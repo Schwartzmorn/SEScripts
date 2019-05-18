@@ -1,0 +1,49 @@
+﻿;Boring machine sprites
+;rough edges (left to right)
+=drillsShapesBackground
+SquareSimple : Light:   7,102:   8,20: 0
+SquareSimple : Light:  15, 93: 156,45: 0
+SquareSimple : Light: 171, 97:   9,40: 0
+SquareSimple : Light: 180,109:  10,28: 0
+RightTriangle: Light:  11, 93:  -4, 9: 0
+RightTriangle: Light: 171, 93:   3, 4: 0
+RightTriangle: Light: 180, 97:  10,12: 0
+
+=drillLights
+Triangle: MedDark: 175,160: 80,80: -1.570796
+Triangle: Light  : 180,160: 80,80: -1.570796
+
+=drillsShapesForeground
+;ribs
+SquareSimple: MedLight:   7,109: 140, 6: 0
+SquareSimple: MedLight:  26, 93:   6,45: 0
+SquareSimple: MedLight:  52, 93:   6,45: 0
+SquareSimple: MedLight:  83, 93:   6,45: 0
+SquareSimple: MedLight: 115, 93:   6,45: 0
+SquareSimple: MedLight: 140, 93:   6,45: 0
+;wheels
+Circle: Dark :   6,119: 19,19: 0
+Circle: Light:   8,121: 15,15: 0
+Circle: Dark :  22,124: 32,32: 0
+Circle: Light:  24,126: 28,28: 0
+Circle: Dark :  54,124: 32,32: 0
+Circle: Light:  56,126: 28,28: 0
+Circle: Dark :  86,124: 32,32: 0
+Circle: Light:  88,126: 28,28: 0
+Circle: Dark : 118,124: 32,32: 0
+Circle: Light: 120,126: 28,28: 0
+Circle: Dark : 150,124: 32,32: 0
+Circle: Light: 152,126: 28,28: 0
+Circle: Dark : 179,119: 19,19: 0
+Circle: Light: 181,121: 15,15: 0
+;cockpit
+SquareSimple : Dark: 175, 99: 5,9: 0
+RightTriangle: Dark: 181,101: 5,7: 0
+
+=drillShapesArm
+Circle       : Dark    : 148, 92: 26,26: 0
+Circle       : MedLight: 150, 94: 22,22: 0
+SquareSimple : MedLight: 164,103: 10, 8: 0
+RightTriangle: MedLight: 174,107:  7,-4: 0
+Circle       : MedLight: 226, 91: 18,18: 0
+SquareSimple : MedLight: 162, 93: 68,14: 0

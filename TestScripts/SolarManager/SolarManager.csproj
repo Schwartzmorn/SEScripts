@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8440B0B3-CFCB-42DE-A8C2-F44581F6BE93}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>IngameScript</RootNamespace>
+    <AssemblyName>SolarManager</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+    <LangVersion>6</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <Import Project="MDK/MDK.options.props" />
+  <Import Project="MDK/MDK.paths.props" Condition="exists('MDK/MDK.paths.props')" />
+  <ItemGroup>
+    <Compile Include="BatteryManager.cs" />
+    <Compile Include="DayTracker.cs" />
+    <Compile Include="DayTrackerTest.cs" />
+    <Compile Include="LCDColor.cs" />
+    <Compile Include="Marshaller.cs" />
+    <Compile Include="MarshallerTest.cs" />
+    <Compile Include="MDK\Bootstrapper.cs" />
+    <AdditionalFiles Include="MDK\MDK.options.props">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="MDK\MDK.paths.props">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AdditionalFiles>
+    <AdditionalFiles Include="MDK\whitelist.cache" />
+    <Compile Include="Serializer.cs" />
+    <Compile Include="SolarDisplay.cs" />
+    <Compile Include="SolarManager.cs" />
+    <Compile Include="SolarManagerMain.cs" />
+    <Compile Include="SolarPanel.cs" />
+    <Compile Include="SolarPylon.cs" />
+    <Compile Include="SolarRotor.cs" />
+    <Compile Include="SolarState.cs" />
+    <Compile Include="Test.cs" />
+    <Compile Include="TimeEstimation.cs" />
+    <Compile Include="TimeEstimationTest.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="AfterBuild">
+    <Copy SourceFiles="MDK\MDK.options.props" DestinationFolder="$(TargetDir)\MDK" />
+    <Copy SourceFiles="MDK\MDK.paths.props" DestinationFolder="$(TargetDir)\MDK" />
+  </Target>
+</Project>
