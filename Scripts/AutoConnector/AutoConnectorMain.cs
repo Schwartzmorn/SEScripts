@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -24,8 +24,8 @@ namespace IngameScript {
     public Program() {
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       Logger.SetupGlobalInstance(new Logger(Me.GetSurface(0)), Echo);
-      Scheduler.Inst.AddAction(Logger.Flush);
-      _commandLine = new CmdLine("Auto connector station", Logger.Inst.Log);
+      Schedule(Logger.Flush);
+      _commandLine = new CmdLine("Auto connector station", Log);
       var ini = new MyIni();
       ini.Parse(Me.CustomData);
       _controller = new AutoConnectionDispatcher(this, _commandLine, ini);

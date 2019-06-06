@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -17,122 +17,86 @@ using VRage.Game;
 using VRageMath;
 
 namespace IngameScript {
-  partial class Program {
-    public class CmdLine {
-      readonly string _name;
-      readonly Dictionary<string, Cmd> _cmds = new Dictionary<string, Cmd>();
-      readonly Action<string> _echo;
-      readonly MyCommandLine _parser = new MyCommandLine();
+partial class Program {
+  public enum CmdTrigger {Antenna=0, User=1, Cmd=2};
+  public class CmdLine {
+    readonly string _name;
+    readonly Dictionary<string, Cmd> _cmds = new Dictionary<string, Cmd>();
+    readonly Action<string> _echo;
+    readonly MyCommandLine _parser = new MyCommandLine();
 
-      public CmdLine(string name, Action<string> echo = null) {
-        _echo = echo;
-        _name = name;
-        AddCmd(new Cmd(
-          "help", "displays this help or help on a command", v => _hlp(_echo, v), maxArgs: 1,
-          detailedHelp: @"If no argument, gives the list of available command
+    public CmdLine(string name, Action<string> echo = null) {
+      _echo = echo;
+      _name = name;
+      AddCmd(new Cmd(
+        "help", "displays this help or help on a command", v => _hlp(v), maxArgs: 1,
+        detailedHelp: @"If no argument, gives the list of available command
 Else, gives the detailed help on the command"));
-        _log($"initialized. Run '-help' for more info");
-      }
+      _log($"{_name} initialized. Run '-help' for more info");
+    }
 
-      public void AddCmd(Cmd command) => _cmds.Add(command.Name, command);
+    public void AddCmd(Cmd cmd) => _cmds.Add(cmd.Name, cmd);
 
-
-      public void StartCmd(string ln, bool hasPermission, Action<string> callback) {
-        bool success = true;
-        if(!string.IsNullOrWhiteSpace(ln)) {
-          if(_parser.TryParse(ln)) {
-            foreach(var s in _parser.Switches) {
-              Cmd cmd;
-              _cmds.TryGetValue(s, out cmd);
-              if(cmd != null) {
-                _log($"'{s}' command received");
-                if(!hasPermission && cmd.RequirePermission) {
-                  _log($"permission denied for '{s}'");
-                  return;
-                }
-                var args = new List<string>();
-                int i = 0;
-                while(_parser.Switch(s, i) != null) {
-                  args.Add(_parser.Switch(s, i));
-                  ++i;
-                }
-                if(args.Count <= cmd.MaxArgs && args.Count >= cmd.MinArgs) {
-                  _cmds[s].Action(args, callback);
-                } else {
-                  success = false;
-                  _log($"wrong number of arguments for '{s}'");
-                }
-              } else {
-                success = false;
-                _log($"unknown command '{s}'");
+    public void StartCmd(string ln, Action<string> callback, CmdTrigger trig) {
+      if(!string.IsNullOrWhiteSpace(ln)) {
+        bool f = true;
+        if(_parser.TryParse(ln)) {
+          if(_parser.Switches.Count > 0) {
+            string s = _parser.Switches.ElementAt(0);
+            Cmd cmd;
+            if(_cmds.TryGetValue(s, out cmd)) {
+              _log($"'{s}' command received");
+              if(trig < cmd.RequiredTrigger) {
+                _log($"permission denied for '{s}'");
+                return;
               }
-            }
-          } else {
-            success = false;
-            _log($"could not parse '{ln}'");
+              var args = new List<string>();
+              int i = -1;
+              string a;
+              while((a = _parser.Switch(s, ++i)) != null)
+                args.Add(a);
+              if(i <= cmd.MaxArgs && i >= cmd.MinArgs) {
+                f = false;
+                cmd.Action(args, callback, trig);
+              } else
+                _log($"wrong number of arguments for '{s}'");
+            } else
+              _log($"unknown command '{s}'");
           }
-        }
-        if(!success) {
+        } else
+          _log($"could not parse '{ln}'");
+        if(f)
           _log($"run '-help' for more info");
-        }
-      }
-
-
-      public void HandleCmd(string ln, bool hasPermission) => StartCmd(ln, hasPermission, _ => { });
-
-      private void _hlp(Action<string> echo, List<string> args) {
-        if (args.Count == 0) {
-          echo(_name);
-          foreach (var kv in _cmds) {
-            echo($"-{kv.Key}: {kv.Value.BriefHelp}");
-          }
-        } else {
-          if (_cmds.ContainsKey(args[0])) {
-            var cmd = _cmds[args[0]];
-            echo(_getHlp(cmd));
-            if (cmd.DetailedHelp.Count > 0) {
-              foreach (var s in cmd.DetailedHelp) {
-                echo("  " + s);
-              }
-            } else {
-              echo("  " + cmd.BriefHelp);
-            }
-          } else {
-            _log($"unknown command '{args[0]}'");
-          }
-        }
-      }
-
-      private void _log(string log) => _echo?.Invoke($"Command: {log}");
-
-      private static string _getHlp(Cmd cmd) {
-        string line = $"-{cmd.Name}";
-        int maxArgs = cmd.MaxArgs;
-        int minArgs = cmd.MinArgs;
-        if (maxArgs == 0) {
-          line += " (no argument)";
-        } else {
-          line += " takes ";
-          if (minArgs == maxArgs) {
-            line += $"{minArgs}";
-          } else if (minArgs == 0) {
-            if (maxArgs < int.MaxValue) {
-              line += $"up to {maxArgs}";
-            } else {
-              line += "any number of";
-            }
-          } else if (maxArgs < int.MaxValue) {
-            line += $"{minArgs}-{maxArgs}";
-          } else {
-            line += $"at least {minArgs}";
-          }
-          line += " argument";
-          if (maxArgs > 1) {
-            line += 's';
-          }
-        }
-        return line;
       }
     }
+
+    public void HandleCmd(string ln, CmdTrigger trig) {
+      try {
+        StartCmd(ln, s => { if(s != null) _echo($"Done: {s}"); }, trig);
+      } catch(Exception e) {
+        Log($"Failed cmd: {e.Message}");
+      }
+    }
+
+    void _hlp(List<string> args) {
+      if (args.Count == 0) {
+        _echo(_name);
+        foreach (var kv in _cmds)
+          _echo($"-{kv.Key}: {kv.Value.BriefHelp}");
+      } else {
+        if (_cmds.ContainsKey(args[0])) {
+          var cmd = _cmds[args[0]];
+          _echo(cmd.Hlp());
+          if(cmd.DetailedHelp.Count > 0)
+            cmd.DetailedHelp.ForEach(s => _echo("  " + s));
+          else
+            _echo("  " + cmd.BriefHelp);
+        } else
+          _log($"unknown command '{args[0]}'");
+      }
+    }
+
+    void _log(string log) => _echo?.Invoke($"{_name}: {log}");
   }
+}
 }

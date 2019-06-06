@@ -9,6 +9,8 @@
     <Import_RootNamespace>IngameScript</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)IniConsumer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ini.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IniHelper.cs" />
   </ItemGroup>
 </Project>

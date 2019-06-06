@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -32,7 +32,7 @@ namespace IngameScript {
       public GridManager(MyGridProgram program, MyIni ini) {
         _block = program.Me;
         Scan(program.GridTerminalSystem);
-        Scheduler.Inst.AddAction(new ScheduledAction(() => Scan(program.GridTerminalSystem), period: 100));
+        Schedule(new ScheduledAction(() => Scan(program.GridTerminalSystem), period: 100));
         _managedGrids = new HashSet<string>(ini.Get(INI_SECTION, "managed-grids").ToString().Split(SPLIT_VALUES_CHAR, StringSplitOptions.RemoveEmptyEntries));
       }
 

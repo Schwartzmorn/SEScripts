@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -35,29 +35,29 @@ namespace IngameScript {
       RUNTIME = Runtime;
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       Logger.SetupGlobalInstance(new Logger(Me.GetSurface(0)), Echo);
-      Scheduler.Inst.AddAction(() => START_TIME = DateTime.Now);
-      Scheduler.Inst.AddAction(Logger.Flush);
+      Schedule(() => START_TIME = DateTime.Now);
+      Schedule(Logger.Flush);
 
       int counter = 0;
       var ini = new MyIni();
       ini.TryParse(Me.CustomData);
 
-      Scheduler.Inst.AddAction(new ScheduledAction(
+      Schedule(new ScheduledAction(
         () => _gridManager = new GridManager(this, ini),
         period: ++counter, useOnce: true));
-      Scheduler.Inst.AddAction(new ScheduledAction(
+      Schedule(new ScheduledAction(
         () => _containerManager = new ContainerManager(GridTerminalSystem, _gridManager),
         period: ++counter, useOnce: true));
-      Scheduler.Inst.AddAction(new ScheduledAction(
+      Schedule(new ScheduledAction(
         () => _assemblerManager = new AssemblerManager(GridTerminalSystem, _gridManager),
         period: ++counter, useOnce: true));
-      Scheduler.Inst.AddAction(new ScheduledAction(
+      Schedule(new ScheduledAction(
         () => _refineryManager = new RefineryManager(GridTerminalSystem, _gridManager),
         period: ++counter, useOnce: true));
-      Scheduler.Inst.AddAction(new ScheduledAction(
+      Schedule(new ScheduledAction(
         () => _miscInventoryManager = new MiscInventoryManager(GridTerminalSystem, _gridManager),
         period: ++counter, useOnce: true));
-      Scheduler.Inst.AddAction(new ScheduledAction(
+      Schedule(new ScheduledAction(
         () => _inventoriesGroomer = new InventoriesGroomer(_gridManager, _containerManager,
           _assemblerManager, _miscInventoryManager, _refineryManager),
         period: ++counter, useOnce: true));
@@ -67,7 +67,7 @@ namespace IngameScript {
     }
 
     static void EchoStat(string message) =>
-        Logger.Inst.Log((DateTime.Now - START_TIME).TotalMilliseconds.ToString("#,000.00") + " - "
+        Log((DateTime.Now - START_TIME).TotalMilliseconds.ToString("#,000.00") + " - "
           + RUNTIME.CurrentInstructionCount + '\n' + message + '\n');
 
     public void Main(string argument, UpdateType updateSource) {

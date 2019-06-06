@@ -11,5 +11,6 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Cmd.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CmdLine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CmdSerializer.cs" />
   </ItemGroup>
 </Project>

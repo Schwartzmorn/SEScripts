@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -24,7 +24,7 @@ namespace IngameScript {
 
       private readonly List<AutoConnectionServer> _autoConnectors = new List<AutoConnectionServer>();
       private readonly IMyIntergridCommunicationSystem _igc;
-      private readonly CoordinatesTransformer _transformer;
+      private readonly CoordsTransformer _transformer;
       private readonly string _referenceName;
       private readonly string _stationName;
       private readonly ScheduledAction _updateAction;
@@ -38,7 +38,7 @@ namespace IngameScript {
           throw new ArgumentException($"Could not find reference block '{_referenceName}'");
         }
         _igc = program.IGC;
-        _transformer = new CoordinatesTransformer(reference, false);
+        _transformer = new CoordsTransformer(reference, false);
         _log($"initializing");
         // Connectors initialization
         var sections = new List<string>();
@@ -50,17 +50,17 @@ namespace IngameScript {
         _log($"has {_autoConnectors.Count} auto connectors");
         _registerCommands(command, program);
         _updateAction = new ScheduledAction(_update);
-        Scheduler.Inst.AddAction(_updateAction);
+        Schedule(_updateAction);
 
         var listener = _igc.RegisterBroadcastListener("StationConnectionRequests");
-        Scheduler.Inst.AddAction(() => {
+        Schedule(() => {
           if(listener.HasPendingMessage) {
             var msg = listener.AcceptMessage();
             command.HandleCmd($"{msg.As<string>()} {msg.Source}", false);
           }
         });
 
-        Scheduler.Inst.AddActionOnSave(_save);
+        ScheduleOnSave(_save);
       }
 
       private void _save(MyIni ini) {
@@ -189,7 +189,7 @@ Will disconnect or cancel a request based on the requestor", minArgs: 2, maxArgs
         _updateAction.Period = hasUpdated ? 1 : 10;
       }
 
-      private void _log(string log) => Logger.Inst.Log($"Dispatcher '{_stationName}': {log}");
+      private void _log(string log) => Log($"Dispatcher '{_stationName}': {log}");
     }
   }
 }

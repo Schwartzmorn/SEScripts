@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -26,9 +26,9 @@ namespace IngameScript {
       public InventoriesGroomer(GridManager gridManager, ContainerManager contManager, AssemblerManager assemblerManager,
           MiscInventoryManager miscInventoryManager, RefineryManager refineryManager) {
         _outputInventories = new List<IOutputInventoryCollection> { assemblerManager, miscInventoryManager, refineryManager };
-        Scheduler.Inst.AddAction(new ScheduledAction(
+        Schedule(new ScheduledAction(
             () => _groomContainers(contManager), period: 100));
-        Scheduler.Inst.AddAction(new ScheduledAction(
+        Schedule(new ScheduledAction(
             () => _groomOutputInventories(gridManager, contManager), period: 47));
       }
 

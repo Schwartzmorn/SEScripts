@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -70,7 +70,7 @@ namespace IngameScript {
       }
 
       public void Disconnect(long address) {
-        Logger.Inst.Log("Disconnecting");
+        Log("Disconnecting");
         if(PreviousRequest != null && (PreviousRequest?.Address == address)) {
           PreviousRequest = null;
         } else if (CurrentRequest != null && (CurrentRequest?.Address == address)) {
@@ -171,7 +171,7 @@ namespace IngameScript {
 
       private void _scheduleCallback(ScheduledAction action) {
         _callbacks.Add(action);
-        Scheduler.Inst.AddAction(action);
+        Schedule(action);
       }
 
       private void _saveRequest(MyIni ini, string sectionName, string requestName, ConnectionRequest request) {

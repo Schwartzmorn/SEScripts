@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -17,46 +17,53 @@ using VRage.Game;
 using VRageMath;
 
 namespace IngameScript {
-  partial class Program {
-    public class APSettings {
-      public readonly double HandbrakeSpeed = 2;
-      public readonly double SpeedPrecision = 2;
-      public readonly float BrakePower = 1;
-      public readonly float PowerMult = 0.2f;
-      public readonly double SpeedSmothingFactor = 40;
+partial class Program {
+  public class APSettings {
+    public readonly double HandbrakeSpeed = 2;
+    public readonly double SpeedPrecision = 2;
+    public readonly float BrakePower = 1;
+    public readonly float PowerMult = 0.2f;
+    public readonly double SpeedSmothingFactor = 40;
 
-      public double GetTargetSpeed(APWaypoint wp) {
-        if (wp.Terrain == Terrain.Bad) {
+    public double GetTargetSpeed(APWaypoint wp) {
+      if(wp == null) return 0;
+      switch(wp.Terrain) {
+        case Terrain.Dangerous:
+          return 1;
+        case Terrain.Bad:
           return 5;
-        } else if(wp.Terrain == Terrain.Normal) {
+        case Terrain.Normal:
           return 10;
-        } else if(wp.Terrain == Terrain.Good) {
+        case Terrain.Good:
           return 20;
-        } else {
+        case Terrain.Open:
+        default:
           return 30;
-        }
-      }
-
-      public double GetTargetPrecision(APWaypoint wp) {
-        return wp.Type == WPType.Path ? 3 : 0.5;
-      }
-
-      public bool IsWaypointReached(APWaypoint wp, double distance) {
-        return distance < GetTargetPrecision(wp);
-      }
-
-      public double GetTargetSpeed(double curTargetSpeed, double nextTargetSpeed, double distToWP, double angle) {
-        double smoothingDistance = (Math.Pow(curTargetSpeed, 2) - Math.Pow(nextTargetSpeed, 2)) / SpeedSmothingFactor;
-        if(distToWP < smoothingDistance) {
-          return MathHelper.Lerp(curTargetSpeed, nextTargetSpeed, 1 - (distToWP / smoothingDistance));
-        }
-        return curTargetSpeed;
-        // TODO take angle into account
-      }
-
-      public float GetSteer(double angle, double speed) {
-        return (float)MathHelper.Clamp(Math.Sqrt(Math.Abs(angle)) * Math.Sign(angle), -1, 1);
       }
     }
+
+    public double GetTargetPrecision(APWaypoint wp) {
+      switch(wp.Type) {
+        case WPType.PrecisePath:
+          return 0.5;
+        case WPType.Maneuvering:
+          return 0.1;
+        case WPType.Path:
+        default:
+          return 3;
+      }
+    }
+
+    public bool IsWaypointReached(APWaypoint wp, double distance) => distance < GetTargetPrecision(wp);
+
+    public double GetTargetSpeed(double curTargetSpeed, double nextTargetSpeed, double distToWP) {
+      double smoothingDistance = (Math.Pow(curTargetSpeed, 2) - Math.Pow(nextTargetSpeed, 2)) / SpeedSmothingFactor;
+      return distToWP < smoothingDistance
+        ? MathHelper.Lerp(curTargetSpeed, nextTargetSpeed, 1 - (distToWP / smoothingDistance))
+        : curTargetSpeed;
+    }
+
+    public float GetSteer(double angle, double speed) => (float)MathHelper.Clamp(Math.Sqrt(Math.Abs(angle)) * Math.Sign(angle), -1, 1);
   }
+}
 }

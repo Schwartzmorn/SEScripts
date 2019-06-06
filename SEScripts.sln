@@ -13,13 +13,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestShip", "TestScripts\Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoNotDelete", "DoNotDelete\DoNotDelete.csproj", "{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "AutoHandbrake", "Mixins\AutoHandbrake\AutoHandbrake.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PilotAssist", "Mixins\AutoHandbrake\PilotAssist.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Autopilot", "Mixins\Autopilot\Autopilot.shproj", "{BDB8D540-249B-4C93-B6E5-70FDE3287356}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CommandLine", "Mixins\CommandLine\CommandLine.shproj", "{4B43BBBC-5477-4E7F-BA3C-B660E7AE6288}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CommandSerializer", "Mixins\CommandSerializer\CommandSerializer.shproj", "{EDEBE9C4-2B9A-4E84-AFD8-FC3AFCE0B8B9}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ConnectionClient", "Mixins\ConnectionClient\ConnectionClient.shproj", "{DCA9D508-08E7-4C3F-8365-B2CF430F9B7A}"
 EndProject
@@ -53,23 +51,40 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAP", "TestScripts\TestA
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Item", "Mixins\Item\Item.shproj", "{8CA46B0B-4B6E-44DE-8F23-0540E977DA88}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "AutoRoutine", "Mixins\AutoRoutine\AutoRoutine.shproj", "{C9AB9D6A-925B-4EDD-89DB-D6F399FE3F83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoringMachineAuxillary", "Scripts\BoringMachineAuxillary\BoringMachineAuxillary.csproj", "{3F759B04-5B9E-46C4-8143-F1AEED9EDF1C}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Mixins\AutoHandbrake\AutoHandbrake.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
+		Mixins\AutoRoutine\AutoRoutine.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\CommandLine\CommandLine.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\ConnectionClient\ConnectionClient.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
+		Mixins\IniHelper\IniHelper.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\Logger\Logger.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\Scheduler\Scheduler.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\WheelsController\WheelsController.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\Scheduler\Scheduler.projitems*{1d3616c7-bcbc-4720-a28a-514a4128aab0}*SharedItemsImports = 13
 		Mixins\WheelsController\WheelsController.projitems*{1fbc1400-6bb0-4b9e-a98f-4fe90dcea2c9}*SharedItemsImports = 13
+		Mixins\AutoHandbrake\AutoHandbrake.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
+		Mixins\AutoRoutine\AutoRoutine.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
+		Mixins\CommandLine\CommandLine.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
+		Mixins\ConnectionClient\ConnectionClient.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
+		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
+		Mixins\Display\Display.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
+		Mixins\IniHelper\IniHelper.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
+		Mixins\Logger\Logger.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
+		Mixins\Scheduler\Scheduler.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
+		Mixins\WheelsController\WheelsController.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
 		Mixins\Logger\Logger.projitems*{49c2a33d-4f72-4c10-bd5d-7e26bb9b49c0}*SharedItemsImports = 4
 		Mixins\Scheduler\Scheduler.projitems*{49c2a33d-4f72-4c10-bd5d-7e26bb9b49c0}*SharedItemsImports = 4
 		Mixins\IniHelper\IniHelper.projitems*{4b26ae5f-a1b6-4f37-b5fd-6aa6cfa940c8}*SharedItemsImports = 13
 		Mixins\CommandLine\CommandLine.projitems*{4b43bbbc-5477-4e7f-ba3c-b660e7ae6288}*SharedItemsImports = 13
 		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{4f394cb5-48ac-4dd6-81d3-a534feddc578}*SharedItemsImports = 13
 		Mixins\CommandLine\CommandLine.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
+		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
 		Mixins\IniHelper\IniHelper.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
 		Mixins\Logger\Logger.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
 		Mixins\Scheduler\Scheduler.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
@@ -80,19 +95,22 @@ Global
 		Mixins\Scheduler\Scheduler.projitems*{74a147bc-033e-4049-8373-d15aa9628d40}*SharedItemsImports = 4
 		Mixins\AutoHandbrake\AutoHandbrake.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\Autopilot\Autopilot.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
+		Mixins\AutoRoutine\AutoRoutine.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\CommandLine\CommandLine.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
-		Mixins\CommandSerializer\CommandSerializer.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\ConnectionClient\ConnectionClient.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
-		Mixins\Display\Display.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\IniHelper\IniHelper.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\Logger\Logger.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\Scheduler\Scheduler.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\WheelsController\WheelsController.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
+		Mixins\CommandLine\CommandLine.projitems*{871775d0-d542-4a2e-aa9d-8af36053df39}*SharedItemsImports = 4
+		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{871775d0-d542-4a2e-aa9d-8af36053df39}*SharedItemsImports = 4
+		Mixins\Logger\Logger.projitems*{871775d0-d542-4a2e-aa9d-8af36053df39}*SharedItemsImports = 4
+		Mixins\Scheduler\Scheduler.projitems*{871775d0-d542-4a2e-aa9d-8af36053df39}*SharedItemsImports = 4
 		Mixins\Item\Item.projitems*{8ca46b0b-4b6e-44de-8f23-0540e977da88}*SharedItemsImports = 13
 		Mixins\Autopilot\Autopilot.projitems*{bdb8d540-249b-4c93-b6e5-70fde3287356}*SharedItemsImports = 13
+		Mixins\AutoRoutine\AutoRoutine.projitems*{c9ab9d6a-925b-4edd-89db-d6f399fe3f83}*SharedItemsImports = 13
 		Mixins\ConnectionClient\ConnectionClient.projitems*{dca9d508-08e7-4c3f-8365-b2cf430f9b7a}*SharedItemsImports = 13
-		Mixins\CommandSerializer\CommandSerializer.projitems*{edebe9c4-2b9a-4e84-afd8-fc3afce0b8b9}*SharedItemsImports = 13
 		Mixins\Logger\Logger.projitems*{f42323f0-faf9-49ec-ad2a-1b1e333cf8b7}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -100,25 +118,17 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{871775D0-D542-4A2E-AA9D-8AF36053DF39}.Debug|x64.ActiveCfg = Debug|x64
-		{871775D0-D542-4A2E-AA9D-8AF36053DF39}.Debug|x64.Build.0 = Debug|x64
 		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Debug|x64.ActiveCfg = Debug|x64
-		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Debug|x64.Build.0 = Debug|x64
 		{49C2A33D-4F72-4C10-BD5D-7E26BB9B49C0}.Debug|x64.ActiveCfg = Debug|x64
-		{49C2A33D-4F72-4C10-BD5D-7E26BB9B49C0}.Debug|x64.Build.0 = Debug|x64
 		{82CA7A8B-BB91-47EC-8270-A7FDF58D1F54}.Debug|x64.ActiveCfg = Debug|x64
-		{82CA7A8B-BB91-47EC-8270-A7FDF58D1F54}.Debug|x64.Build.0 = Debug|x64
 		{74A147BC-033E-4049-8373-D15AA9628D40}.Debug|x64.ActiveCfg = Debug|x64
-		{74A147BC-033E-4049-8373-D15AA9628D40}.Debug|x64.Build.0 = Debug|x64
 		{5151329F-C2CF-4F3E-A0DA-E465D0496980}.Debug|x64.ActiveCfg = Debug|x64
-		{5151329F-C2CF-4F3E-A0DA-E465D0496980}.Debug|x64.Build.0 = Debug|x64
 		{015514BA-9E70-4A3B-B2C9-189772F8770C}.Debug|x64.ActiveCfg = Debug|x64
-		{015514BA-9E70-4A3B-B2C9-189772F8770C}.Debug|x64.Build.0 = Debug|x64
 		{36E3D3C7-717C-4C23-9582-6BF82A396B80}.Debug|x64.ActiveCfg = Debug|x64
-		{36E3D3C7-717C-4C23-9582-6BF82A396B80}.Debug|x64.Build.0 = Debug|x64
 		{8440B0B3-CFCB-42DE-A8C2-F44581F6BE93}.Debug|x64.ActiveCfg = Debug|x64
-		{8440B0B3-CFCB-42DE-A8C2-F44581F6BE93}.Debug|x64.Build.0 = Debug|x64
 		{2A7AF5F6-C756-4961-9E17-72A5E76E1F48}.Debug|x64.ActiveCfg = Debug|x64
-		{2A7AF5F6-C756-4961-9E17-72A5E76E1F48}.Debug|x64.Build.0 = Debug|x64
+		{3F759B04-5B9E-46C4-8143-F1AEED9EDF1C}.Debug|x64.ActiveCfg = Debug|x64
+		{3F759B04-5B9E-46C4-8143-F1AEED9EDF1C}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -128,7 +138,6 @@ Global
 		{61EBA249-19F3-48B6-A25B-A4CEE90168BA} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{BDB8D540-249B-4C93-B6E5-70FDE3287356} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{4B43BBBC-5477-4E7F-BA3C-B660E7AE6288} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
-		{EDEBE9C4-2B9A-4E84-AFD8-FC3AFCE0B8B9} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{DCA9D508-08E7-4C3F-8365-B2CF430F9B7A} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{4F394CB5-48AC-4DD6-81D3-A534FEDDC578} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{5588F66D-3F10-4530-AAFF-101C35574A01} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
@@ -145,6 +154,8 @@ Global
 		{8440B0B3-CFCB-42DE-A8C2-F44581F6BE93} = {C746D2D5-0B4E-4FA0-B56E-609D6BEC0133}
 		{2A7AF5F6-C756-4961-9E17-72A5E76E1F48} = {C746D2D5-0B4E-4FA0-B56E-609D6BEC0133}
 		{8CA46B0B-4B6E-44DE-8F23-0540E977DA88} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
+		{C9AB9D6A-925B-4EDD-89DB-D6F399FE3F83} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
+		{3F759B04-5B9E-46C4-8143-F1AEED9EDF1C} = {2963E9C9-840E-4B5C-B85D-CDE5F8859F0E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4B1EACEE-0472-40F0-8708-5BDC579549E2}

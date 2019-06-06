@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -38,7 +38,7 @@ namespace IngameScript {
       private Vector3D _min;
       private Vector3D _restPosition;
       public readonly string Name;
-      private readonly CircularBuffer<Waypoint> _waypoints = new CircularBuffer<Waypoint>(10);
+      private readonly CircBuf<Waypoint> _waypoints = new CircBuf<Waypoint>(10);
       // in case of wild disconnection, this should ensure we position the correct block and don't flail
       private ConnectionType _lastConnectionType = ConnectionType.None;
       // position
@@ -204,7 +204,7 @@ namespace IngameScript {
       }
 
       public void Disconnect() {
-        _waypoints.Clear();
+        _waypoints.Clr();
         var connector = _getCurrentConnected()
             ?? _getConnector(_lastConnectionType)
             ?? _frontConnector;
@@ -269,7 +269,7 @@ namespace IngameScript {
       }
 
       private void _queueConnectionRoute(Vector3D target, Vector3D orientation) {
-        _waypoints.Clear();
+        _waypoints.Clr();
         var connectionType = Math.Abs(orientation.Dot(UP)) > 0.8 ? ConnectionType.Down : ConnectionType.Front;
         float angle = connectionType == ConnectionType.Front ? _getTargetAngle(orientation) : 0;
         var con = _getCurrentConnected();
@@ -377,7 +377,7 @@ namespace IngameScript {
           _max.Y,
           (_min.Z + _max.Z) / 2);
 
-      private void _log(string log) => Logger.Inst.Log($"Connector {Name}: {log}");
+      private void _log(string log) => Log($"Connector {Name}: {log}");
 
       private IMyShipConnector _getCurrentConnected() {
         return _frontConnector.Status == MyShipConnectorStatus.Connected

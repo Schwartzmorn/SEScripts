@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -24,7 +24,7 @@ namespace IngameScript {
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       Logger.SetupGlobalInstance(new Logger(Me.GetSurface(0)), Echo);
       _doorManager = new DoorManager(this);
-      Scheduler.Inst.AddAction(Logger.Flush);
+      Schedule(Logger.Flush);
     }
 
     public void Save() {

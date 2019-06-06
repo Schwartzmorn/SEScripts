@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -63,15 +63,15 @@ namespace IngameScript {
 
       // connector initialization
       var cockpit = GridTerminalSystem.GetBlockWithName("W1 Cockpit") as IMyCockpit;
-      Logger.SetupGlobalInstance(new Logger(cockpit.GetSurface(0), fontSize: 1), Echo);
-      _commandline = new CmdLine("MarmOS", Logger.Inst.Log);
+      Logger.SetupGlobalInstance(new Logger(cockpit.GetSurface(0), size: 1), Echo);
+      _commandline = new CmdLine("MarmOS", Log);
       var ini = new MyIni();
       if(!ini.TryParse(Me.CustomData)) {
-        Logger.Inst.Log("Could not parse ini");
+        Log("Could not parse ini");
       }
       var connector = GridTerminalSystem.GetBlockWithName("W1 Connector (Front)") as IMyShipConnector;
       var connectionRequestor = new ConnectionClient(this, ini, _commandline, "StationConnectionRequests", "W1Connections");
-      var autoHandbrake = new AutoHandbrake(ini, GridTerminalSystem);
+      var autoHandbrake = new PilotAssist(ini, GridTerminalSystem);
       autoHandbrake.AddBraker(connectionRequestor);
       var wheelsController = new WheelsController(this, ini, _commandline, new CoordsTransformer(cockpit, true), cockpit);
 
@@ -79,8 +79,8 @@ namespace IngameScript {
           MArmOS_Main(_arguments);
           _arguments = "";
         }, period: 10);
-      Scheduler.Inst.AddAction(_marmosMain);
-      Scheduler.Inst.AddAction(Logger.Flush);
+      Schedule(_marmosMain);
+      Schedule(Logger.Flush);
     }
 
     public void Main(string argument, UpdateType updateSource) {

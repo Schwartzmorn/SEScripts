@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -24,7 +24,7 @@ namespace IngameScript {
 
       public MiscInventoryManager(IMyGridTerminalSystem gts, GridManager gridManager) {
         Scan(gts, gridManager);
-        Scheduler.Inst.AddAction(new ScheduledAction(
+        Schedule(new ScheduledAction(
           () => Scan(gts, gridManager), period: 300));
       }
 

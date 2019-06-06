@@ -47,6 +47,10 @@
     <AdditionalFiles Include="MDK\whitelist.cache" />
     <Compile Include="TestShip.cs" />
   </ItemGroup>
+  <Import Project="..\..\Mixins\Logger\Logger.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\Scheduler\Scheduler.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\CommandLine\CommandLine.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <Copy SourceFiles="MDK\MDK.options.props" DestinationFolder="$(TargetDir)\MDK" />

@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -25,7 +25,7 @@ namespace IngameScript {
       private readonly List<IMyCargoContainer> _tmpList = new List<IMyCargoContainer>();
 
       public ContainerManager(IMyGridTerminalSystem gts, GridManager gridManager) {
-        Scheduler.Inst.AddAction(new ScheduledAction(() => Scan(gts, gridManager), period: 100));
+        Schedule(new ScheduledAction(() => Scan(gts, gridManager), period: 100));
         Scan(gts, gridManager);
       }
 

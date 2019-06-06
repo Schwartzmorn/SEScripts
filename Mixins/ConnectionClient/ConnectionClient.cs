@@ -1,258 +1,228 @@
-﻿using Sandbox.ModAPI.Ingame;
+using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRageMath;
 
 namespace IngameScript {
-  partial class Program {
-    public enum ConnectionState { Connected, Ready, Standby,  WaitingCon, WaitingDisc };
+partial class Program {
+  public enum ConnectionState { Connected, Ready, Standby,  WaitingCon, WaitingDisc };
 
-    public enum FailReason { Cancellation, Failure, User, Timeout, None }
+  public enum FailReason { Cancellation, Failure, User, Timeout, None }
 
-    public class ConnectionClient: IAHBraker {
-      static readonly ConnectionState[] BRAKE_STATES = { ConnectionState.Connected, ConnectionState.WaitingCon, ConnectionState.WaitingDisc };
-      const double DECO_DISTANCE_SQUARED = 0.1;
-      const string SECTION = "connection-client";
+  public class ConnectionClient: JobProvider, IIniConsumer, IPABraker {
+    static readonly ConnectionState[] BRAKE_STATES = { ConnectionState.Connected, ConnectionState.WaitingCon, ConnectionState.WaitingDisc };
+    const double DECO_DISTANCE_SQUARED = 0.1;
+    const string SECTION = "connection-client";
 
-      public readonly string ClientChannel;
-      public float CurrentProgress { get; set; } = 0;
-      public ConnectionState State { get { return _state; } set { _setState(value); } }
-      public FailReason FailureState { get; set; } = FailReason.None;
+    public string ClientChannel { get; private set; }
+    public float Progress { get; private set; } = 0;
+    public ConnectionState State { get { return _state; } private set { _setState(value); } }
+    public FailReason FailReason { get; private set; } = FailReason.None;
 
-      readonly List<ScheduledAction> _callbacks = new List<ScheduledAction>(3);
-      readonly CmdLine _cmd = new CmdLine("Connection client listener");
-      readonly IMyShipConnector _con;
-      readonly IMyIntergridCommunicationSystem _igc;
-      Vector3D? _pos = null;
-      readonly string _srvChannel;
-      readonly IMyUnicastListener _srvListener;
-      ConnectionState _state = ConnectionState.Ready;
-      ScheduledAction _timeOut = null;
+    readonly List<ScheduledAction> _callbacks = new List<ScheduledAction>(3);
+    readonly CmdLine _cmd = new CmdLine("Connection client listener");
+    IMyShipConnector _con;
+    readonly IMyGridTerminalSystem _gts;
+    readonly IMyIntergridCommunicationSystem _igc;
+    Vector3D? _pos = null;
+    string _srvChannel;
+    readonly IMyUnicastListener _srvListener;
+    ConnectionState _state = ConnectionState.Ready;
+    ScheduledAction _timeOut = null;
 
-      public ConnectionClient(MyGridProgram program, MyIni ini, CmdLine command, string srvChannel, string clientChannel) {
-        ClientChannel = clientChannel;
-        _con = program.GridTerminalSystem.GetBlockWithName(ini.GetThrow(SECTION, "connector-name").ToString()) as IMyShipConnector;
-        _igc = program.IGC;
-        _srvChannel = srvChannel;
-        _addCommands(command);
-        _registerListener(clientChannel, out _srvListener);
-        Scheduler.Inst.AddActionOnSave(_save);
-        if (ini.ContainsKey(SECTION, "state")) {
-          ConnectionState state;
-          Enum.TryParse(ini.Get(SECTION, "state").ToString(), out state);
-          State = state;
-        }
-      }
+    public ConnectionClient(Ini ini, MyGridProgram p, CmdLine cmd) {
+      _igc = p.IGC;
+      _gts = p.GridTerminalSystem;
 
-      public bool ShouldHandbrake() => BRAKE_STATES.Contains(_state);
+      _srvListener = _igc.UnicastListener;
+      _cmd.AddCmd(new Cmd("ac-progress", "", s => _progress(s[0]), nArgs: 1));
+      _cmd.AddCmd(new Cmd("ac-done", "", _ => _done(), nArgs: 0));
+      _cmd.AddCmd(new Cmd("ac-cancel", "", _ => _serverCancel(), nArgs: 0));
+      _cmd.AddCmd(new Cmd("ac-ko", "", _ => _ko(), nArgs: 0));
+      Schedule(new ScheduledAction(_listen, 5, false, "cc-listen"));
 
-      // Client events
-      protected void Connect() {
-        if (State != ConnectionState.Connected) {
-          State = ConnectionState.WaitingCon;
-          _sendConnection();
-        }
-      }
-      protected void Disconnect() {
-        if (State == ConnectionState.WaitingCon || State == ConnectionState.Standby) {
-          State = ConnectionState.Ready;
-          _setFailureState(FailReason.Cancellation);
-          _sendDisconnection();
-        } else if (State == ConnectionState.Connected) {
-          State = ConnectionState.WaitingDisc;
-          _sendDisconnection();
-        }
-      }
-      protected void Switch() {
-        if (State == ConnectionState.Connected) {
-          Disconnect();
-        } else {
-          Connect();
-        }
-      }
-
-      // Self events
-      protected void CancelByClient() {
-        State = ConnectionState.Ready;
-        _setFailureState(FailReason.Cancellation);
-        _sendDisconnection();
-      }
-      protected void Timeout() {
-        if (State == ConnectionState.WaitingCon || State == ConnectionState.WaitingDisc) {
-          State = ConnectionState.Ready;
-          _setFailureState(FailReason.Timeout);
-        }
-      }
-
-      // Server events
-      protected void CancelByServer() {
-        if (State == ConnectionState.Connected || State == ConnectionState.WaitingCon) {
-          State = ConnectionState.Standby;
-        } else if (State != ConnectionState.Ready) {
-          State = ConnectionState.Ready;
-          _setFailureState(FailReason.Failure);
-        }
-      }
-      protected void Progress(string p) {
-        if (State == ConnectionState.WaitingCon
-            || State == ConnectionState.WaitingDisc
-            || State == ConnectionState.Standby) {
-          if(State == ConnectionState.Standby) {
-            State = ConnectionState.WaitingCon;
-          }
-          float pf = 0;
-          if(float.TryParse(p, out pf)) {
-            CurrentProgress = pf;
-            _timeOut?.ResetCounter();
-          }
-        }
-      }
-      protected void Done() {
-        if (State == ConnectionState.WaitingCon) {
-          State = ConnectionState.Connected;
-        } else if (State == ConnectionState.WaitingDisc) {
-          State = ConnectionState.Ready;
-        }
-      }
-      protected void Reconnect() {
-        if (State == ConnectionState.Standby) {
-          State = ConnectionState.WaitingCon;
-        }
-      }
-      protected void KO() {
-        State = ConnectionState.Ready;
-        _setFailureState(FailReason.Failure);
-      }
-
-      // helpers
-      void _save(MyIni ini) {
-        ini.Set(SECTION, "connector-name", _con.DisplayNameText);
-        ini.Set(SECTION, "state", State.ToString());
-      }
-
-      void _setState(ConnectionState state) {
-        _state = state;
-        _resetCallbacks();
-        if(_state == ConnectionState.Connected) {
-          _scheduleCallback(new ScheduledAction(_checkConnection, period: 10));
-        } else if(_state == ConnectionState.Ready) {
-          // nada
-        } else if(_state == ConnectionState.Standby) {
-          _startMoveListener();
-        } else if(_state == ConnectionState.WaitingCon) {
-          _startTimeOut();
-          _startMoveListener();
-        } else if(_state == ConnectionState.WaitingDisc) {
-          _startTimeOut();
-        }
-      }
-
-      void _sendConnection() {
-        var com = new CmdSerializer("ac-con");
-        com.AddArg(_con.CubeGrid.GridSizeEnum);
-        com.AddArg(ClientChannel);
-        SerializeVector(_con.GetPosition(), com);
-        SerializeVector(_con.WorldMatrix.Forward, com);
-        _igc.SendBroadcastMessage(_srvChannel, com.ToString());
-      }
-
-      void _sendDisconnection() {
-        var com = new CmdSerializer("ac-disc");
-        com.AddArg(ClientChannel);
-        _igc.SendBroadcastMessage(_srvChannel, com.ToString());
-      }
-
-      void _listenServer() {
-        if (_srvListener.HasPendingMessage) {
-          _cmd.HandleCmd(_srvListener.AcceptMessage().As<string>(), true);
-        }
-      }
-
-      void _resetCallbacks() {
-        CurrentProgress = 0;
-        FailureState = FailReason.None;
-        _pos = null;
-
-        _callbacks.ForEach(a => a.Dispose());
-        _callbacks.Clear();
-
-        _timeOut?.Dispose();
-        _timeOut = null;
-      }
-
-      void _startTimeOut() {
-        _timeOut = new ScheduledAction(Timeout, period: 50, useOnce: true);
-        Scheduler.Inst.AddAction(_timeOut);
-      }
-
-      void _startMoveListener() {
-        _pos = _con.GetPosition();
-        _scheduleCallback(new ScheduledAction(_checkPosition, period: 10));
-      }
-
-      void _setFailureState(FailReason state) {
-        FailureState = state;
-        _scheduleCallback(new ScheduledAction(() => FailureState = FailReason.None, period: 500, useOnce: true));
-      }
-
-      void _checkPosition() {
-        if ((_con.GetPosition() - _pos.Value).LengthSquared() > DECO_DISTANCE_SQUARED) {
-          CancelByClient();
-        }
-      }
-
-      void _checkConnection() {
-        if (_con.Status != MyShipConnectorStatus.Connected) {
-          State = ConnectionState.Ready;
-          _setFailureState(FailReason.User);
-        }
-      }
-
-      void _scheduleCallback(ScheduledAction callback) {
-        _callbacks.Add(callback);
-        Scheduler.Inst.AddAction(callback);
-      }
-
-      void _addCommands(CmdLine command) {
-        command.AddCmd(new Cmd(
-          "ac-connect", "Requests for an auto connection",
-          _ => Connect(),
-          detailedHelp: $@"Picks a random connector on the grid and requests for its connection
-It will broadcast on the channel '{_srvChannel}'",
-          maxArgs: 0
-          ));
-        command.AddCmd(new Cmd(
-          "ac-disconnect", "Requests for disconnection",
-          _ => Disconnect(),
-          detailedHelp: $@"Disconnects a connected connector and notifies of the disconnection
-It will broadcast on the channel '{_srvChannel}'",
-          maxArgs: 0
-          ));
-        command.AddCmd(new Cmd(
-          "ac-switch", "Requests for connection/disconnection",
-          _ => Switch(),
-          detailedHelp: $@"Depending on whether it is connected or not:
-It will request a disconnection or a connection
-It will broadcast on the channel '{_srvChannel}'",
-          maxArgs: 0
-          ));
-      }
-
-      void _registerListener(string channel, out IMyUnicastListener listener) {
-        listener = _igc.UnicastListener;
-        _cmd.AddCmd(new Cmd("ac-progress", "Connection progress", s => Progress(s[0]), minArgs: 1, maxArgs: 1));
-        _cmd.AddCmd(new Cmd("ac-done", "When the request is done", _ => Done(), maxArgs: 0));
-        _cmd.AddCmd(new Cmd("ac-cancel", "When the request has been cancelled", _ => CancelByServer(), maxArgs: 0));
-        _cmd.AddCmd(new Cmd("ac-ko", "When the request failed", _ => KO(), maxArgs: 0));
-        Scheduler.Inst.AddAction(new ScheduledAction(_listenServer, period: 5));
-      }
-
-      static void SerializeVector(Vector3D v, CmdSerializer com) {
-        com.AddArg(v.X);
-        com.AddArg(v.Y);
-        com.AddArg(v.Z);
+      ini.Add(this);
+      Read(ini);
+      _addCmds(cmd);
+      ScheduleOnSave(_save);
+      if (ini.ContainsKey(SECTION, "state")) {
+        ConnectionState state;
+        Enum.TryParse(ini.Get(SECTION, "state").ToString(), out state);
+        State = state;
       }
     }
+
+    public void Read(Ini ini) {
+      _con = _gts.GetBlockWithName(ini.GetThrow(SECTION, "connector-name").ToString()) as IMyShipConnector;
+      _srvChannel = ini.GetThrow(SECTION, "server-channel").ToString();
+      ClientChannel = ini.GetThrow(SECTION, "client-channel").ToString();
+    }
+
+    public bool ShouldHandbrake() => BRAKE_STATES.Contains(_state);
+
+    // Client events
+    void _connect() {
+      if (State != ConnectionState.Connected) {
+        State = ConnectionState.WaitingCon;
+        _sendCon();
+      }
+    }
+    void _deco() {
+      if (State == ConnectionState.WaitingCon || State == ConnectionState.Standby) {
+        State = ConnectionState.Ready;
+        _setFR(FailReason.Cancellation);
+        _sendDisc();
+      } else if (State == ConnectionState.Connected) {
+        State = ConnectionState.WaitingDisc;
+        _sendDisc();
+      }
+    }
+    void _switch() {
+      if (State == ConnectionState.Connected)
+        _deco();
+      else
+        _connect();
+    }
+
+    // Self events
+    void _clientCancel() {
+      State = ConnectionState.Ready;
+      _setFR(FailReason.Cancellation);
+      _sendDisc();
+    }
+    void _timeout() {
+      if (State == ConnectionState.WaitingCon || State == ConnectionState.WaitingDisc) {
+        State = ConnectionState.Ready;
+        _setFR(FailReason.Timeout);
+      }
+    }
+
+    // Server events
+    void _serverCancel() {
+      CancelCallback();
+      if (State == ConnectionState.Connected || State == ConnectionState.WaitingCon) {
+        State = ConnectionState.Standby;
+      } else if (State != ConnectionState.Ready) {
+        State = ConnectionState.Ready;
+        _setFR(FailReason.Failure);
+      }
+    }
+    void _progress(string p) {
+      if (State == ConnectionState.WaitingCon
+          || State == ConnectionState.WaitingDisc
+          || State == ConnectionState.Standby) {
+        if(State == ConnectionState.Standby)
+          State = ConnectionState.WaitingCon;
+        float pf = 0;
+        if(float.TryParse(p, out pf)) {
+          Progress = pf;
+          _timeOut?.ResetCounter();
+        }
+      }
+    }
+    void _done() {
+      if (State == ConnectionState.WaitingCon)
+        State = ConnectionState.Connected;
+      else if (State == ConnectionState.WaitingDisc)
+        State = ConnectionState.Ready;
+      StopCallback(State == ConnectionState.Connected ? "Connected" : "Disconnected");
+    }
+    void _reconnect() {
+      if (State == ConnectionState.Standby)
+        State = ConnectionState.WaitingCon;
+    }
+      void _ko() {
+      CancelCallback();
+      State = ConnectionState.Ready;
+      _setFR(FailReason.Failure);
+    }
+    // helpers
+    void _save(MyIni ini) {
+      ini.Set(SECTION, "client-channel", ClientChannel);
+      ini.Set(SECTION, "connector-name", _con.DisplayNameText);
+      ini.Set(SECTION, "server-channel", _srvChannel);
+      ini.Set(SECTION, "state", State.ToString());
+    }
+    void _setState(ConnectionState state) {
+      _state = state;
+      _clrCallbacks();
+      if(_state == ConnectionState.Connected)
+        _schedule(new ScheduledAction(_checkCon, 10, false, "cc-checkcon"));
+      else if(_state == ConnectionState.Standby)
+        _startMoveListener();
+      else if(_state == ConnectionState.WaitingCon) {
+        _startTimeOut();
+        _startMoveListener();
+      } else if(_state == ConnectionState.WaitingDisc)
+        _startTimeOut();
+    }
+
+    void _sendCon() {
+      var com = new CmdSerializer("ac-con").AddArg(_con.CubeGrid.GridSizeEnum).AddArg(ClientChannel);
+      AddVector(_con.GetPosition(), com);
+      AddVector(_con.WorldMatrix.Forward, com);
+      _igc.SendBroadcastMessage(_srvChannel, com.ToString());
+    }
+
+    void _sendDisc() => _igc.SendBroadcastMessage(_srvChannel, new CmdSerializer("ac-disc").AddArg(ClientChannel).ToString());
+
+    void _listen() {
+      if (_srvListener.HasPendingMessage)
+        _cmd.HandleCmd(_srvListener.AcceptMessage().As<string>(), CmdTrigger.Cmd);
+    }
+
+    void _clrCallbacks() {
+      Progress = 0;
+      FailReason = FailReason.None;
+      _pos = null;
+
+      _callbacks.ForEach(a => a.Dispose());
+      _callbacks.Clear();
+
+      _timeOut?.Dispose();
+      _timeOut = null;
+    }
+
+    void _startTimeOut() {
+      _timeOut = new ScheduledAction(_timeout, 50, true, "cc-timeout");
+      Schedule(_timeOut);
+    }
+
+    void _startMoveListener() {
+      _pos = _con.GetPosition();
+      _schedule(new ScheduledAction(_checkPos, 10, false, "cc-movelistener"));
+    }
+
+    void _setFR(FailReason state) {
+      FailReason = state;
+      _schedule(new ScheduledAction(() => FailReason = FailReason.None, 500, true, "cc-failreset"));
+    }
+
+    void _checkPos() {
+      if ((_con.GetPosition() - _pos.Value).LengthSquared() > DECO_DISTANCE_SQUARED)
+        _clientCancel();
+    }
+
+    void _checkCon() {
+      if (_con.Status != MyShipConnectorStatus.Connected) {
+        State = ConnectionState.Ready;
+        _setFR(FailReason.User);
+      }
+    }
+
+    void _schedule(ScheduledAction cb) {
+      _callbacks.Add(cb);
+      Schedule(cb);
+    }
+
+    void _addCmds(CmdLine cmd) {
+      cmd.AddCmd(new Cmd("ac-connect", "Requests for an auto connection", (_, c) => StartJob(_connect, c), nArgs: 0 ));
+      cmd.AddCmd(new Cmd("ac-disconnect", "Requests for disconnection", (_, c) => StartJob(_deco, c), nArgs: 0));
+      cmd.AddCmd(new Cmd("ac-switch", "Requests for connection/disconnection", (_, c) => StartJob(_switch, c),  nArgs: 0));
+    }
+
+    static void AddVector(Vector3D v, CmdSerializer com) => com.AddArg(v.X).AddArg(v.Y).AddArg(v.Z);
   }
+}
 }

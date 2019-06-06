@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -33,8 +33,8 @@ namespace IngameScript {
 
       public DoorManager(MyGridProgram program) {
         Scan(program);
-        Scheduler.Inst.AddAction(new ScheduledAction(() => Scan(program), period: 431));
-        Scheduler.Inst.AddAction(_handleDoors);
+        Schedule(new ScheduledAction(() => Scan(program), period: 431));
+        Schedule(_handleDoors);
       }
 
       public void Scan(MyGridProgram program) {
@@ -57,7 +57,7 @@ namespace IngameScript {
           }
         }
         _doors.AddRange(_tmpSases.Values);
-        Logger.Inst.Log($"Found {_doors.Count} doors and {_sases.Count} sases");
+        Log($"Found {_doors.Count} doors and {_sases.Count} sases");
 
         _tmpSases.Clear();
       }
@@ -66,8 +66,8 @@ namespace IngameScript {
         foreach(var door in _doors) {
           if (door.OpenRatio > 0) {
             if (!_handledDoors.Contains(door.EntityId)) {
-              Logger.Inst.Log($"Will close door {door.DisplayNameText}");
-              Scheduler.Inst.AddAction(new ScheduledAction(() => _closeDoor(door), period: TIME_TO_CLOSE, useOnce: true));
+              Log($"Will close door {door.DisplayNameText}");
+              Schedule(new ScheduledAction(() => _closeDoor(door), period: TIME_TO_CLOSE, useOnce: true));
               _handledDoors.Add(door.EntityId);
             }
           }
@@ -75,10 +75,10 @@ namespace IngameScript {
         foreach(var sas in _sases) {
           if (sas.IsOpen()) {
             if (!_handledSases.Contains(sas.Name)) {
-              Logger.Inst.Log($"Will close sas {sas.Name}");
+              Log($"Will close sas {sas.Name}");
               sas.Lock();
               _handledSases.Add(sas.Name);
-              Scheduler.Inst.AddAction(new ScheduledAction(() => _closeSas(sas), period: TIME_TO_CLOSE, useOnce: true));
+              Schedule(new ScheduledAction(() => _closeSas(sas), period: TIME_TO_CLOSE, useOnce: true));
             }
           }
         }
@@ -86,12 +86,12 @@ namespace IngameScript {
 
       private void _closeDoor(IMyDoor door) {
         door.CloseDoor();
-        Scheduler.Inst.AddAction(new ScheduledAction(() => _handledDoors.Remove(door.EntityId), period: GRACE_PERIOD, useOnce: true));
+        Schedule(new ScheduledAction(() => _handledDoors.Remove(door.EntityId), period: GRACE_PERIOD, useOnce: true));
       }
 
       private void _closeSas(Sas sas) {
         sas.Close();
-        Scheduler.Inst.AddAction(new ScheduledAction(() => _unlockSas(sas), period: GRACE_PERIOD, useOnce: true));
+        Schedule(new ScheduledAction(() => _unlockSas(sas), period: GRACE_PERIOD, useOnce: true));
       }
 
       private void _unlockSas(Sas sas) {

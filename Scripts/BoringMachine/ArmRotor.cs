@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -18,28 +18,24 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
 namespace IngameScript {
-  partial class Program {
-    public class ArmRotor {
-      public float Angle => _reversed ? -_rotor.Angle : _rotor.Angle;
-      public bool IsMoving => _rotor.TargetVelocityRad != 0;
+partial class Program {
+  public class ArmRotor {
+    public float Angle => _rev ? -_rot.Angle : _rot.Angle;
+    public float Max => _rev ? -_rot.LowerLimitRad : _rot.UpperLimitRad;
+    public float Min => _rev ? -_rot.UpperLimitRad : _rot.LowerLimitRad;
 
-      private readonly IMyMotorStator _rotor;
-      private readonly bool _reversed;
+    readonly IMyMotorStator _rot;
+    readonly bool _rev;
 
-      public ArmRotor(IMyMotorStator rotor, bool reversed) {
-        _rotor = rotor;
-        _reversed = reversed;
-      }
+    public ArmRotor(IMyMotorStator rotor, bool reversed) {
+      _rot = rotor;
+      _rev = reversed;
+    }
 
-      public void Move(float speed) {
-        _rotor.TargetVelocityRad = speed * (_reversed ? -0.1f : 0.1f);
-        _rotor.Enabled = true;
-      }
-
-      public void Stop() {
-        _rotor.TargetVelocityRad = 0f;
-        _rotor.Enabled = false;
-      }
+    public void Move(float speed) {
+      _rot.TargetVelocityRad = speed * (_rev ? -0.1f : 0.1f);
+      _rot.Enabled = true;
     }
   }
+}
 }
