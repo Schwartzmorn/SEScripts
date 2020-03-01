@@ -3,14 +3,12 @@
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <HasSharedItems>true</HasSharedItems>
-    <SharedGUID>61eba249-19f3-48b6-a25b-a4cee90168ba</SharedGUID>
+    <SharedGUID>36bd6759-585c-48a3-8b56-339b6048574a</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>IngameScript</Import_RootNamespace>
+    <Import_RootNamespace>TestRunner</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)IScheduler.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Process.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Scheduler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TestRunner.cs" />
   </ItemGroup>
 </Project>

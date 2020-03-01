@@ -57,11 +57,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoringMachineAuxillary", "S
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MDK-Mockups", "..\MDK-Mockups\MDK-Mockups.shproj", "{33863C91-80F6-4ABC-A735-3934A61D494C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestNewScript", "TestScripts\TestNewScript\TestNewScript.csproj", "{4BFA8FDB-36F0-4C13-8932-B09C4DF2D9DE}"
-EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Process", "Mixins\Process\Process.shproj", "{3987597C-1F14-41BB-85D8-7141773EECE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IngameScript1", "IngameScript1\IngameScript1.csproj", "{CE0E418B-DC57-43E3-BFFA-C770971D1317}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{D48E986A-21D4-4B43-85F1-5051E72BBDB3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProcessTest", "UnitTests\ProcessTest\ProcessTest.csproj", "{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{641D1534-C26C-4B35-8528-09A51E3DB56A}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TestRunner", "UnitTests\TestRunner\TestRunner.shproj", "{36BD6759-585C-48A3-8B56-339B6048574A}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -77,6 +81,7 @@ Global
 		Mixins\Scheduler\Scheduler.projitems*{1d3616c7-bcbc-4720-a28a-514a4128aab0}*SharedItemsImports = 13
 		Mixins\WheelsController\WheelsController.projitems*{1fbc1400-6bb0-4b9e-a98f-4fe90dcea2c9}*SharedItemsImports = 13
 		..\MDK-Mockups\MDK-Mockups.projitems*{33863c91-80f6-4abc-a735-3934a61d494c}*SharedItemsImports = 13
+		UnitTests\TestRunner\TestRunner.projitems*{36bd6759-585c-48a3-8b56-339b6048574a}*SharedItemsImports = 13
 		Mixins\Process\Process.projitems*{3987597c-1f14-41bb-85d8-7141773eece0}*SharedItemsImports = 13
 		Mixins\AutoHandbrake\AutoHandbrake.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
 		Mixins\AutoRoutine\AutoRoutine.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
@@ -120,6 +125,8 @@ Global
 		Mixins\Item\Item.projitems*{8ca46b0b-4b6e-44de-8f23-0540e977da88}*SharedItemsImports = 13
 		Mixins\Autopilot\Autopilot.projitems*{bdb8d540-249b-4c93-b6e5-70fde3287356}*SharedItemsImports = 13
 		Mixins\AutoRoutine\AutoRoutine.projitems*{c9ab9d6a-925b-4edd-89db-d6f399fe3f83}*SharedItemsImports = 13
+		Mixins\Process\Process.projitems*{d4fe2ac0-ec0c-4071-ba4f-262213c954d2}*SharedItemsImports = 4
+		UnitTests\TestRunner\TestRunner.projitems*{d4fe2ac0-ec0c-4071-ba4f-262213c954d2}*SharedItemsImports = 4
 		Mixins\ConnectionClient\ConnectionClient.projitems*{dca9d508-08e7-4c3f-8365-b2cf430f9b7a}*SharedItemsImports = 13
 		Mixins\Logger\Logger.projitems*{f42323f0-faf9-49ec-ad2a-1b1e333cf8b7}*SharedItemsImports = 13
 	EndGlobalSection
@@ -197,20 +204,13 @@ Global
 		{3F759B04-5B9E-46C4-8143-F1AEED9EDF1C}.Release|Any CPU.Build.0 = Debug|x64
 		{3F759B04-5B9E-46C4-8143-F1AEED9EDF1C}.Release|x64.ActiveCfg = Debug|x64
 		{3F759B04-5B9E-46C4-8143-F1AEED9EDF1C}.Release|x64.Build.0 = Debug|x64
-		{4BFA8FDB-36F0-4C13-8932-B09C4DF2D9DE}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{4BFA8FDB-36F0-4C13-8932-B09C4DF2D9DE}.Debug|x64.ActiveCfg = Debug|x64
-		{4BFA8FDB-36F0-4C13-8932-B09C4DF2D9DE}.Debug|x64.Build.0 = Debug|x64
-		{4BFA8FDB-36F0-4C13-8932-B09C4DF2D9DE}.Release|Any CPU.ActiveCfg = Debug|x64
-		{4BFA8FDB-36F0-4C13-8932-B09C4DF2D9DE}.Release|Any CPU.Build.0 = Debug|x64
-		{4BFA8FDB-36F0-4C13-8932-B09C4DF2D9DE}.Release|x64.ActiveCfg = Debug|x64
-		{4BFA8FDB-36F0-4C13-8932-B09C4DF2D9DE}.Release|x64.Build.0 = Debug|x64
-		{CE0E418B-DC57-43E3-BFFA-C770971D1317}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{CE0E418B-DC57-43E3-BFFA-C770971D1317}.Debug|x64.ActiveCfg = Debug|x64
-		{CE0E418B-DC57-43E3-BFFA-C770971D1317}.Debug|x64.Build.0 = Debug|x64
-		{CE0E418B-DC57-43E3-BFFA-C770971D1317}.Release|Any CPU.ActiveCfg = Debug|x64
-		{CE0E418B-DC57-43E3-BFFA-C770971D1317}.Release|Any CPU.Build.0 = Debug|x64
-		{CE0E418B-DC57-43E3-BFFA-C770971D1317}.Release|x64.ActiveCfg = Debug|x64
-		{CE0E418B-DC57-43E3-BFFA-C770971D1317}.Release|x64.Build.0 = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Debug|x64.ActiveCfg = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Debug|x64.Build.0 = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|Any CPU.ActiveCfg = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|Any CPU.Build.0 = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|x64.ActiveCfg = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -238,9 +238,10 @@ Global
 		{8CA46B0B-4B6E-44DE-8F23-0540E977DA88} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{C9AB9D6A-925B-4EDD-89DB-D6F399FE3F83} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{3F759B04-5B9E-46C4-8143-F1AEED9EDF1C} = {2963E9C9-840E-4B5C-B85D-CDE5F8859F0E}
-		{4BFA8FDB-36F0-4C13-8932-B09C4DF2D9DE} = {C746D2D5-0B4E-4FA0-B56E-609D6BEC0133}
 		{3987597C-1F14-41BB-85D8-7141773EECE0} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
-		{CE0E418B-DC57-43E3-BFFA-C770971D1317} = {C746D2D5-0B4E-4FA0-B56E-609D6BEC0133}
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
+		{641D1534-C26C-4B35-8528-09A51E3DB56A} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
+		{36BD6759-585C-48A3-8B56-339B6048574A} = {641D1534-C26C-4B35-8528-09A51E3DB56A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4B1EACEE-0472-40F0-8708-5BDC579549E2}

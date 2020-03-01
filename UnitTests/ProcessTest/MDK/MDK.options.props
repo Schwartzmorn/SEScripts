@@ -9,10 +9,11 @@
       <Enabled>no</Enabled>
     </MDKTrimTypes>
     <MDKMinify>
-      <Level>StripComments</Level>
+      <Level>None</Level>
     </MDKMinify>
     <MDKIgnore>
       <Folder>mdk</Folder>
     </MDKIgnore>
+    <MDKExcludeFromDeployAll />
   </PropertyGroup>
 </Project>
