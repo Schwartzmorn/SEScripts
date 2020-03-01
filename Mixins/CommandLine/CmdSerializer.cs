@@ -17,12 +17,17 @@ using VRage.Game;
 using VRageMath;
 
 namespace IngameScript {
-partial class Program {
-public class CmdSerializer {
-readonly StringBuilder _b;
-public CmdSerializer(string command) { _b = new StringBuilder($"-{command}"); }
-public CmdSerializer AddArg(object i) { _b.Append($" \"{i.ToString()}\""); return this; }
-public override string ToString() => _b.ToString();
-}
-}
+  partial class Program {
+    public class CmdSerializer {
+      readonly StringBuilder builder;
+      public CmdSerializer(string command) {
+        this.builder = new StringBuilder($"-{command}");
+      }
+      public CmdSerializer AddArg(object i) {
+        this.builder.Append($" \"{i.ToString()}\"");
+        return this;
+      }
+      public override string ToString() => this.builder.ToString();
+    }
+  }
 }

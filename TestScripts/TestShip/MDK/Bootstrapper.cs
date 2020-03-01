@@ -16,6 +16,7 @@ namespace IngameScript.MDK {
       // your script uses from the game, since they're not available outside of the game.
 
       // Create and configure the desired program.
+      System.Func<MDKFactory.ProgramConfig, Program> p = MDKFactory.CreateProgram<Program>;
       var program = MDKFactory.CreateProgram<Program>();
       MDKFactory.Run(program);
     }
