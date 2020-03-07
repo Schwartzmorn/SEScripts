@@ -17,7 +17,7 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program : MyGridProgram {
-    CoordsTransformer _ct;
+    CoordinatesTransformer _ct;
     IMyProgrammableBlock _b;
     int counter = 0;
 

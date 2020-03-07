@@ -17,10 +17,11 @@ using VRage.Game;
 using VRageMath;
 
 namespace IngameScript {
-public enum ItemType { Unknown = 0, Ammo, Component, Hydrogen, Ingot, Ore, Oxygen, Tool };
+  /// <summary>Enum more convenient to handle for the object main type</summary>
+  public enum ItemType { Unknown = 0, Ammo, Component, Hydrogen, Ingot, Ore, Oxygen, Tool };
 
-static class Item {
-  static readonly Dictionary<string, ItemType> TYPES = new Dictionary<string, ItemType> {
+  static class Item {
+    static readonly Dictionary<string, ItemType> TYPES = new Dictionary<string, ItemType> {
     { "MyObjectBuilder_AmmoMagazine", ItemType.Ammo },
     { "MyObjectBuilder_Component", ItemType.Component },
     { "MyObjectBuilder_GasContainerObject", ItemType.Hydrogen },
@@ -29,11 +30,17 @@ static class Item {
     { "MyObjectBuilder_OxygenContainerObject", ItemType.Oxygen },
     { "MyObjectBuilder_PhysicalGunObject", ItemType.Tool }
   };
-  public static ItemType GetItemType(this MyInventoryItem item) {
-    ItemType res;
-    TYPES.TryGetValue(item.Type.TypeId, out res);
-    return res;
+    /// <summary>Returns the main type of the item, as an <see cref="ItemType"/></summary>
+    /// <param name="item">This</param>
+    /// <returns>The item type</returns>
+    public static ItemType GetItemType(this MyInventoryItem item) {
+      ItemType res;
+      TYPES.TryGetValue(item.Type.TypeId, out res);
+      return res;
+    }
+    /// <summary>Returns the actual type of the object</summary>
+    /// <param name="item">This</param>
+    /// <returns>The type, as a string</returns>
+    public static string GetItemSubype(this MyInventoryItem item) => item.Type.SubtypeId;
   }
-  public static string GetItemSubype(this MyInventoryItem item) => item.Type.SubtypeId;
-}
 }

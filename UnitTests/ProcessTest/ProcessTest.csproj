@@ -5,6 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}</ProjectGuid>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Exe</OutputType>
     <RootNamespace>IngameScript</RootNamespace>
     <AssemblyName>ProcessTest</AssemblyName>
@@ -47,11 +48,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AdditionalFiles>
     <Compile Include="MDK\ProcessTest.cs" />
-    <Compile Include="MDK\SchedulerTest.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="MDK\ProcessManagerTest.cs" />
+    <Compile Include="ProcessTestMain.cs" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
   </ItemGroup>
-  <Import Project="..\TestRunner\TestRunner.projitems" Label="Shared" />
+  <Import Project="..\Common\TestRunner\TestRunner.projitems" Label="Shared" />
   <Import Project="..\..\Mixins\Process\Process.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">

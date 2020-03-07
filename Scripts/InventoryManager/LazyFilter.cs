@@ -19,13 +19,14 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program {
+    /// <summary>Class that ensures a filter is only run once per tick.</summary>
     public abstract class LazyFilter {
-      private int _lastFilter = -1;
+      private int lastFilter = -1;
 
       protected void FilterLazily() {
-        if (GLOBAL_COUNTER != _lastFilter) {
-          _lastFilter = GLOBAL_COUNTER;
-          Filter();
+        if (GLOBAL_COUNTER != this.lastFilter) {
+          this.lastFilter = GLOBAL_COUNTER;
+          this.Filter();
         }
       }
 

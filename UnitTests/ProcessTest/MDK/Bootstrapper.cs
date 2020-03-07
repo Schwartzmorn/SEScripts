@@ -11,7 +11,7 @@ namespace IngameScript.MDK {
     public static void Main() {
       var runner = new TestRunner.TestRunner();
       runner.AddTest(new ProcessTest());
-      runner.AddTest(new SchedulerTest());
+      runner.AddTest(new ProcessManagerTest());
       runner.RunTests();
     }
   }

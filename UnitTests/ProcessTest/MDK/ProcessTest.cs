@@ -9,16 +9,20 @@ namespace IngameScript.MDK {
   class ProcessTest {
 
     public class MockAction {
-      public int CallCount { get; private set; } = 0;
-      readonly Action action;
-      public MockAction(Action action = null) {
+      readonly List<Program.Process> calls = new List<Program.Process>();
+      readonly List<Program.ProcessResult> callResults = new List<Program.ProcessResult>();
+      public int CallCount => this.calls.Count;
+      readonly Action<Program.Process> action;
+      public MockAction(Action<Program.Process> action = null) {
         this.action = action;
       }
-      public void Action() {
-        ++this.CallCount;
-        this.action?.Invoke();
+      public void Action(Program.Process res) {
+        this.calls.Add(res);
+        this.callResults.Add(res.Result);
+        this.action?.Invoke(res);
       }
       public bool Called => this.CallCount > 0;
+      public Program.ProcessResult GetCallResult(int i) => this.callResults[i];
     };
 
     public class MockActionProcess {
@@ -32,22 +36,23 @@ namespace IngameScript.MDK {
         this.calls.Add(p);
         this.action?.Invoke();
       }
-      public Program.Process GetCall(int i) => this.calls[i];
       public bool Called => this.CallCount > 0;
+      public Program.Process GetCall(int i) => this.calls[i];
     };
 
-    private void tick() => Program.SCHEDULER.Tick();
+    private void tick() => this.manager.Tick();
+
+    private Program.IProcessManager manager;
 
     public void BeforeEach() {
-      Program.SCHEDULER.KillAll();
-      Program.SCHEDULER.SetSmart(false);
-      Program.SCHEDULER.Tick();
+      this.manager = Program.Process.CreateManager(null);
+      this.manager.SetSmart(false);
     }
 
     public void ProcessBasicDone() {
       var mock = new MockActionProcess();
       var mockDone = new MockAction();
-      var p = Program.SCHEDULER.Spawn(mock.Action, onDone: mockDone.Action);
+      var p = this.manager.Spawn(mock.Action, onDone: mockDone.Action);
 
       this.tick();
       p.Done();
@@ -61,12 +66,13 @@ namespace IngameScript.MDK {
 
       p.Done();
       Assert.AreEqual(1, mockDone.CallCount);
+      Assert.AreEqual(Program.ProcessResult.OK, mockDone.GetCallResult(0));
     }
 
     public void ProcessBasicKill() {
       var mock = new MockActionProcess();
       var mockKill = new MockAction();
-      var p = Program.SCHEDULER.Spawn(mock.Action, onInterrupt: mockKill.Action);
+      var p = this.manager.Spawn(mock.Action, onDone: mockKill.Action);
 
       Assert.IsTrue(p.Active, "A newly created process is active");
       Assert.AreEqual(0, p.Counter);
@@ -86,6 +92,7 @@ namespace IngameScript.MDK {
 
       Assert.IsFalse(p.Active, "Once killed, a process is no longer active");
       Assert.AreEqual(1, mockKill.CallCount);
+      Assert.AreEqual(Program.ProcessResult.KILLED, mockKill.GetCallResult(0));
 
       this.tick();
 
@@ -97,7 +104,7 @@ namespace IngameScript.MDK {
 
     public void Period() {
       var mock = new MockActionProcess();
-      var p = Program.SCHEDULER.Spawn(mock.Action, period: 3);
+      var p = this.manager.Spawn(mock.Action, period: 3);
 
       this.tick();
       this.tick();
@@ -114,7 +121,7 @@ namespace IngameScript.MDK {
     public void UseOnce() {
       var mock = new MockActionProcess();
       var mockDone = new MockAction();
-      var p = Program.SCHEDULER.Spawn(mock.Action, period: 3, useOnce: true, onDone: mockDone.Action);
+      var p = this.manager.Spawn(mock.Action, period: 3, useOnce: true, onDone: mockDone.Action);
 
       this.tick();
       this.tick();
@@ -131,7 +138,7 @@ namespace IngameScript.MDK {
 
     public void DoneBeforeChildrenUseOnce() {
       var mockDone = new MockAction();
-      var p = Program.SCHEDULER.Spawn(null, useOnce: true, onDone: mockDone.Action);
+      var p = this.manager.Spawn(null, useOnce: true, onDone: mockDone.Action);
       var mockChild = new MockActionProcess();
       var mockDoneChild = new MockAction();
       var child = p.Spawn(mockChild.Action, period: 3, useOnce: true, onDone: mockDoneChild.Action);
@@ -156,12 +163,13 @@ namespace IngameScript.MDK {
       Assert.AreEqual(child, mockChild.GetCall(0), "The action is called with the child process as argument");
       Assert.IsFalse(child.Active);
       Assert.IsTrue(mockDone.Called);
+      Assert.AreEqual(Program.ProcessResult.OK, mockDone.GetCallResult(0));
       Assert.IsTrue(mockDoneChild.Called);
     }
 
     public void DoneBeforeChildren() {
       var mockDone = new MockAction();
-      var p = Program.SCHEDULER.Spawn(null, onDone: mockDone.Action);
+      var p = this.manager.Spawn(null, onDone: mockDone.Action);
       var mockChild = new MockActionProcess();
       var child1 = p.Spawn(mockChild.Action);
       var child2 = p.Spawn(null);
@@ -187,13 +195,14 @@ namespace IngameScript.MDK {
       child1.Done();
 
       Assert.IsTrue(mockDone.Called);
+      Assert.AreEqual(Program.ProcessResult.OK, mockDone.GetCallResult(0));
       Assert.AreEqual(3, mockChild.CallCount);
       Assert.IsFalse(child1.Active);
     }
 
     public void DoneAfterChildren() {
       var mockDone = new MockAction();
-      var p = Program.SCHEDULER.Spawn(null, onDone: mockDone.Action);
+      var p = this.manager.Spawn(null, onDone: mockDone.Action);
       var mockDoneChild = new MockAction();
       var child = p.Spawn(null, onDone: mockDoneChild.Action);
 
@@ -217,12 +226,11 @@ namespace IngameScript.MDK {
     }
 
     public void KillChildren() {
-      var mockKill = new MockAction();
       var mockDone = new MockAction();
-      var p = Program.SCHEDULER.Spawn(null, onDone: mockDone.Action, onInterrupt: mockKill.Action);
-      var child1 = p.Spawn(null, onDone: mockDone.Action, onInterrupt: mockKill.Action);
-      var child2 = p.Spawn(null, onDone: mockDone.Action, onInterrupt: mockKill.Action);
-      var grandChild = child1.Spawn(null, onDone: mockDone.Action, onInterrupt: mockKill.Action);
+      var p = this.manager.Spawn(null, onDone: mockDone.Action);
+      var child1 = p.Spawn(null, onDone: mockDone.Action);
+      var child2 = p.Spawn(null, onDone: mockDone.Action);
+      var grandChild = child1.Spawn(null, onDone: mockDone.Action);
 
       p.Kill();
 
@@ -230,36 +238,36 @@ namespace IngameScript.MDK {
       Assert.IsFalse(child1.Active);
       Assert.IsFalse(child2.Active);
       Assert.IsFalse(grandChild.Active);
-      Assert.AreEqual(4, mockKill.CallCount);
-      Assert.IsFalse(mockDone.Called);
+      Assert.AreEqual(4, mockDone.CallCount);
+      foreach(var i in Enumerable.Range(0, 4)) {
+        Assert.AreEqual(Program.ProcessResult.KILLED, mockDone.GetCallResult(i));
+      }
     }
 
     public void DoneAfterChildrenKilled() {
-      var mockKill = new MockAction();
       var mockDone = new MockAction();
-      var p = Program.SCHEDULER.Spawn(null, onDone: mockDone.Action, onInterrupt: mockKill.Action);
-      var child = p.Spawn(null, onDone: mockDone.Action, onInterrupt: mockKill.Action);
+      var p = this.manager.Spawn(null, onDone: mockDone.Action);
+      var child = p.Spawn(null, onDone: mockDone.Action);
 
       child.Kill();
 
       Assert.IsTrue(p.Active);
       Assert.IsFalse(child.Alive);
-      Assert.AreEqual(1, mockKill.CallCount);
-      Assert.IsFalse(mockDone.Called);
+      Assert.AreEqual(1, mockDone.CallCount);
+      Assert.AreEqual(Program.ProcessResult.KILLED, mockDone.GetCallResult(0));
 
       p.Done();
 
       Assert.IsFalse(p.Alive);
       Assert.IsFalse(child.Alive);
-      Assert.AreEqual(1, mockKill.CallCount);
-      Assert.AreEqual(1, mockDone.CallCount);
+      Assert.AreEqual(2, mockDone.CallCount);
+      Assert.AreEqual(Program.ProcessResult.OK, mockDone.GetCallResult(1));
     }
 
     public void DoneBeforeChildrenKilled() {
-      var mockKill = new MockAction();
       var mockDone = new MockAction();
-      var p = Program.SCHEDULER.Spawn(null, onDone: mockDone.Action, onInterrupt: mockKill.Action);
-      var child = p.Spawn(null, onDone: mockDone.Action, onInterrupt: mockKill.Action);
+      var p = this.manager.Spawn(null, onDone: mockDone.Action);
+      var child = p.Spawn(null, onDone: mockDone.Action);
 
       p.Done();
 
@@ -267,18 +275,18 @@ namespace IngameScript.MDK {
       Assert.IsTrue(p.Alive);
       Assert.IsTrue(child.Active);
       Assert.IsFalse(mockDone.Called);
-      Assert.IsFalse(mockKill.Called);
 
       child.Kill();
 
       Assert.IsFalse(p.Alive);
       Assert.IsFalse(child.Alive);
-      Assert.AreEqual(1, mockKill.CallCount);
-      Assert.AreEqual(1, mockDone.CallCount);
+      Assert.AreEqual(2, mockDone.CallCount);
+      Assert.AreEqual(Program.ProcessResult.KILLED, mockDone.GetCallResult(0));
+      Assert.AreEqual(Program.ProcessResult.OK, mockDone.GetCallResult(1));
     }
 
     public void ResetCounter() {
-      var p = Program.SCHEDULER.Spawn(null, period: 10);
+      var p = this.manager.Spawn(null, period: 10);
 
       p.ResetCounter(5);
 
@@ -294,9 +302,9 @@ namespace IngameScript.MDK {
     }
 
     public void KillWithChildInError() {
-      var mockKill = new MockAction(() => { throw new NotImplementedException(); } );
-      var p = Program.SCHEDULER.Spawn(null, onInterrupt: mockKill.Action);
-      var child1 = p.Spawn(null, onInterrupt: mockKill.Action);
+      var mockKill = new MockAction((i) => { throw new NotImplementedException(); } );
+      var p = this.manager.Spawn(null, onDone: mockKill.Action);
+      var child1 = p.Spawn(null, onDone: mockKill.Action);
       var child2 = p.Spawn(null);
       var grandChild = child1.Spawn(null);
 
@@ -307,6 +315,33 @@ namespace IngameScript.MDK {
       Assert.IsFalse(child1.Alive);
       Assert.IsFalse(child2.Alive);
       Assert.IsFalse(grandChild.Alive);
+    }
+
+    public void KillGrandChild() {
+      var mock = new MockAction();
+      var p = this.manager.Spawn(null, onDone: mock.Action);
+      var child = p.Spawn(null, onDone: mock.Action);
+      var grandChild = child.Spawn(null, onDone: mock.Action);
+
+      p.Done();
+
+      Assert.IsTrue(p.Alive);
+
+      child.Fail();
+
+      Assert.IsTrue(p.Alive);
+      Assert.IsTrue(child.Alive);
+      Assert.IsFalse(mock.Called);
+
+      grandChild.Kill();
+
+      Assert.IsFalse(p.Alive);
+      Assert.IsFalse(child.Alive);
+      Assert.IsFalse(grandChild.Alive);
+      Assert.AreEqual(3, mock.CallCount);
+      Assert.AreEqual(Program.ProcessResult.KILLED, mock.GetCallResult(0));
+      Assert.AreEqual(Program.ProcessResult.KO, mock.GetCallResult(1));
+      Assert.AreEqual(Program.ProcessResult.OK, mock.GetCallResult(2));
     }
   }
 }

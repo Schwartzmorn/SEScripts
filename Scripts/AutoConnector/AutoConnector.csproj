@@ -53,9 +53,9 @@
     <Compile Include="AutoConnectorMain.cs" />
     <Compile Include="Waypoint.cs" />
   </ItemGroup>
-  <Import Project="..\..\Mixins\CommandLine\CommandLine.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\ZZZCommandLine\CommandLine.projitems" Label="Shared" />
   <Import Project="..\..\Mixins\Logger\Logger.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\Scheduler\Scheduler.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\ZZZScheduler\Scheduler.projitems" Label="Shared" />
   <Import Project="..\..\Mixins\IniHelper\IniHelper.projitems" Label="Shared" />
   <Import Project="..\..\Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

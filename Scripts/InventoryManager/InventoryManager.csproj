@@ -53,15 +53,11 @@
     <AdditionalFiles Include="MDK\MDK.paths.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AdditionalFiles>
-    <Compile Include="Program.cs" />
-    <AdditionalFiles Include="Instructions.readme" />
-    <AdditionalFiles Include="thumb.png" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
     <Compile Include="MetaGrid.cs" />
     <Compile Include="MiscInventoryManager.cs" />
     <Compile Include="RefineryManager.cs" />
   </ItemGroup>
-  <Import Project="..\..\Mixins\Scheduler\Scheduler.projitems" Label="Shared" />
   <Import Project="..\..\Mixins\Logger\Logger.projitems" Label="Shared" />
   <Import Project="..\..\Mixins\Item\Item.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
