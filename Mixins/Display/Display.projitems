@@ -10,6 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Display.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)ShapeCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ShapeCollections.cs" />
   </ItemGroup>
 </Project>

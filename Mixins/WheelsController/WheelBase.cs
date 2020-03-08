@@ -19,37 +19,45 @@ using VRageMath;
 
 namespace IngameScript {
 partial class Program {
+  /// <summary>Class that contains the characteristics of a wheel base, mostly to enable Ackermann steering</summary>
   public class WheelBase {
-    static Vector3D L = new Vector3D(-1, 0, 0);
-    static Vector3D R = new Vector3D(1, 0, 0);
-
-    public double MinZ => _min.Z;
-    public double MaxZ => _max.Z;
+    static Vector3D LEFT = new Vector3D(-1, 0, 0);
+    static Vector3D RIGHT = new Vector3D(1, 0, 0);
+    /// <summary>Minimum Z coordinate of the base (ie most forward)</summary>
+    public double MinZ => this.min.Z;
+    /// <summary>Maximum Z coordinate of the base (ie rearmost)</summary>
+    public double MaxZ => this.max.Z;
+    /// <summary>Z coordinate of the center of turn</summary>
     public double CenterOfTurnZ { get; private set; }
     public double TurnRadius { get; private set; }
     public Vector3D LeftCenterOfTurn { get; private set; }
     public Vector3D RightCenterOfTurn { get; private set; }
 
-    private Vector3D _min = new Vector3D(double.MaxValue, 0, double.MaxValue);
-    private Vector3D _max = new Vector3D(double.MinValue, 0, double.MinValue);
+    Vector3D min = new Vector3D(double.MaxValue, 0, double.MaxValue);
+    Vector3D max = new Vector3D(double.MinValue, 0, double.MinValue);
 
-    public void AddWheel(PowerWheel w) {
-      var p = w.Position;
-      _min.X = Math.Min(p.X, _min.X);
-      _min.Z = Math.Min(p.Z, _min.Z);
-      _max.X = Math.Max(p.X, _max.X);
-      _max.Z = Math.Max(p.Z, _max.Z);
-      CenterOfTurnZ = (_min.Z + _max.Z) / 2;
-      TurnRadius = _max.Z - _min.Z + ((_max.X - _min.X) / 2);
-      LeftCenterOfTurn = ((_min + _max) / 2) + new Vector3D(-TurnRadius, 0, 0);
-      RightCenterOfTurn = ((_min + _max) / 2) + new Vector3D(TurnRadius, 0, 0);
+    /// <summary>Updates the characteristics of the wheel base</summary>
+    /// <param name="wheel">Wheel to add</param>
+    public void AddWheel(PowerWheel wheel) {
+      Vector3D p = wheel.Position;
+      this.min.X = Math.Min(p.X, this.min.X);
+      this.min.Z = Math.Min(p.Z, this.min.Z);
+      this.max.X = Math.Max(p.X, this.max.X);
+      this.max.Z = Math.Max(p.Z, this.max.Z);
+      this.CenterOfTurnZ = (this.min.Z + this.max.Z) / 2;
+      this.TurnRadius = this.max.Z - this.min.Z + ((this.max.X - this.min.X) / 2);
+      this.LeftCenterOfTurn = ((this.min + this.max) / 2) + new Vector3D(-this.TurnRadius, 0, 0);
+      this.RightCenterOfTurn = ((this.min + this.max) / 2) + new Vector3D(this.TurnRadius, 0, 0);
     }
-
+    /// <summary>Based on the characteristics of the wheel base, returns the amount the wheel should turn</summary>
+    /// <param name="wheel">Wheel whose angle we want</param>
+    /// <param name="turnLeft">Whether the wheel is turning left or right</param>
+    /// <returns>The angle, in degrees</returns>
     public float GetAngle(PowerWheel wheel, bool turnLeft) {
-      var delta = (turnLeft ? LeftCenterOfTurn : RightCenterOfTurn) - wheel.Position;
+      Vector3D delta = (turnLeft ? this.LeftCenterOfTurn : this.RightCenterOfTurn) - wheel.Position;
       delta.Y = 0;
       delta = Vector3D.Normalize(delta);
-      return MathHelper.ToDegrees((float)Math.Acos(delta.Dot(turnLeft ? L : R)));
+      return MathHelper.ToDegrees((float)Math.Acos(delta.Dot(turnLeft ? LEFT : RIGHT)));
     }
   }
 }

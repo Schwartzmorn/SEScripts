@@ -14,7 +14,7 @@ namespace IngameScript
       /// <summary>Creates a new transformer</summary>
       /// <param name="block">Reference block, coordinates will then be </param>
       /// <param name="spawner">If present, a <see cref="Process"/> will be spawned to update the transformer each tick</param>
-      public CoordinatesTransformer(IMyTerminalBlock block, IProcessSpawner spawner)
+      public CoordinatesTransformer(IMyTerminalBlock block, IProcessSpawner spawner = null)
       {
         this.reference = block;
         this.update(null);

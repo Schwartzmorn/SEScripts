@@ -11,25 +11,25 @@ partial class Program {
   public enum FailReason { Cancellation, Failure, User, Timeout, None }
 
   public class ConnectionClient: JobProvider, IIniConsumer, IPABraker {
-    static readonly ConnectionState[] BRAKE_STATES = { ConnectionState.Connected, ConnectionState.WaitingCon, ConnectionState.WaitingDisc };
-    const double DECO_DISTANCE_SQUARED = 0.1;
-    const string SECTION = "connection-client";
+    private static readonly ConnectionState[] BRAKE_STATES = { ConnectionState.Connected, ConnectionState.WaitingCon, ConnectionState.WaitingDisc };
+    private const double DECO_DISTANCE_SQUARED = 0.1;
+    private const string SECTION = "connection-client";
 
     public string ClientChannel { get; private set; }
     public float Progress { get; private set; } = 0;
     public ConnectionState State { get { return _state; } private set { _setState(value); } }
     public FailReason FailReason { get; private set; } = FailReason.None;
 
-    readonly List<ScheduledAction> _callbacks = new List<ScheduledAction>(3);
-    readonly CmdLine _cmd = new CmdLine("Connection client listener");
-    IMyShipConnector _con;
-    readonly IMyGridTerminalSystem _gts;
-    readonly IMyIntergridCommunicationSystem _igc;
-    Vector3D? _pos = null;
-    string _srvChannel;
-    readonly IMyUnicastListener _srvListener;
-    ConnectionState _state = ConnectionState.Ready;
-    ScheduledAction _timeOut = null;
+    private readonly List<ScheduledAction> _callbacks = new List<ScheduledAction>(3);
+    private readonly CmdLine _cmd = new CmdLine("Connection client listener");
+    private IMyShipConnector _con;
+    private readonly IMyGridTerminalSystem _gts;
+    private readonly IMyIntergridCommunicationSystem _igc;
+    private Vector3D? _pos = null;
+    private string _srvChannel;
+    private readonly IMyUnicastListener _srvListener;
+    private ConnectionState _state = ConnectionState.Ready;
+    private ScheduledAction _timeOut = null;
 
     public ConnectionClient(Ini ini, MyGridProgram p, CmdLine cmd) {
       _igc = p.IGC;

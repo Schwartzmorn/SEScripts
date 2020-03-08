@@ -24,9 +24,9 @@ namespace IngameScript {
     /// <para>The most important in this class is the <see cref="ActionProvider"/> <see cref="actionProvider"/>:</para>
     /// <para>It is a function that takes the arguments <see cref="List{string}"/> from a parsed command, an optional logger <see cref="Action{string}"/> and returns a <see cref="MyTuple"/> that contains:
     /// <list type="bullet">
-    /// <item>The <see cref="Process.Period"/></item>
-    /// <item>Whether the process is <see cref="Process.UseOnce"/></item>
-    /// <item>The <see cref="Process.action"/></item>
+    ///   <item>The <see cref="Process.Period"/></item>
+    ///   <item>Whether the process is <see cref="Process.UseOnce"/></item>
+    ///   <item>The <see cref="Process.action"/></item>
     /// </list>
     /// </para>
     /// </summary>
@@ -40,14 +40,32 @@ namespace IngameScript {
 
       private readonly List<string> detailedHelp;
       private readonly ActionProvider actionProvider;
+      /// <summary>Method to wrap an <see cref="Action"/> as a command</summary>
+      /// <param name="action">Action to execute, the args will be ignored</param>
+      /// <param name="period">Period for the scheduling</param>
+      /// <param name="useOnce">Whether the command should be executed only once or not</param>
+      /// <returns>The wrapped command</returns>
+      public static ActionProvider Wrap(Action action, int period = 1, bool useOnce = true) => (args, logger) => MyTuple.Create<int, bool, Action<Process>>(period, useOnce, _ => action());
+      /// <summary>Method to wrap an <see cref="Action"/> as a command</summary>
+      /// <param name="action">Action to execute, only the first arg will be taken into account</param>
+      /// <param name="period">Period for the scheduling</param>
+      /// <param name="useOnce">Whether the command should be executed only once or not</param>
+      /// <returns>The wrapped command</returns>
+      public static ActionProvider Wrap(Action<string> action, int period = 1, bool useOnce = true) => (args, logger) => MyTuple.Create<int, bool, Action<Process>>(period, useOnce, _ => action(args[0]));
+      /// <summary>Method to wrap an <see cref="Action"/> as a command</summary>
+      /// <param name="action">Action to execute</param>
+      /// <param name="period">Period for the scheduling</param>
+      /// <param name="useOnce">Whether the command should be executed only once or not</param>
+      /// <returns>The wrapped command</returns>
+      public static ActionProvider Wrap(Action<List<string>> action, int period = 1, bool useOnce = true) => (args, logger) => MyTuple.Create<int, bool, Action<Process>>(period, useOnce, _ => action(args));
       /// <summary>Creates a new command ready to be registered in a <see cref="CommandLine"/>.</summary>
       /// <param name="name">Unique name of the command, used summon the command.</param>
       /// <param name="actionProvider">Function that returns the </param>
       /// <param name="briefHelp"></param>
       /// <param name="detailedHelp"></param>
-      /// <param name="maxArgs"></param>
-      /// <param name="minArgs"></param>
-      /// <param name="nArgs"></param>
+      /// <param name="maxArgs">Ignored if <paramref name="nArgs"/> is given</param>
+      /// <param name="minArgs">Ignored if <paramref name="nArgs"/> is given</param>
+      /// <param name="nArgs">Number of argguments required by the command</param>
       /// <param name="requiredTrigger"></param>
       public Command(string name, ActionProvider actionProvider, string briefHelp, string detailedHelp = null, int maxArgs = int.MaxValue, int minArgs = 0, int nArgs = -1, CommandTrigger requiredTrigger = CommandTrigger.User) {
         this.Name = name;
