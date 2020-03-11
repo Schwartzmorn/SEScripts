@@ -70,7 +70,7 @@ namespace IngameScript {
         Log("Could not parse ini");
       }
       var connector = GridTerminalSystem.GetBlockWithName("W1 Connector (Front)") as IMyShipConnector;
-      var connectionRequestor = new ConnectionClient(this, ini, _commandline, "StationConnectionRequests", "W1Connections");
+      var connectionClient = new ConnectionClient(this, ini, _commandline, "StationConnectionRequests", "W1Connections");
       var autoHandbrake = new PilotAssist(ini, GridTerminalSystem);
       autoHandbrake.AddBraker(connectionRequestor);
       var wheelsController = new WheelsController(this, ini, _commandline, new CoordsTransformer(cockpit, true), cockpit);

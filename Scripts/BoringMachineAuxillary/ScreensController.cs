@@ -35,7 +35,7 @@ namespace IngameScript {
         _scheme = scheme;
         if(drillStatusSurface != null) {
           var offset = new Vector2(2, 25);
-          var sprts = new ShapeCollection(offset, _scheme);
+          var sprts = new ShapeCollections(_scheme);
           sprts.Parse(sprites);
           _drillSurface = new Display(drillStatusSurface, offset, _scheme, sprts);
         }
@@ -56,19 +56,19 @@ namespace IngameScript {
           if(status.AreFrontLightsOn)
             f.DrawCollection("drillLights");
           if(!float.IsNaN(angle) && !float.IsNaN(targetAngle))
-            f.DrawCollectionTform("drillShapesArm", centerOfRotation: DRILL_ARM_CENTER, rot: targetAngle, col: _scheme.MedDark);
+            f.DrawCollectionTform("drillShapesArm", centerOfRotation: DRILL_ARM_CENTER, rotation: targetAngle, color: _scheme.MedDark);
           if(status.AreArmLightsOn)
-            f.DrawCollectionTform("drillLights", translation: DRILL_LIGHTS_OFFSET, centerOfRotation: DRILL_ARM_CENTER, rot: angle);
+            f.DrawCollectionTform("drillLights", translation: DRILL_LIGHTS_OFFSET, centerOfRotation: DRILL_ARM_CENTER, rotation: angle);
           f.DrawCollection("drillsShapesBackground");
-          f.Draw(new Shape("SquareSimple", _scheme.MedDark, pos: new Vector2(32, 93), size: new Vector2(loadFactor * 108, 45)));
+          f.Draw(new Shape("SquareSimple", _scheme.MedDark, position: new Vector2(32, 93), size: new Vector2(loadFactor * 108, 45)));
           f.DrawCollection("drillsShapesForeground");
           if(!float.IsNaN(angle)) {
             if(!float.IsNaN(targetAngle))
-              f.DrawCollectionTform("drillShapesArm", centerOfRotation: DRILL_ARM_CENTER, rot: targetAngle, col: _scheme.MedDark);
-            f.DrawCollectionTform("drillShapesArm", centerOfRotation: DRILL_ARM_CENTER, rot: angle);
+              f.DrawCollectionTform("drillShapesArm", centerOfRotation: DRILL_ARM_CENTER, rotation: targetAngle, color: _scheme.MedDark);
+            f.DrawCollectionTform("drillShapesArm", centerOfRotation: DRILL_ARM_CENTER, rotation: angle);
           }
-          f.DrawTxt($"Full at {loadFactor * 100:000}%", INV_TEXT_POS, scale: 0.5f, al: TextAlignment.LEFT);
-          f.DrawTxt(_conStatus(), CON_TEXT_POS, scale: 0.5f, al: TextAlignment.LEFT);
+          f.DrawText($"Full at {loadFactor * 100:000}%", INV_TEXT_POS, scale: 0.5f, alignment: TextAlignment.LEFT);
+          f.DrawText(_conStatus(), CON_TEXT_POS, scale: 0.5f, alignment: TextAlignment.LEFT);
         }
       }
 

@@ -8,23 +8,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace IngameScript.MDK {
   class ProcessTest {
 
-    public class MockAction {
-      readonly List<Program.Process> calls = new List<Program.Process>();
-      readonly List<Program.ProcessResult> callResults = new List<Program.ProcessResult>();
-      public int CallCount => this.calls.Count;
-      readonly Action<Program.Process> action;
-      public MockAction(Action<Program.Process> action = null) {
-        this.action = action;
-      }
-      public void Action(Program.Process res) {
-        this.calls.Add(res);
-        this.callResults.Add(res.Result);
-        this.action?.Invoke(res);
-      }
-      public bool Called => this.CallCount > 0;
-      public Program.ProcessResult GetCallResult(int i) => this.callResults[i];
-    };
-
     public class MockActionProcess {
       public int CallCount => this.calls.Count;
       readonly Action action;
@@ -51,7 +34,7 @@ namespace IngameScript.MDK {
 
     public void ProcessBasicDone() {
       var mock = new MockActionProcess();
-      var mockDone = new MockAction();
+      var mockDone = new Program.MockAction();
       var p = this.manager.Spawn(mock.Action, onDone: mockDone.Action);
 
       this.tick();
@@ -71,7 +54,7 @@ namespace IngameScript.MDK {
 
     public void ProcessBasicKill() {
       var mock = new MockActionProcess();
-      var mockKill = new MockAction();
+      var mockKill = new Program.MockAction();
       var p = this.manager.Spawn(mock.Action, onDone: mockKill.Action);
 
       Assert.IsTrue(p.Active, "A newly created process is active");
@@ -120,7 +103,7 @@ namespace IngameScript.MDK {
 
     public void UseOnce() {
       var mock = new MockActionProcess();
-      var mockDone = new MockAction();
+      var mockDone = new Program.MockAction();
       var p = this.manager.Spawn(mock.Action, period: 3, useOnce: true, onDone: mockDone.Action);
 
       this.tick();
@@ -137,10 +120,10 @@ namespace IngameScript.MDK {
     }
 
     public void DoneBeforeChildrenUseOnce() {
-      var mockDone = new MockAction();
+      var mockDone = new Program.MockAction();
       var p = this.manager.Spawn(null, useOnce: true, onDone: mockDone.Action);
       var mockChild = new MockActionProcess();
-      var mockDoneChild = new MockAction();
+      var mockDoneChild = new Program.MockAction();
       var child = p.Spawn(mockChild.Action, period: 3, useOnce: true, onDone: mockDoneChild.Action);
 
       Assert.IsTrue(p.Active);
@@ -168,7 +151,7 @@ namespace IngameScript.MDK {
     }
 
     public void DoneBeforeChildren() {
-      var mockDone = new MockAction();
+      var mockDone = new Program.MockAction();
       var p = this.manager.Spawn(null, onDone: mockDone.Action);
       var mockChild = new MockActionProcess();
       var child1 = p.Spawn(mockChild.Action);
@@ -201,9 +184,9 @@ namespace IngameScript.MDK {
     }
 
     public void DoneAfterChildren() {
-      var mockDone = new MockAction();
+      var mockDone = new Program.MockAction();
       var p = this.manager.Spawn(null, onDone: mockDone.Action);
-      var mockDoneChild = new MockAction();
+      var mockDoneChild = new Program.MockAction();
       var child = p.Spawn(null, onDone: mockDoneChild.Action);
 
       this.tick();
@@ -226,7 +209,7 @@ namespace IngameScript.MDK {
     }
 
     public void KillChildren() {
-      var mockDone = new MockAction();
+      var mockDone = new Program.MockAction();
       var p = this.manager.Spawn(null, onDone: mockDone.Action);
       var child1 = p.Spawn(null, onDone: mockDone.Action);
       var child2 = p.Spawn(null, onDone: mockDone.Action);
@@ -245,7 +228,7 @@ namespace IngameScript.MDK {
     }
 
     public void DoneAfterChildrenKilled() {
-      var mockDone = new MockAction();
+      var mockDone = new Program.MockAction();
       var p = this.manager.Spawn(null, onDone: mockDone.Action);
       var child = p.Spawn(null, onDone: mockDone.Action);
 
@@ -265,7 +248,7 @@ namespace IngameScript.MDK {
     }
 
     public void DoneBeforeChildrenKilled() {
-      var mockDone = new MockAction();
+      var mockDone = new Program.MockAction();
       var p = this.manager.Spawn(null, onDone: mockDone.Action);
       var child = p.Spawn(null, onDone: mockDone.Action);
 
@@ -302,7 +285,7 @@ namespace IngameScript.MDK {
     }
 
     public void KillWithChildInError() {
-      var mockKill = new MockAction((i) => { throw new NotImplementedException(); } );
+      var mockKill = new Program.MockAction((i) => { throw new NotImplementedException(); } );
       var p = this.manager.Spawn(null, onDone: mockKill.Action);
       var child1 = p.Spawn(null, onDone: mockKill.Action);
       var child2 = p.Spawn(null);
@@ -318,7 +301,7 @@ namespace IngameScript.MDK {
     }
 
     public void KillGrandChild() {
-      var mock = new MockAction();
+      var mock = new Program.MockAction();
       var p = this.manager.Spawn(null, onDone: mock.Action);
       var child = p.Spawn(null, onDone: mock.Action);
       var grandChild = child.Spawn(null, onDone: mock.Action);
@@ -342,6 +325,15 @@ namespace IngameScript.MDK {
       Assert.AreEqual(Program.ProcessResult.KILLED, mock.GetCallResult(0));
       Assert.AreEqual(Program.ProcessResult.KO, mock.GetCallResult(1));
       Assert.AreEqual(Program.ProcessResult.OK, mock.GetCallResult(2));
+    }
+
+    public void SelfKillingProcess() {
+      var mock = new Program.MockAction(p => p.Kill());
+      Program.Process process = this.manager.Spawn(null, onDone: mock.Action);
+
+      process.Kill();
+
+      Assert.IsFalse(process.Alive);
     }
   }
 }

@@ -19,8 +19,8 @@ namespace TestRunner {
       }
     }
     
-    private readonly List<UnitTest> tests = new List<UnitTest>();
-    private int failedTests = 0;
+    readonly List<UnitTest> tests = new List<UnitTest>();
+    int failedTests = 0;
 
     public void AddTest(object o) {
       Action beforeEach = null;

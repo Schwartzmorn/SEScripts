@@ -9,7 +9,6 @@
     <Import_RootNamespace>IngameScript</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)ARHandler.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)AutoRoutine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Instruction.cs" />
   </ItemGroup>
 </Project>

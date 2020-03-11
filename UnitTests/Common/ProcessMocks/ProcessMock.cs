@@ -17,6 +17,22 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program {
+    public class MockAction {
+      readonly List<Process> calls = new List<Process>();
+      readonly List<ProcessResult> callResults = new List<ProcessResult>();
+      public int CallCount => this.calls.Count;
+      readonly Action<Process> action;
+      public MockAction(Action<Process> action = null) {
+        this.action = action;
+      }
+      public void Action(Process res) {
+        this.calls.Add(res);
+        this.callResults.Add(res.Result);
+        this.action?.Invoke(res);
+      }
+      public bool Called => this.CallCount > 0;
+      public ProcessResult GetCallResult(int i) => this.callResults[i];
+    };
     public class ProcessMock : Process {
       public readonly Action<Process> action;
 

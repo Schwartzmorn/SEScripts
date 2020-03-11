@@ -95,9 +95,9 @@ partial class Program {
         var d = Math.Cos(Target.Angle) * g + Math.Sin(Target.Angle) * o; // normal to desired slope plane
         var wPlane = _wc.GetContactPlaneW(); // normal of the contact plane
 
-        var wPitch = _orthoNorm(wPlane, p);
-        var fp = _orthoNorm(cont.WorldMatrix.Forward, wPitch);
-        var wRoll = _orthoNorm(wPlane, fp);
+        var wPitch = _orthoNorm(wPlane, p); // yaw axis
+        var fp = _orthoNorm(cont.WorldMatrix.Forward, wPitch); // forward direction somewhat in the plane of contact
+        var wRoll = _orthoNorm(wPlane, fp); // pitch axis
 
         double curPitch = Math.Asin(wPitch.Dot(o));
         double curRoll = Math.Asin(wRoll.Dot(p));

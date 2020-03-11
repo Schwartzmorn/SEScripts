@@ -27,7 +27,20 @@ namespace IngameScript {
       }
 
       private class ProcessManager: ISchedulerManager {
-        IEnumerable<Process> allProcesses => this.processes.Concat(this.toAdd);
+        /// <summary>Returns an enumerable on all the processes present at the time of the call</summary>
+        IEnumerable<Process> AllProcesses {
+          get {
+            // we don't want to process any process added during the foreach
+            int count = this.toAdd.Count;
+            foreach (Process p in this.processes) {
+              yield return p;
+            }
+            // can't use a foreach on a list that might change anyway
+            for (int i = 0; i < count; ++i) {
+              yield return this.toAdd[i];
+            }
+          }
+        }
         readonly Action<string> logger;
         readonly List<Process> processes = new List<Process>();
         readonly List<Action<MyIni>> onSave = new List<Action<MyIni>>();
@@ -40,16 +53,16 @@ namespace IngameScript {
 
         public void AddOnSave(Action<MyIni> a) => this.onSave.Add(a);
 
-        public void Kill(int pid) => this.allProcesses.FirstOrDefault(p => p.ID == pid)?.Kill();
+        public void Kill(int pid) => this.AllProcesses.FirstOrDefault(p => p.ID == pid)?.Kill();
 
         public void KillAll() {
-          foreach (Process p in this.allProcesses) {
+          foreach (Process p in this.AllProcesses) {
             p.Kill();
           }
         }
 
         public void KillAll(string n) {
-          foreach(Process p in this.allProcesses.Where(p => p.Name == n)) {
+          foreach(Process p in this.AllProcesses.Where(p => p.Name == n)) {
             p.Kill();
           }
         }
@@ -92,7 +105,7 @@ namespace IngameScript {
         }
 
         public void Log(Action<string> log) {
-          foreach (var p in this.allProcesses.Where(p => p.Alive && p.parent == null)) {
+          foreach (var p in this.AllProcesses.Where(p => p.Alive && p.parent == null)) {
             p.ToString(0, log);
           }
         }

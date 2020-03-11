@@ -13,6 +13,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CommandLine", "Mixins\Comma
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CommandSerializer", "Mixins\CommandSerializer\CommandSerializer.shproj", "{EDEBE9C4-2B9A-4E84-AFD8-FC3AFCE0B8B9}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ConnectionClient", "Mixins\ConnectionClient\ConnectionClient.shproj", "{DCA9D508-08E7-4C3F-8365-B2CF430F9B7A}"
+EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CoordinatesTransformer", "Mixins\CoordinatesTransformer\CoordinatesTransformer.shproj", "{4F394CB5-48AC-4DD6-81D3-A534FEDDC578}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Display", "Mixins\Display\Display.shproj", "{5588F66D-3F10-4530-AAFF-101C35574A01}"
@@ -26,6 +28,8 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PilotAssist", "Mixins\PilotAssist\PilotAssist.shproj", "{619E7CC0-A3A7-41A2-802F-4B249905A907}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Process", "Mixins\Process\Process.shproj", "{3987597C-1F14-41BB-85D8-7141773EECE0}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "WheelsController", "Mixins\WheelsController\WheelsController.shproj", "{1FBC1400-6BB0-4B9E-A98F-4FE90DCEA2C9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{2963E9C9-840E-4B5C-B85D-CDE5F8859F0E}"
 EndProject
@@ -59,41 +63,51 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ProcessMocks", "UnitTests\C
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TestRunner", "UnitTests\Common\TestRunner\TestRunner.shproj", "{36BD6759-585C-48A3-8B56-339B6048574A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandLineTest", "UnitTests\CommandLineTest\CommandLineTest.csproj", "{81735F21-1CD9-40E6-9370-B5464207726B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UTestAutoRoutine", "UnitTests\AutoRoutine\UTestAutoRoutine.csproj", "{685ECBE1-6802-451F-B34B-A4EBB33D758C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IniWatcherTest", "UnitTests\IniWatcherTest\IniWatcherTest.csproj", "{6B07FF00-6608-434D-A35F-ACEC95A209BD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UTestCommandLine", "UnitTests\CommandLine\UTestCommandLine.csproj", "{81735F21-1CD9-40E6-9370-B5464207726B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProcessTest", "UnitTests\ProcessTest\ProcessTest.csproj", "{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UTestConnectionClient", "UnitTests\ConnectionClient\UTestConnectionClient.csproj", "{24AF8A46-1D2D-4C4D-A2B8-AEF1C0F73BDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UTestDisplay", "UnitTests\Display\UTestDisplay.csproj", "{517B991B-13FE-46F4-84E6-E7C7845C3CD4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UTestIniWatcher", "UnitTests\IniWatcher\UTestIniWatcher.csproj", "{6B07FF00-6608-434D-A35F-ACEC95A209BD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UTestLogger", "UnitTests\Logger\UTestLogger.csproj", "{FE73E735-8237-48F6-BBB0-D29E7607B3AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UTestPilotAssist", "UnitTests\PilotAssist\UTestPilotAssist.csproj", "{BC763BBB-58A1-41BE-BE2D-36EAEAF123C6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UTestProcess", "UnitTests\Process\UTestProcess.csproj", "{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UTestWheelsController", "UnitTests\WheelsController\UTestWheelsController.csproj", "{E1CAC091-909E-4090-B726-A4EAAFA5E8E2}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MDK-Mockups", "..\MDK-Mockups\MDK-Mockups.shproj", "{33863C91-80F6-4ABC-A735-3934A61D494C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoNotDelete", "DoNotDelete\DoNotDelete.csproj", "{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "WheelsController", "Mixins\WheelsController\WheelsController.shproj", "{1FBC1400-6BB0-4B9E-A98F-4FE90DCEA2C9}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ConnectionClient", "Mixins\ConnectionClient\ConnectionClient.shproj", "{DCA9D508-08E7-4C3F-8365-B2CF430F9B7A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PilotAssistTest", "UnitTests\PilotAssistTest\PilotAssistTest.csproj", "{BC763BBB-58A1-41BE-BE2D-36EAEAF123C6}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ConnectorController", "Mixins\ConnectorController\ConnectorController.shproj", "{7048A05F-52DE-4661-A4CA-2BEC40A77C86}"
-EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Mixins\AutoHandbrake\AutoHandbrake.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\AutoRoutine\AutoRoutine.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
+		Mixins\CommandLine\CommandLine.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
+		Mixins\ConnectionClient\ConnectionClient.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
+		Mixins\IniWatcher\IniWatcher.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\Logger\Logger.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
-		Mixins\ZZZCommandLine\CommandLine.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
-		Mixins\ZZZConnectionClient\ConnectionClient.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
-		Mixins\ZZZIniHelper\IniHelper.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
-		Mixins\ZZZScheduler\Scheduler.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
-		Mixins\ZZZWheelsController\WheelsController.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
+		Mixins\PilotAssist\PilotAssist.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
+		Mixins\Process\Process.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
+		Mixins\WheelsController\WheelsController.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\WheelsController\WheelsController.projitems*{1fbc1400-6bb0-4b9e-a98f-4fe90dcea2c9}*SharedItemsImports = 13
+		..\MDK-Mockups\MDK-Mockups.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
+		Mixins\ConnectionClient\ConnectionClient.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
+		Mixins\Process\Process.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
+		UnitTests\Common\ProcessMocks\ProcessMocks.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
+		UnitTests\Common\TestRunner\TestRunner.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
 		UnitTests\Common\ProcessMocks\ProcessMocks.projitems*{2a024a78-a110-4127-aaca-a9993a7c783f}*SharedItemsImports = 13
+		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{2a7af5f6-c756-4961-9e17-72a5e76e1f48}*SharedItemsImports = 4
+		Mixins\Process\Process.projitems*{2a7af5f6-c756-4961-9e17-72a5e76e1f48}*SharedItemsImports = 4
 		..\MDK-Mockups\MDK-Mockups.projitems*{33863c91-80f6-4abc-a735-3934a61d494c}*SharedItemsImports = 13
 		UnitTests\Common\TestRunner\TestRunner.projitems*{36bd6759-585c-48a3-8b56-339b6048574a}*SharedItemsImports = 13
 		Mixins\Process\Process.projitems*{3987597c-1f14-41bb-85d8-7141773eece0}*SharedItemsImports = 13
-		Mixins\AutoHandbrake\AutoHandbrake.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
 		Mixins\AutoRoutine\AutoRoutine.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
 		Mixins\CommandLine\CommandLine.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
 		Mixins\ConnectionClient\ConnectionClient.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
@@ -101,41 +115,49 @@ Global
 		Mixins\Display\Display.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
 		Mixins\IniWatcher\IniWatcher.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
 		Mixins\Logger\Logger.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
+		Mixins\PilotAssist\PilotAssist.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
 		Mixins\Process\Process.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
 		Mixins\WheelsController\WheelsController.projitems*{3f759b04-5b9e-46c4-8143-f1aeed9edf1c}*SharedItemsImports = 4
 		Mixins\Logger\Logger.projitems*{49c2a33d-4f72-4c10-bd5d-7e26bb9b49c0}*SharedItemsImports = 4
+		Mixins\Process\Process.projitems*{49c2a33d-4f72-4c10-bd5d-7e26bb9b49c0}*SharedItemsImports = 4
 		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{4f394cb5-48ac-4dd6-81d3-a534feddc578}*SharedItemsImports = 13
+		Mixins\CommandLine\CommandLine.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
 		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
+		Mixins\IniWatcher\IniWatcher.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
 		Mixins\Logger\Logger.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
-		Mixins\ZZZCommandLine\CommandLine.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
-		Mixins\ZZZIniHelper\IniHelper.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
-		Mixins\ZZZScheduler\Scheduler.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
+		Mixins\Process\Process.projitems*{5151329f-c2cf-4f3e-a0da-e465d0496980}*SharedItemsImports = 4
+		..\MDK-Mockups\MDK-Mockups.projitems*{517b991b-13fe-46f4-84e6-e7c7845c3cd4}*SharedItemsImports = 4
+		Mixins\Display\Display.projitems*{517b991b-13fe-46f4-84e6-e7c7845c3cd4}*SharedItemsImports = 4
+		UnitTests\Common\TestRunner\TestRunner.projitems*{517b991b-13fe-46f4-84e6-e7c7845c3cd4}*SharedItemsImports = 4
 		Mixins\Display\Display.projitems*{5588f66d-3f10-4530-aaff-101c35574a01}*SharedItemsImports = 13
 		Mixins\PilotAssist\PilotAssist.projitems*{619e7cc0-a3a7-41a2-802f-4b249905a907}*SharedItemsImports = 13
+		Mixins\AutoRoutine\AutoRoutine.projitems*{685ecbe1-6802-451f-b34b-a4ebb33d758c}*SharedItemsImports = 4
+		Mixins\CommandLine\CommandLine.projitems*{685ecbe1-6802-451f-b34b-a4ebb33d758c}*SharedItemsImports = 4
+		Mixins\Process\Process.projitems*{685ecbe1-6802-451f-b34b-a4ebb33d758c}*SharedItemsImports = 4
+		UnitTests\Common\ProcessMocks\ProcessMocks.projitems*{685ecbe1-6802-451f-b34b-a4ebb33d758c}*SharedItemsImports = 4
+		UnitTests\Common\TestRunner\TestRunner.projitems*{685ecbe1-6802-451f-b34b-a4ebb33d758c}*SharedItemsImports = 4
 		..\MDK-Mockups\MDK-Mockups.projitems*{6b07ff00-6608-434d-a35f-acec95a209bd}*SharedItemsImports = 4
 		Mixins\IniWatcher\IniWatcher.projitems*{6b07ff00-6608-434d-a35f-acec95a209bd}*SharedItemsImports = 4
 		Mixins\Process\Process.projitems*{6b07ff00-6608-434d-a35f-acec95a209bd}*SharedItemsImports = 4
 		UnitTests\Common\ProcessMocks\ProcessMocks.projitems*{6b07ff00-6608-434d-a35f-acec95a209bd}*SharedItemsImports = 4
 		UnitTests\Common\TestRunner\TestRunner.projitems*{6b07ff00-6608-434d-a35f-acec95a209bd}*SharedItemsImports = 4
-		Mixins\ConnectorController\ConnectorController.projitems*{7048a05f-52de-4661-a4ca-2bec40a77c86}*SharedItemsImports = 13
 		Mixins\Item\Item.projitems*{74a147bc-033e-4049-8373-d15aa9628d40}*SharedItemsImports = 4
 		Mixins\Logger\Logger.projitems*{74a147bc-033e-4049-8373-d15aa9628d40}*SharedItemsImports = 4
+		Mixins\Process\Process.projitems*{74a147bc-033e-4049-8373-d15aa9628d40}*SharedItemsImports = 4
 		Mixins\CommandLine\CommandLine.projitems*{7a2b83c9-7453-4d63-a881-6d0a249b79f8}*SharedItemsImports = 13
 		Mixins\CommandLine\CommandLine.projitems*{81735f21-1cd9-40e6-9370-b5464207726b}*SharedItemsImports = 4
 		Mixins\Process\Process.projitems*{81735f21-1cd9-40e6-9370-b5464207726b}*SharedItemsImports = 4
 		UnitTests\Common\TestRunner\TestRunner.projitems*{81735f21-1cd9-40e6-9370-b5464207726b}*SharedItemsImports = 4
-		Mixins\AutoHandbrake\AutoHandbrake.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\Autopilot\Autopilot.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\AutoRoutine\AutoRoutine.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
+		Mixins\CommandLine\CommandLine.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
+		Mixins\ConnectionClient\ConnectionClient.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
+		Mixins\IniWatcher\IniWatcher.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\Logger\Logger.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
-		Mixins\ZZZCommandLine\CommandLine.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
-		Mixins\ZZZConnectionClient\ConnectionClient.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
-		Mixins\ZZZIniHelper\IniHelper.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
-		Mixins\ZZZScheduler\Scheduler.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
-		Mixins\ZZZWheelsController\WheelsController.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
-		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{871775d0-d542-4a2e-aa9d-8af36053df39}*SharedItemsImports = 4
-		Mixins\Logger\Logger.projitems*{871775d0-d542-4a2e-aa9d-8af36053df39}*SharedItemsImports = 4
+		Mixins\PilotAssist\PilotAssist.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
+		Mixins\Process\Process.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
+		Mixins\WheelsController\WheelsController.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\Item\Item.projitems*{8ca46b0b-4b6e-44de-8f23-0540e977da88}*SharedItemsImports = 13
 		Mixins\IniWatcher\IniWatcher.projitems*{b1a6c2d1-a796-4118-8517-90f17b6c178f}*SharedItemsImports = 13
 		..\MDK-Mockups\MDK-Mockups.projitems*{bc763bbb-58a1-41be-be2d-36eaeaf123c6}*SharedItemsImports = 4
@@ -147,10 +169,23 @@ Global
 		Mixins\Autopilot\Autopilot.projitems*{bdb8d540-249b-4c93-b6e5-70fde3287356}*SharedItemsImports = 13
 		Mixins\AutoRoutine\AutoRoutine.projitems*{c9ab9d6a-925b-4edd-89db-d6f399fe3f83}*SharedItemsImports = 13
 		Mixins\Process\Process.projitems*{d4fe2ac0-ec0c-4071-ba4f-262213c954d2}*SharedItemsImports = 4
+		UnitTests\Common\ProcessMocks\ProcessMocks.projitems*{d4fe2ac0-ec0c-4071-ba4f-262213c954d2}*SharedItemsImports = 4
 		UnitTests\Common\TestRunner\TestRunner.projitems*{d4fe2ac0-ec0c-4071-ba4f-262213c954d2}*SharedItemsImports = 4
 		Mixins\ConnectionClient\ConnectionClient.projitems*{dca9d508-08e7-4c3f-8365-b2cf430f9b7a}*SharedItemsImports = 13
+		..\MDK-Mockups\MDK-Mockups.projitems*{e1cac091-909e-4090-b726-a4eaafa5e8e2}*SharedItemsImports = 4
+		Mixins\CommandLine\CommandLine.projitems*{e1cac091-909e-4090-b726-a4eaafa5e8e2}*SharedItemsImports = 4
+		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{e1cac091-909e-4090-b726-a4eaafa5e8e2}*SharedItemsImports = 4
+		Mixins\IniWatcher\IniWatcher.projitems*{e1cac091-909e-4090-b726-a4eaafa5e8e2}*SharedItemsImports = 4
+		Mixins\Process\Process.projitems*{e1cac091-909e-4090-b726-a4eaafa5e8e2}*SharedItemsImports = 4
+		Mixins\WheelsController\WheelsController.projitems*{e1cac091-909e-4090-b726-a4eaafa5e8e2}*SharedItemsImports = 4
+		UnitTests\Common\ProcessMocks\ProcessMocks.projitems*{e1cac091-909e-4090-b726-a4eaafa5e8e2}*SharedItemsImports = 4
+		UnitTests\Common\TestRunner\TestRunner.projitems*{e1cac091-909e-4090-b726-a4eaafa5e8e2}*SharedItemsImports = 4
 		Mixins\CommandSerializer\CommandSerializer.projitems*{edebe9c4-2b9a-4e84-afd8-fc3afce0b8b9}*SharedItemsImports = 13
 		Mixins\Logger\Logger.projitems*{f42323f0-faf9-49ec-ad2a-1b1e333cf8b7}*SharedItemsImports = 13
+		Mixins\Logger\Logger.projitems*{fe73e735-8237-48f6-bbb0-d29e7607b3ad}*SharedItemsImports = 4
+		Mixins\Process\Process.projitems*{fe73e735-8237-48f6-bbb0-d29e7607b3ad}*SharedItemsImports = 4
+		UnitTests\Common\ProcessMocks\ProcessMocks.projitems*{fe73e735-8237-48f6-bbb0-d29e7607b3ad}*SharedItemsImports = 4
+		UnitTests\Common\TestRunner\TestRunner.projitems*{fe73e735-8237-48f6-bbb0-d29e7607b3ad}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -220,6 +255,13 @@ Global
 		{8440B0B3-CFCB-42DE-A8C2-F44581F6BE93}.Release|Any CPU.Build.0 = Debug|x64
 		{8440B0B3-CFCB-42DE-A8C2-F44581F6BE93}.Release|x64.ActiveCfg = Debug|x64
 		{8440B0B3-CFCB-42DE-A8C2-F44581F6BE93}.Release|x64.Build.0 = Debug|x64
+		{685ECBE1-6802-451F-B34B-A4EBB33D758C}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{685ECBE1-6802-451F-B34B-A4EBB33D758C}.Debug|x64.ActiveCfg = Debug|x64
+		{685ECBE1-6802-451F-B34B-A4EBB33D758C}.Debug|x64.Build.0 = Debug|x64
+		{685ECBE1-6802-451F-B34B-A4EBB33D758C}.Release|Any CPU.ActiveCfg = Debug|x64
+		{685ECBE1-6802-451F-B34B-A4EBB33D758C}.Release|Any CPU.Build.0 = Debug|x64
+		{685ECBE1-6802-451F-B34B-A4EBB33D758C}.Release|x64.ActiveCfg = Debug|x64
+		{685ECBE1-6802-451F-B34B-A4EBB33D758C}.Release|x64.Build.0 = Debug|x64
 		{81735F21-1CD9-40E6-9370-B5464207726B}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{81735F21-1CD9-40E6-9370-B5464207726B}.Debug|x64.ActiveCfg = Debug|x64
 		{81735F21-1CD9-40E6-9370-B5464207726B}.Debug|x64.Build.0 = Debug|x64
@@ -227,6 +269,20 @@ Global
 		{81735F21-1CD9-40E6-9370-B5464207726B}.Release|Any CPU.Build.0 = Debug|x64
 		{81735F21-1CD9-40E6-9370-B5464207726B}.Release|x64.ActiveCfg = Debug|x64
 		{81735F21-1CD9-40E6-9370-B5464207726B}.Release|x64.Build.0 = Debug|x64
+		{24AF8A46-1D2D-4C4D-A2B8-AEF1C0F73BDA}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{24AF8A46-1D2D-4C4D-A2B8-AEF1C0F73BDA}.Debug|x64.ActiveCfg = Debug|x64
+		{24AF8A46-1D2D-4C4D-A2B8-AEF1C0F73BDA}.Debug|x64.Build.0 = Debug|x64
+		{24AF8A46-1D2D-4C4D-A2B8-AEF1C0F73BDA}.Release|Any CPU.ActiveCfg = Debug|x64
+		{24AF8A46-1D2D-4C4D-A2B8-AEF1C0F73BDA}.Release|Any CPU.Build.0 = Debug|x64
+		{24AF8A46-1D2D-4C4D-A2B8-AEF1C0F73BDA}.Release|x64.ActiveCfg = Debug|x64
+		{24AF8A46-1D2D-4C4D-A2B8-AEF1C0F73BDA}.Release|x64.Build.0 = Debug|x64
+		{517B991B-13FE-46F4-84E6-E7C7845C3CD4}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{517B991B-13FE-46F4-84E6-E7C7845C3CD4}.Debug|x64.ActiveCfg = Debug|x64
+		{517B991B-13FE-46F4-84E6-E7C7845C3CD4}.Debug|x64.Build.0 = Debug|x64
+		{517B991B-13FE-46F4-84E6-E7C7845C3CD4}.Release|Any CPU.ActiveCfg = Debug|x64
+		{517B991B-13FE-46F4-84E6-E7C7845C3CD4}.Release|Any CPU.Build.0 = Debug|x64
+		{517B991B-13FE-46F4-84E6-E7C7845C3CD4}.Release|x64.ActiveCfg = Debug|x64
+		{517B991B-13FE-46F4-84E6-E7C7845C3CD4}.Release|x64.Build.0 = Debug|x64
 		{6B07FF00-6608-434D-A35F-ACEC95A209BD}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{6B07FF00-6608-434D-A35F-ACEC95A209BD}.Debug|x64.ActiveCfg = Debug|x64
 		{6B07FF00-6608-434D-A35F-ACEC95A209BD}.Debug|x64.Build.0 = Debug|x64
@@ -234,19 +290,13 @@ Global
 		{6B07FF00-6608-434D-A35F-ACEC95A209BD}.Release|Any CPU.Build.0 = Debug|x64
 		{6B07FF00-6608-434D-A35F-ACEC95A209BD}.Release|x64.ActiveCfg = Debug|x64
 		{6B07FF00-6608-434D-A35F-ACEC95A209BD}.Release|x64.Build.0 = Debug|x64
-		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Debug|x64.ActiveCfg = Debug|x64
-		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Debug|x64.Build.0 = Debug|x64
-		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|Any CPU.ActiveCfg = Debug|x64
-		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|Any CPU.Build.0 = Debug|x64
-		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|x64.ActiveCfg = Debug|x64
-		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|x64.Build.0 = Debug|x64
-		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Debug|x64.ActiveCfg = Debug|x64
-		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Release|Any CPU.ActiveCfg = Debug|x64
-		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Release|Any CPU.Build.0 = Debug|x64
-		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Release|x64.ActiveCfg = Debug|x64
-		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Release|x64.Build.0 = Debug|x64
+		{FE73E735-8237-48F6-BBB0-D29E7607B3AD}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{FE73E735-8237-48F6-BBB0-D29E7607B3AD}.Debug|x64.ActiveCfg = Debug|x64
+		{FE73E735-8237-48F6-BBB0-D29E7607B3AD}.Debug|x64.Build.0 = Debug|x64
+		{FE73E735-8237-48F6-BBB0-D29E7607B3AD}.Release|Any CPU.ActiveCfg = Debug|x64
+		{FE73E735-8237-48F6-BBB0-D29E7607B3AD}.Release|Any CPU.Build.0 = Debug|x64
+		{FE73E735-8237-48F6-BBB0-D29E7607B3AD}.Release|x64.ActiveCfg = Debug|x64
+		{FE73E735-8237-48F6-BBB0-D29E7607B3AD}.Release|x64.Build.0 = Debug|x64
 		{BC763BBB-58A1-41BE-BE2D-36EAEAF123C6}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{BC763BBB-58A1-41BE-BE2D-36EAEAF123C6}.Debug|x64.ActiveCfg = Debug|x64
 		{BC763BBB-58A1-41BE-BE2D-36EAEAF123C6}.Debug|x64.Build.0 = Debug|x64
@@ -254,6 +304,26 @@ Global
 		{BC763BBB-58A1-41BE-BE2D-36EAEAF123C6}.Release|Any CPU.Build.0 = Debug|x64
 		{BC763BBB-58A1-41BE-BE2D-36EAEAF123C6}.Release|x64.ActiveCfg = Debug|x64
 		{BC763BBB-58A1-41BE-BE2D-36EAEAF123C6}.Release|x64.Build.0 = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Debug|x64.ActiveCfg = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Debug|x64.Build.0 = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|Any CPU.ActiveCfg = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|Any CPU.Build.0 = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|x64.ActiveCfg = Debug|x64
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2}.Release|x64.Build.0 = Debug|x64
+		{E1CAC091-909E-4090-B726-A4EAAFA5E8E2}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{E1CAC091-909E-4090-B726-A4EAAFA5E8E2}.Debug|x64.ActiveCfg = Debug|x64
+		{E1CAC091-909E-4090-B726-A4EAAFA5E8E2}.Debug|x64.Build.0 = Debug|x64
+		{E1CAC091-909E-4090-B726-A4EAAFA5E8E2}.Release|Any CPU.ActiveCfg = Debug|x64
+		{E1CAC091-909E-4090-B726-A4EAAFA5E8E2}.Release|Any CPU.Build.0 = Debug|x64
+		{E1CAC091-909E-4090-B726-A4EAAFA5E8E2}.Release|x64.ActiveCfg = Debug|x64
+		{E1CAC091-909E-4090-B726-A4EAAFA5E8E2}.Release|x64.Build.0 = Debug|x64
+		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Debug|x64.ActiveCfg = Debug|x64
+		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Release|Any CPU.ActiveCfg = Debug|x64
+		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Release|Any CPU.Build.0 = Debug|x64
+		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Release|x64.ActiveCfg = Debug|x64
+		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Release|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -263,6 +333,7 @@ Global
 		{C9AB9D6A-925B-4EDD-89DB-D6F399FE3F83} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{7A2B83C9-7453-4D63-A881-6D0A249B79F8} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{EDEBE9C4-2B9A-4E84-AFD8-FC3AFCE0B8B9} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
+		{DCA9D508-08E7-4C3F-8365-B2CF430F9B7A} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{4F394CB5-48AC-4DD6-81D3-A534FEDDC578} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{5588F66D-3F10-4530-AAFF-101C35574A01} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{B1A6C2D1-A796-4118-8517-90F17B6C178F} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
@@ -270,6 +341,7 @@ Global
 		{F42323F0-FAF9-49EC-AD2A-1B1E333CF8B7} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{619E7CC0-A3A7-41A2-802F-4B249905A907} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{3987597C-1F14-41BB-85D8-7141773EECE0} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
+		{1FBC1400-6BB0-4B9E-A98F-4FE90DCEA2C9} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{5151329F-C2CF-4F3E-A0DA-E465D0496980} = {2963E9C9-840E-4B5C-B85D-CDE5F8859F0E}
 		{49C2A33D-4F72-4C10-BD5D-7E26BB9B49C0} = {2963E9C9-840E-4B5C-B85D-CDE5F8859F0E}
 		{82CA7A8B-BB91-47EC-8270-A7FDF58D1F54} = {2963E9C9-840E-4B5C-B85D-CDE5F8859F0E}
@@ -283,13 +355,15 @@ Global
 		{641D1534-C26C-4B35-8528-09A51E3DB56A} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
 		{2A024A78-A110-4127-AACA-A9993A7C783F} = {641D1534-C26C-4B35-8528-09A51E3DB56A}
 		{36BD6759-585C-48A3-8B56-339B6048574A} = {641D1534-C26C-4B35-8528-09A51E3DB56A}
+		{685ECBE1-6802-451F-B34B-A4EBB33D758C} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
 		{81735F21-1CD9-40E6-9370-B5464207726B} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
+		{24AF8A46-1D2D-4C4D-A2B8-AEF1C0F73BDA} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
+		{517B991B-13FE-46F4-84E6-E7C7845C3CD4} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
 		{6B07FF00-6608-434D-A35F-ACEC95A209BD} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
-		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
-		{1FBC1400-6BB0-4B9E-A98F-4FE90DCEA2C9} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
-		{DCA9D508-08E7-4C3F-8365-B2CF430F9B7A} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
+		{FE73E735-8237-48F6-BBB0-D29E7607B3AD} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
 		{BC763BBB-58A1-41BE-BE2D-36EAEAF123C6} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
-		{7048A05F-52DE-4661-A4CA-2BEC40A77C86} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
+		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
+		{E1CAC091-909E-4090-B726-A4EAAFA5E8E2} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4B1EACEE-0472-40F0-8708-5BDC579549E2}

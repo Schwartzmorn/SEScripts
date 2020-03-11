@@ -39,7 +39,7 @@ namespace IngameScript.MDK {
     }
 
     public void Kill() {
-      var mock = new ProcessTest.MockAction();
+      var mock = new Program.MockAction();
       var killedByName = Enumerable.Range(0, 2).Select(i => this.manager.Spawn(null, name: "KillMeByName", onDone: mock.Action)).ToList();
       var killedById = this.manager.Spawn(null, onDone: mock.Action);
       var killedInTheEnd = Enumerable.Range(0, 2).Select(i => this.manager.Spawn(null, onDone: mock.Action)).ToList();
@@ -70,7 +70,7 @@ namespace IngameScript.MDK {
 
     // Same test than Kill, but when the scheduler has not yet ticked
     public void KillNotTicked() {
-      var mock = new ProcessTest.MockAction();
+      var mock = new Program.MockAction();
       var killedByName = Enumerable.Range(0, 2).Select(i => this.manager.Spawn(null, name: "KillMeByName", onDone: mock.Action)).ToList();
       var killedById = this.manager.Spawn(null, onDone: mock.Action);
       var killedInTheEnd = Enumerable.Range(0, 2).Select(i => this.manager.Spawn(null, onDone: mock.Action)).ToList();
@@ -108,6 +108,31 @@ namespace IngameScript.MDK {
 
       Assert.IsTrue(mockFail.Called);
       Assert.IsTrue(mock.Called);
+    }
+
+    public void KillAllSpawning() {
+      // we check that processes can spawn new processes when being killed, and that we ignore those processes
+      var mock = new Program.MockAction(p => this.manager.Spawn(null, "killme"));
+      Program.Process process1 = this.manager.Spawn(null, "killme", mock.Action);
+      Program.Process process2 = this.manager.Spawn(null, "killme", mock.Action);
+
+      this.manager.KillAll("killme");
+
+      Assert.IsFalse(process2.Alive);
+      Assert.IsFalse(process1.Alive);
+      Assert.AreEqual(2, mock.CallCount);
+
+      var processes = new List<string>();
+      this.manager.Log(s => processes.Add(s));
+
+      Assert.AreEqual(2, processes.Count(s => s.Contains("killme")));
+
+      // Although ignored at first because spawned during the KillAll call, a subsequent call to KillAll will kill them
+      this.manager.KillAll("killme");
+      processes.Clear();
+      this.manager.Log(s => processes.Add(s));
+
+      Assert.AreEqual(0, processes.Count(s => s.Contains("killme")));
     }
   }
 }

@@ -64,11 +64,11 @@ namespace IngameScript {
       /// <remarks>The <see cref="onDone"/> callback will only be executed with <see cref="ProcessResult.OK"/> once all its children have been terminated, unless <see cref="Fail"/> or <see cref="Kill"/> is called in the meantime.</remarks>
       public void Done() {
         if (this.Active) {
+          this.Active = false;
           if ((this.children?.Count ?? 0) == 0) {
             this.invokeDone();
             this.parent?.notifyDone(this);
           }
-          this.Active = false;
         }
       }
       /// <summary>Ends the process so that the <see cref="action"/> will no longer be executed.</summary>
@@ -168,15 +168,18 @@ namespace IngameScript {
 
       // Unschedule itself, kill all children
       private void killNoNotify() {
+        bool wasAlive = this.Alive;
+        this.Active = false;
+        if (wasAlive) {
+          this.Result = ProcessResult.KILLED;
+        }
         foreach (Process child in this.children ?? Enumerable.Empty<Process>()) {
           child.killNoNotify();
         }
-        if (this.Alive) {
-          this.Result = ProcessResult.KILLED;
+        if (wasAlive) {
+          this.children?.Clear();
           this.invokeDone();
         }
-        this.children?.Clear();
-        this.Active = false;
       }
 
       private void invokeDone() {

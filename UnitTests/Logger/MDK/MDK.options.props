@@ -6,13 +6,14 @@
     -->
     <MDKVersion>1.2.31</MDKVersion>
     <MDKTrimTypes>
-      <Enabled>no</Enabled>
+      <Enabled>yes</Enabled>
     </MDKTrimTypes>
     <MDKMinify>
-      <Level>None</Level>
+      <Level>StripComments</Level>
     </MDKMinify>
     <MDKIgnore>
       <Folder>mdk</Folder>
     </MDKIgnore>
+    <MDKExcludeFromDeployAll />
   </PropertyGroup>
 </Project>
