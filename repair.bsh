@@ -1,0 +1,24 @@
+# Once the DoNotDelete project has been fixed by MDK, run this file to fix the other projects
+sourceFolder=DoNotDelete/MDK
+filesToCopy="$sourceFolder/mdk.paths.props $sourceFolder/whitelist.cache"
+additionalWhitelistFile=UnitTests/README.md
+
+function fixProject() {
+  for project in `find $1 -iname \*.csproj`:
+  do
+    local path=`dirname $project`
+    for file in $filesToCopy
+    do
+      cp $file $path/MDK
+    done
+    if [[ $1 == "UnitTests" ]]
+    then
+      cat $additionalWhitelistFile | grep -v -e "\(\*\*\)\|\(\`\`\`\)" >> $path/MDK/whitelist.cache
+    fi
+  done
+}
+
+for basePath in Scripts TestScripts UnitTests
+do
+  fixProject $basePath
+done

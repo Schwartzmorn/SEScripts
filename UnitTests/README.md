@@ -1,5 +1,6 @@
-To have the unit test working, the following line should be added at the end of the whitelist.cache:
+**To have the unit test working, the following lines should be added at the end of the whitelist.cache:**
 ```
+# Added for Unit Tests
 System.Diagnostics.Debug+*, System
 Microsoft.VisualStudio.TestTools.UnitTesting.*, Microsoft.VisualStudio.QualityTools.UnitTestFramework
 System.Type.GetMethod(string, System.Reflection.BindingFlags), mscorlib
