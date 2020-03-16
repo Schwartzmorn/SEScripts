@@ -11,8 +11,6 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "AutoRoutine", "Mixins\AutoR
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CommandLine", "Mixins\CommandLine\CommandLine.shproj", "{7A2B83C9-7453-4D63-A881-6D0A249B79F8}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CommandSerializer", "Mixins\CommandSerializer\CommandSerializer.shproj", "{EDEBE9C4-2B9A-4E84-AFD8-FC3AFCE0B8B9}"
-EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ConnectionClient", "Mixins\ConnectionClient\ConnectionClient.shproj", "{DCA9D508-08E7-4C3F-8365-B2CF430F9B7A}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CoordinatesTransformer", "Mixins\CoordinatesTransformer\CoordinatesTransformer.shproj", "{4F394CB5-48AC-4DD6-81D3-A534FEDDC578}"
@@ -180,7 +178,6 @@ Global
 		Mixins\WheelsController\WheelsController.projitems*{e1cac091-909e-4090-b726-a4eaafa5e8e2}*SharedItemsImports = 4
 		UnitTests\Common\ProcessMocks\ProcessMocks.projitems*{e1cac091-909e-4090-b726-a4eaafa5e8e2}*SharedItemsImports = 4
 		UnitTests\Common\TestRunner\TestRunner.projitems*{e1cac091-909e-4090-b726-a4eaafa5e8e2}*SharedItemsImports = 4
-		Mixins\CommandSerializer\CommandSerializer.projitems*{edebe9c4-2b9a-4e84-afd8-fc3afce0b8b9}*SharedItemsImports = 13
 		Mixins\Logger\Logger.projitems*{f42323f0-faf9-49ec-ad2a-1b1e333cf8b7}*SharedItemsImports = 13
 		Mixins\Logger\Logger.projitems*{fe73e735-8237-48f6-bbb0-d29e7607b3ad}*SharedItemsImports = 4
 		Mixins\Process\Process.projitems*{fe73e735-8237-48f6-bbb0-d29e7607b3ad}*SharedItemsImports = 4
@@ -332,7 +329,6 @@ Global
 		{BDB8D540-249B-4C93-B6E5-70FDE3287356} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{C9AB9D6A-925B-4EDD-89DB-D6F399FE3F83} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{7A2B83C9-7453-4D63-A881-6D0A249B79F8} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
-		{EDEBE9C4-2B9A-4E84-AFD8-FC3AFCE0B8B9} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{DCA9D508-08E7-4C3F-8365-B2CF430F9B7A} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{4F394CB5-48AC-4DD6-81D3-A534FEDDC578} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}
 		{5588F66D-3F10-4530-AAFF-101C35574A01} = {71FD4D9D-2E82-4545-AEAC-E4BFCA11DAD4}

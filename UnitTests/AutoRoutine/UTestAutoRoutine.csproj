@@ -50,6 +50,7 @@
     <Compile Include="AutoRoutineTestMain.cs" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
     <Compile Include="MDK\InstructionsTest.cs" />
+    <Compile Include="MDK\RoutineParserTest.cs" />
   </ItemGroup>
   <Import Project="..\..\Mixins\Process\Process.projitems" Label="Shared" />
   <Import Project="..\Common\ProcessMocks\ProcessMocks.projitems" Label="Shared" />

@@ -34,9 +34,9 @@ namespace IngameScript.MDK {
     }
 
     public void CommandInstruction() {
-      var cmd = new Program.CommandInstruction("-cmd arg1 arg2", this.commandLine);
+      var cmd = new Program.CommandInstruction("cmd", new List<string>{"arg1", "arg2"}, this.commandLine);
 
-      cmd.Execute(this.process, this.mock.Action);
+      cmd.Execute(this.process, this.mock.Action, new List<string>());
       List<string> processes = this.getProcesses();
 
       Assert.AreEqual(2, processes.Count);
@@ -54,9 +54,9 @@ namespace IngameScript.MDK {
     }
     public void KillCommandInstruction() {
       // We check that the callback is executed correctly when we kill the process
-      var cmd = new Program.CommandInstruction("-cmd", this.commandLine);
+      var cmd = new Program.CommandInstruction("cmd", new List<string>(), this.commandLine);
 
-      cmd.Execute(this.process, this.mock.Action);
+      cmd.Execute(this.process, this.mock.Action, new List<string>());
 
       Assert.IsFalse(this.mock.Called);
 
@@ -70,9 +70,9 @@ namespace IngameScript.MDK {
     }
 
     public void WaitInstruction() {
-      var wait = new Program.WaitInstruction(4);
+      var wait = new Program.WaitInstruction("4");
 
-      wait.Execute(this.process, this.mock.Action);
+      wait.Execute(this.process, this.mock.Action, new List<string>());
       List<string> processes = this.getProcesses();
 
       Assert.AreEqual(2, processes.Count);
@@ -95,9 +95,9 @@ namespace IngameScript.MDK {
       Assert.IsFalse(processes.Any(s => s.Contains("ar-wait")));
     }
     public void KillWaitInstruction() {
-      var wait = new Program.WaitInstruction(1);
+      var wait = new Program.WaitInstruction("1");
 
-      wait.Execute(this.process, this.mock.Action);
+      wait.Execute(this.process, this.mock.Action, new List<string>());
 
       Assert.IsFalse(this.mock.Called);
 
@@ -113,7 +113,7 @@ namespace IngameScript.MDK {
     public void ForeverInstruction() {
       var always = new Program.ForeverInstruction();
 
-      always.Execute(this.process, this.mock.Action);
+      always.Execute(this.process, this.mock.Action, new List<string>());
       List<string> processes = this.getProcesses();
 
       Assert.AreEqual(2, processes.Count);
@@ -134,12 +134,12 @@ namespace IngameScript.MDK {
 
     public void MultipleInstruction() {
       var multiple = new Program.MultipleInstruction(new List<Program.Instruction>{
-        new Program.CommandInstruction("-cmd 1", this.commandLine),
-        new Program.WaitInstruction(2),
-        new Program.CommandInstruction("-cmd 2", this.commandLine)
+        new Program.CommandInstruction("cmd", new List<string>{"1"}, this.commandLine),
+        new Program.WaitInstruction("2"),
+        new Program.CommandInstruction("cmd", new List<string>{"2"}, this.commandLine)
       });
 
-      multiple.Execute(this.process, this.mock.Action);
+      multiple.Execute(this.process, this.mock.Action, new List<string>());
 
       this.tick();
 
@@ -163,12 +163,12 @@ namespace IngameScript.MDK {
 
     public void KillMultipleInstruction() {
       var multiple = new Program.MultipleInstruction(new List<Program.Instruction>{
-        new Program.CommandInstruction("-cmd 1", this.commandLine),
-        new Program.WaitInstruction(2),
-        new Program.CommandInstruction("-cmd 2", this.commandLine)
+        new Program.CommandInstruction("cmd", new List<string>{"1"}, this.commandLine),
+        new Program.WaitInstruction("2"),
+        new Program.CommandInstruction("cmd", new List<string>{"2"}, this.commandLine)
       });
 
-      multiple.Execute(this.process, this.mock.Action);
+      multiple.Execute(this.process, this.mock.Action, new List<string>());
 
       this.tick();
       Assert.IsTrue(this.getProcesses().Any(s => s.Contains("ar-wait")));
@@ -185,14 +185,14 @@ namespace IngameScript.MDK {
 
     public void WhileInstruction() {
       var whileInstruction = new Program.WhileInstruction(
-        new Program.WaitInstruction(5),
+        new Program.WaitInstruction("5"),
         new List<Program.Instruction> {
-           new Program.CommandInstruction("-cmd 1", this.commandLine),
-           new Program.CommandInstruction("-cmd 2", this.commandLine),
-           new Program.CommandInstruction("-cmd 3", this.commandLine),
+           new Program.CommandInstruction("cmd", new List<string>{"1"}, this.commandLine),
+           new Program.CommandInstruction("cmd", new List<string>{"2"}, this.commandLine),
+           new Program.CommandInstruction("cmd", new List<string>{"3"}, this.commandLine),
         }
       );
-      whileInstruction.Execute(this.process, this.mock.Action);
+      whileInstruction.Execute(this.process, this.mock.Action, new List<string>());
 
       foreach(int i in Enumerable.Range(0, 4)) {
         this.tick();
@@ -214,14 +214,14 @@ namespace IngameScript.MDK {
 
     public void KillWhileInstruction() {
       var whileInstruction = new Program.WhileInstruction(
-        new Program.WaitInstruction(5),
+        new Program.WaitInstruction("5"),
         new List<Program.Instruction> {
-           new Program.CommandInstruction("-cmd 1", this.commandLine),
-           new Program.CommandInstruction("-cmd 2", this.commandLine),
-           new Program.CommandInstruction("-cmd 3", this.commandLine),
+           new Program.CommandInstruction("cmd", new List<string>{"1"}, this.commandLine),
+           new Program.CommandInstruction("cmd", new List<string>{"2"}, this.commandLine),
+           new Program.CommandInstruction("cmd", new List<string>{"3"}, this.commandLine),
         }
       );
-      whileInstruction.Execute(this.process, this.mock.Action);
+      whileInstruction.Execute(this.process, this.mock.Action, new List<string>());
 
       this.tick();
 
@@ -236,6 +236,41 @@ namespace IngameScript.MDK {
       this.tick();
 
       Assert.AreEqual(1, this.commandCalls.Count);
+    }
+
+    public void Placeholders() {
+      var multipleInstruction = new Program.MultipleInstruction(
+        new List<Program.Instruction> {
+          new Program.CommandInstruction("cmd", new List<string>{"$1"}, this.commandLine),
+          new Program.CommandInstruction("cmd", new List<string>{"$1", "$4"}, this.commandLine),
+          new Program.WaitInstruction("$3"),
+        }
+      );
+
+      multipleInstruction.Execute(this.process, this.mock.Action, new List<string>{ "arg1", "arg2", "4", "arg4" });
+
+      this.tick();
+
+      Assert.IsFalse(this.mock.Called);
+      Assert.AreEqual(1, this.commandCalls.Count);
+      Assert.AreEqual("arg1", this.commandCalls[0]);
+
+      this.tick();
+
+      Assert.IsFalse(this.mock.Called);
+      Assert.AreEqual(2, this.commandCalls.Count);
+      Assert.AreEqual("arg1,arg4", this.commandCalls[1]);
+
+      foreach (int i in Enumerable.Range(0, 3)) {
+        this.tick();
+      }
+
+      Assert.IsFalse(this.mock.Called);
+      Assert.AreEqual(2, this.commandCalls.Count);
+
+      this.tick();
+
+      Assert.IsTrue(this.mock.Called);
     }
   }
 }
