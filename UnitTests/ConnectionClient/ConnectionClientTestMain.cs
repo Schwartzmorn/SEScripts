@@ -19,6 +19,15 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program : MyGridProgram {
+    private IMyIntergridCommunicationSystem igc;
+
+    public override IMyIntergridCommunicationSystem IGC => this.igc;
+
     public void Main(string argument, UpdateType updateSource) { }
+
+    public Program(IMyGridTerminalSystem gts, IMyIntergridCommunicationSystem igc) {
+      this.GridTerminalSystem = gts;
+      this.igc = igc;
+    }
   }
 }

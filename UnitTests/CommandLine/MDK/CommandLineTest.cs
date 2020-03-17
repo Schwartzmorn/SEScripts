@@ -61,18 +61,20 @@ namespace IngameScript.MDK {
       var mock = new MockCommand();
       this.cmdLine.RegisterCommand(new Program.Command("test1", mock.Provider, "Brief Help test1"));
       this.cmdLine.RegisterCommand(new Program.Command("test2", mock.Provider, "Brief Help test2"));
+      this.cmdLine.RegisterCommand(new Program.Command("test3", mock.Provider, "Brief Help test3", requiredTrigger: Program.CommandTrigger.Cmd));
 
       var p = this.cmdLine.StartCmd("-help", Program.CommandTrigger.Cmd);
       this.logs.Clear();
 
       this.manager.Tick();
 
-      Assert.AreEqual(6, this.logs.Count, "One for the introduction + 1 for each command (help, kill, ps, test1, test2)");
+      Assert.AreEqual(6, this.logs.Count, "One for the introduction + 1 for each command except test3 (help, kill, ps, test1, test2)");
       foreach(string s in new List<string>{ "help", "kill", "ps", "test1", "test2" }) {
         Assert.IsNotNull(this.logs.FirstOrDefault(l => l.StartsWith($"-{s}")));
       }
       Assert.IsNotNull(this.logs.FirstOrDefault(l => l == "-test1: Brief Help test1"));
       Assert.IsFalse(p.Alive);
+      Assert.IsFalse(this.logs.Any(l => l.Contains("test3")), "Commands that cannot be run by the User are not displayed");
     }
 
     public void HelpCommand() {

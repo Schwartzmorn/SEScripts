@@ -46,18 +46,24 @@ namespace IngameScript {
       /// <param name="useOnce">Whether the command should be executed only once or not</param>
       /// <returns>The wrapped command</returns>
       public static ActionProvider Wrap(Action action, int period = 1, bool useOnce = true) => (args, logger) => MyTuple.Create<int, bool, Action<Process>>(period, useOnce, _ => action());
-      /// <summary>Method to wrap an <see cref="Action"/> as a command</summary>
+      /// <summary>Method to wrap an <see cref="Action{string}"/> as a command</summary>
       /// <param name="action">Action to execute, only the first arg will be taken into account</param>
       /// <param name="period">Period for the scheduling</param>
       /// <param name="useOnce">Whether the command should be executed only once or not</param>
       /// <returns>The wrapped command</returns>
       public static ActionProvider Wrap(Action<string> action, int period = 1, bool useOnce = true) => (args, logger) => MyTuple.Create<int, bool, Action<Process>>(period, useOnce, _ => action(args[0]));
-      /// <summary>Method to wrap an <see cref="Action"/> as a command</summary>
+      /// <summary>Method to wrap an <see cref="Action{List{string}}"/> as a command</summary>
       /// <param name="action">Action to execute</param>
       /// <param name="period">Period for the scheduling</param>
       /// <param name="useOnce">Whether the command should be executed only once or not</param>
       /// <returns>The wrapped command</returns>
       public static ActionProvider Wrap(Action<List<string>> action, int period = 1, bool useOnce = true) => (args, logger) => MyTuple.Create<int, bool, Action<Process>>(period, useOnce, _ => action(args));
+      /// <summary>Method to wrap an <see cref="Action{List{string}, Action{string}}"/> as a command</summary>
+      /// <param name="action">Action to execute</param>
+      /// <param name="period">Period for the scheduling</param>
+      /// <param name="useOnce">Whether the command should be executed only once or not</param>
+      /// <returns>The wrapped command</returns>
+      public static ActionProvider Wrap(Action<List<string>, Action<string>> action, int period = 1, bool useOnce = true) => (args, logger) => MyTuple.Create<int, bool, Action<Process>>(period, useOnce, _ => action(args, logger));
       /// <summary>Creates a new command ready to be registered in a <see cref="CommandLine"/>.</summary>
       /// <param name="name">Unique name of the command, used summon the command.</param>
       /// <param name="actionProvider">Function that returns the </param>

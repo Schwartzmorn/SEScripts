@@ -24,21 +24,13 @@ namespace IngameScript {
       public AutoRoutine(string name, List<Instruction> instructions): base(instructions) {
         this.Name = name;
       }
-
-      public override void Execute(Process parent, Action<Process> onDone, List<string> args) {
-        int argCount = this.ArgsCount();
-        if (argCount > 0 && (args == null || args.Count < argCount)) {
-          throw new InvalidOperationException($"AutoRoutine '{this.Name}' expects at least {argCount} arguments.");
-        }
-        base.Execute(parent, onDone, args);
-      }
     }
 
     public class AutoRoutineHandler {
       readonly Dictionary<string, AutoRoutine> routines = new Dictionary<string, AutoRoutine>();
       public AutoRoutineHandler(CommandLine commandLine) {
         commandLine.RegisterCommand(new Command("ar-execute", this.execute, "Execute a routine", minArgs: 1));
-        commandLine.RegisterCommand(new Command("ar-list", this.list, "Lists all the routines", nArgs: 0));
+        commandLine.RegisterCommand(new Command("ar-list", Command.Wrap(this.list), "Lists all the routines", nArgs: 0));
       }
 
       public void AddRoutines(List<AutoRoutine> routines) {
@@ -47,21 +39,24 @@ namespace IngameScript {
         }
       }
 
-      private MyTuple<int, bool, Action<Process>> list(List<string> args, Action<string> logger) {
-        return MyTuple.Create<int, bool, Action<Process>>(1, true, p => {
-          logger("Available routines:");
-          foreach (var kv in this.routines) {
-            logger($"  '{kv.Key}': 0 argument");
-          }
-        });
+      void list(List<string> args, Action<string> logger) {
+        logger("Available routines:");
+        foreach (KeyValuePair<string, AutoRoutine> kv in this.routines) {
+          int argc = kv.Value.ArgsCount();
+          logger($"  '{kv.Key}': takes {(argc == 0 ? "no" : argc.ToString())} argument{(argc > 1 ? "s" : "")}");
+        }
       }
 
-      private MyTuple<int, bool, Action<Process>> execute(List<string> args, Action<string> logger) {
+      MyTuple<int, bool, Action<Process>> execute(List<string> args, Action<string> logger) {
         return MyTuple.Create<int, bool, Action<Process>>(1, true, p => {
           AutoRoutine routine;
           if (this.routines.TryGetValue(args[0], out routine)) {
-            // TODO check arguments
-            routine.Execute(p, null, args);
+            int argc = routine.ArgsCount();
+            if (args.Count > argc) {
+              routine.Execute(p, null, args.GetRange(1, argc));
+            } else {
+              logger($"Routine '{args[0]}' needs {argc} argument{(argc > 1 ? "s" : "")}");
+            }
           } else {
             logger($"Could not find routine {args[0]}");
           }

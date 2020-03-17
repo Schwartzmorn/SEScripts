@@ -57,7 +57,7 @@ namespace IngameScript {
       public override void Execute(Process parent, Action<Process> onDone, List<string> args) {
         this.executeNext(this.instructions.GetEnumerator(), parent, onDone, args);
       }
-      public override int ArgsCount() => this.instructions.Max(i => i.ArgsCount());
+      public override int ArgsCount() => (this.instructions != null && this.instructions.Count > 0)  ? this.instructions.Max(i => i.ArgsCount()) : 0;
       void executeNext(List<Instruction>.Enumerator instruction, Process parent, Action<Process> onDone, List<string> args) {
         if (parent.Active) {
           if (instruction.MoveNext()) {
@@ -71,7 +71,7 @@ namespace IngameScript {
     /// <summary>Executes the instructions of the loop until the condition instruction terminates, at which point it kills itself</summary>
     public class WhileInstruction : MultipleInstruction {
       readonly SingleInstruction condition;
-      /// <summary>Creates a interupting "while" loop. It differs from a real while loop as the condition is a process that runs in parallel to the loop body and interupts the body whenever it terminates</summary>
+      /// <summary>Creates a interupting "while" loop. It differs from a real while loop as the condition is a process that runs in parallel to the loop body and interrupts the body whenever it terminates</summary>
       /// <param name="condition">Instruction that makes the loop stop when it terminates</param>
       /// <param name="instructions">Instruction to execute in a loop</param>
       public WhileInstruction(SingleInstruction condition, List<Instruction> instructions) : base(instructions) {

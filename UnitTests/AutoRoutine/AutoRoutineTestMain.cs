@@ -19,6 +19,6 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program : MyGridProgram {
-    public void Main(string argument, UpdateType updateSource) { }
+    public void Main(string argument, UpdateType updateSource) {}
   }
 }

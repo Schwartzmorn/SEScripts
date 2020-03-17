@@ -41,13 +41,13 @@ namespace IngameScript {
         this.logger = logger;
         this.spawner = spawner;
 
-        this.RegisterCommand(new Command("help", this.help, "Displays this help or help on a command", detailedHelp: @"If no argument, gives the list of available command
+        this.RegisterCommand(new Command("help", Command.Wrap(this.help), "Displays this help or help on a command", detailedHelp: @"If no argument, gives the list of available command
 Else, gives the detailed help on the command", maxArgs: 1));
         this.log($"'{this.name}' initialized. Run '-help' for more info");
         if ((spawner as IProcessManager) != null) {
-          this.RegisterCommand(new Command("kill", this.kill, "Kills processes by pid or by name", nArgs: 1, detailedHelp: @"If a number is provided, it will kill the process with the given process id.
+          this.RegisterCommand(new Command("kill", Command.Wrap(this.kill), "Kills processes by pid or by name", nArgs: 1, detailedHelp: @"If a number is provided, it will kill the process with the given process id.
 Otherwise, it kills all the process with the given name."));
-          this.RegisterCommand(new Command("ps", this.ps, "Lists alive processes", nArgs: 0));
+          this.RegisterCommand(new Command("ps", Command.Wrap(this.ps), "Lists alive processes", nArgs: 0));
         }
       }
       /// <summary>Registers a <see cref="Command"/> so the <see cref="CommandLine"/> recognizes it.</summary>
@@ -91,36 +91,32 @@ Otherwise, it kills all the process with the given name."));
         return MyTuple.Create(cmdName, args);
       }
 
-      MyTuple<int, bool, Action<Process>> help(List<string> args, Action<string> log) {
-        return MyTuple.Create<int, bool, Action<Process>>(1, true, p => {
-          if (args.Count > 0) {
-            Command command;
-            if (this.commands.TryGetValue(args[0], out command)) {
-              command.DetailedHelp(log);
-            } else {
-              log($"Unknown command: {args[0]}");
-            }
+      void help(List<string> args, Action<string> log) {
+        if (args.Count > 0) {
+          Command command;
+          if (this.commands.TryGetValue(args[0], out command)) {
+            command.DetailedHelp(log);
           } else {
-            log($"Commands available on {this.name}:");
-            foreach (var kv in this.commands) {
-              log($"-{kv.Key}: {kv.Value.BriefHelp}");
-            }
+            log($"Unknown command: {args[0]}");
           }
-        });
+        } else {
+          log($"Commands available on {this.name}:");
+          foreach (KeyValuePair<string, Command> kv in this.commands.Where(kv => kv.Value.RequiredTrigger != CommandTrigger.Cmd)) {
+            log($"-{kv.Key}: {kv.Value.BriefHelp}");
+          }
+        }
       }
 
-      MyTuple<int, bool, Action<Process>> kill(List<string> args, Action<string> log) {
+      void kill(List<string> args, Action<string> log) {
         int pid;
-        return int.TryParse(args[0], out pid) && pid > 0
-          ? MyTuple.Create<int, bool, Action<Process>>(1, true, p => (this.spawner as IProcessManager).Kill(pid))
-          : MyTuple.Create<int, bool, Action<Process>>(1, true, p => (this.spawner as IProcessManager).KillAll(args[0]));
+        if (int.TryParse(args[0], out pid) && pid > 0) {
+          (this.spawner as IProcessManager).Kill(pid);
+        } else {
+          (this.spawner as IProcessManager).KillAll(args[0]);
+        }
       }
 
-      MyTuple<int, bool, Action<Process>> ps(List<string> args, Action<string> log) {
-        return MyTuple.Create<int, bool, Action<Process>>(1, true, p => {
-          (this.spawner as IProcessManager).Log(log);
-        });
-      }
+      void ps(List<string> args, Action<string> log) => (this.spawner as IProcessManager).Log(log);
 
       void log(string s) => this.logger?.Invoke(s);
     }

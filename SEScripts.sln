@@ -96,8 +96,13 @@ Global
 		Mixins\WheelsController\WheelsController.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
 		Mixins\WheelsController\WheelsController.projitems*{1fbc1400-6bb0-4b9e-a98f-4fe90dcea2c9}*SharedItemsImports = 13
 		..\MDK-Mockups\MDK-Mockups.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
+		Mixins\CommandLine\CommandLine.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
 		Mixins\ConnectionClient\ConnectionClient.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
+		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
+		Mixins\IniWatcher\IniWatcher.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
+		Mixins\PilotAssist\PilotAssist.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
 		Mixins\Process\Process.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
+		Mixins\WheelsController\WheelsController.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
 		UnitTests\Common\ProcessMocks\ProcessMocks.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
 		UnitTests\Common\TestRunner\TestRunner.projitems*{24af8a46-1d2d-4c4d-a2b8-aef1c0f73bda}*SharedItemsImports = 4
 		UnitTests\Common\ProcessMocks\ProcessMocks.projitems*{2a024a78-a110-4127-aaca-a9993a7c783f}*SharedItemsImports = 13

@@ -10,6 +10,7 @@ namespace IngameScript.MDK {
       var runner = new TestRunner.TestRunner();
       runner.AddTest(new InstructionsTest());
       runner.AddTest(new RoutineParserTest());
+      runner.AddTest(new AutoRoutineHandlerTest());
       runner.RunTests();
     }
   }

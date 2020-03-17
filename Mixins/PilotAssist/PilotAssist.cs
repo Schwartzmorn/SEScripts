@@ -26,21 +26,21 @@ namespace IngameScript {
     /// <para>It maintains a list of controllers, and if there is no pilot in any of the controllers, it engages the handbrake.</para>
     /// </summary>
     public class PilotAssist: IIniConsumer {
-      private const string SECTION = "pilot-assist";
+      const string SECTION = "pilot-assist";
 
       public bool ManuallyBraked { get; private set; }
-      private bool Braked => this.controllers.First().HandBrake;
-      private bool Deactivated => this.deactivators.Any(d => d.ShouldDeactivate());
+      bool Braked => this.controllers.First().HandBrake;
+      bool Deactivated => this.deactivators.Any(d => d.ShouldDeactivate());
 
-      private readonly List<IMyShipController> controllers = new List<IMyShipController>(3);
-      private readonly List<IPADeactivator> deactivators = new List<IPADeactivator>();
-      private readonly List<IPABraker> handBrakers = new List<IPABraker>();
-      private readonly IMyGridTerminalSystem gts;
-      private readonly Action<string> logger;
-      private readonly WheelsController wheelControllers;
-      private bool assist;
-      private float sensitivity;
-      private bool wasPreviouslyAutoBraked;
+      readonly List<IMyShipController> controllers = new List<IMyShipController>(3);
+      readonly List<IPADeactivator> deactivators = new List<IPADeactivator>();
+      readonly List<IPABraker> handBrakers = new List<IPABraker>();
+      readonly IMyGridTerminalSystem gts;
+      readonly Action<string> logger;
+      readonly WheelsController wheelControllers;
+      bool assist;
+      float sensitivity;
+      bool wasPreviouslyAutoBraked;
       /// <summary>Creates a PilotAssist</summary>
       /// <param name="gts">To get the different blocks</param>
       /// <param name="ini">Parsed ini that contains the configuration. See <see cref="Read(Ini)"/> for more information</param>
@@ -91,7 +91,7 @@ namespace IngameScript {
           throw new InvalidOperationException("No controller found");
         }
       }
-      private void handle(Process p) {
+      void handle(Process p) {
         if (!this.Deactivated) {
           if (!this.wasPreviouslyAutoBraked && this.Braked) {
             this.ManuallyBraked = true;
@@ -107,13 +107,13 @@ namespace IngameScript {
           }
         }
       }
-      private void save(MyIni ini) {
+      void save(MyIni ini) {
         ini.Set(SECTION, "assist", this.assist);
         ini.Set(SECTION, "controllers", string.Join(",", this.controllers.Select(c => c.DisplayNameText)));
         ini.Set(SECTION, "sensitivity", this.sensitivity);
       }
-      private bool shouldBrake() {
-        // To engage the hanbrake when the pilot presses the up key (esp. useful when controlling with the pad)
+      bool shouldBrake() {
+        // To engage the handbrake when the pilot presses the up key (esp. useful when controlling with the pad)
         float up = this.assist ? this.controllers.Sum(c => c.MoveIndicator.Y) : 0;
         return this.controllers.All(c => !c.IsUnderControl) || this.handBrakers.Any(h => h.ShouldHandbrake()) || up == 1;
       }

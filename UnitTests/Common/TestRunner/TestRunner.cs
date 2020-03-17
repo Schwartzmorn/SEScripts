@@ -24,12 +24,12 @@ namespace TestRunner {
 
     public void AddTest(object o) {
       Action beforeEach = null;
-      var method = o.GetType().GetMethod("BeforeEach", BindingFlags.Public | BindingFlags.Instance);
+      MethodInfo method = o.GetType().GetMethod("BeforeEach", BindingFlags.Public | BindingFlags.Instance);
       if (method != null) {
         beforeEach = () => method.Invoke(o, null);
       }
 
-      foreach(var m in o.GetType().GetMethods(BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.Instance)) {
+      foreach(MethodInfo m in o.GetType().GetMethods(BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.Instance)) {
         if (m.Name != "BeforeEach") {
           this.tests.Add(new UnitTest($"{o.GetType().Name}.{m.Name}", () => m.Invoke(o, null), beforeEach));
         }

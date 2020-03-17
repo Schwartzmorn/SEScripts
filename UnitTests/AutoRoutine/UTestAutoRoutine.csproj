@@ -49,6 +49,7 @@
     </AdditionalFiles>
     <Compile Include="AutoRoutineTestMain.cs" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
+    <Compile Include="MDK\AutoRoutineHandlerTest.cs" />
     <Compile Include="MDK\InstructionsTest.cs" />
     <Compile Include="MDK\RoutineParserTest.cs" />
   </ItemGroup>

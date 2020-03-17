@@ -16,7 +16,7 @@ namespace IngameScript.MDK {
       this.commandCalls = new List<string>();
       this.manager = Program.Process.CreateManager(s => System.Diagnostics.Debug.WriteLine(s));
       this.commandLine = new Program.CommandLine("test", null, this.manager);
-      this.commandLine.RegisterCommand(new Program.Command("cmd", this.command, ""));
+      this.commandLine.RegisterCommand(new Program.Command("cmd", this.command, "", requiredTrigger: Program.CommandTrigger.Cmd));
       this.mock = new Program.MockAction();
       this.process = this.manager.Spawn(null, "test");
     }
