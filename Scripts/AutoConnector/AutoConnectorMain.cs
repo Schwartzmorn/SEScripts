@@ -22,19 +22,19 @@ namespace IngameScript {
     private readonly CmdLine _commandLine;
 
     public Program() {
-      Runtime.UpdateFrequency = UpdateFrequency.Update1;
-      Logger.SetupGlobalInstance(new Logger(Me.GetSurface(0)), Echo);
+      this.Runtime.UpdateFrequency = UpdateFrequency.Update1;
+      Logger.SetupGlobalInstance(new Logger(this.Me.GetSurface(0)), this.Echo);
       Schedule(Logger.Flush);
-      _commandLine = new CmdLine("Auto connector station", Log);
+      this._commandLine = new CmdLine("Auto connector station", Log);
       var ini = new MyIni();
-      ini.Parse(Me.CustomData);
-      _controller = new AutoConnectionDispatcher(this, _commandLine, ini);
+      ini.Parse(this.Me.CustomData);
+      this._controller = new AutoConnectionDispatcher(this, this._commandLine, ini);
     }
 
-    public void Save() => Scheduler.Inst.Save(s => Me.CustomData = s);
+    public void Save() => Scheduler.Inst.Save(s => this.Me.CustomData = s);
 
     public void Main(string argument, UpdateType updateSource) {
-      _commandLine.HandleCmd(argument, true);
+      this._commandLine.HandleCmd(argument, true);
       Scheduler.Inst.Tick();
     }
   }

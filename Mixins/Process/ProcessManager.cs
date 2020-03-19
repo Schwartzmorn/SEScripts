@@ -83,7 +83,7 @@ namespace IngameScript {
 
         public void Tick() {
           if (this.smartSchedule) {
-            foreach (var p in this.toAdd.Where(t => t.Alive)) {
+            foreach (Process p in this.toAdd.Where(t => t.Alive)) {
               if (p.Period > 1 && !p.UseOnce) {
                 var cs = new HashSet<int>(this.processes.Where(b => b.Period == p.Period).Select(b => b.Counter));
                 p.ResetCounter(Enumerable.Range(0, p.Period).FirstOrDefault(t => !cs.Contains(t)));
@@ -94,7 +94,7 @@ namespace IngameScript {
             this.processes.AddRange(this.toAdd);
           }
           this.toAdd.Clear();
-          foreach (var p in this.processes) {
+          foreach (Process p in this.processes) {
             try {
               p.tick();
             } catch (Exception e) {
@@ -105,7 +105,7 @@ namespace IngameScript {
         }
 
         public void Log(Action<string> log) {
-          foreach (var p in this.AllProcesses.Where(p => p.Alive && p.parent == null)) {
+          foreach (Process p in this.AllProcesses.Where(p => p.Alive && p.parent == null)) {
             p.ToString(0, log);
           }
         }

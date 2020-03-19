@@ -19,13 +19,14 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program {
+    /// <summary>The auto routine is just a <see cref="MultipleInstruction"/> with a name</summary>
     public class AutoRoutine: MultipleInstruction {
       public readonly string Name;
       public AutoRoutine(string name, List<Instruction> instructions): base(instructions) {
         this.Name = name;
       }
     }
-
+    /// <summary>Entry point for <see cref="AutoRoutine"/></summary>
     public class AutoRoutineHandler {
       readonly Dictionary<string, AutoRoutine> routines = new Dictionary<string, AutoRoutine>();
       public AutoRoutineHandler(CommandLine commandLine) {

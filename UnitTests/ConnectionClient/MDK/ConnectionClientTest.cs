@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Sandbox.ModAPI.Ingame;
 using IngameScript.Mockups;
 using IngameScript.Mockups.Blocks;
+using VRageMath;
 
 namespace IngameScript.MDK {
   class ConnectionClientTest {
@@ -20,13 +21,18 @@ namespace IngameScript.MDK {
     Program program;
     public void BeforeEach() {
       this.connector = new MockShipConnector() {
-        CustomData = @"
-        [connection-client]
-        connector-name=connector name
-        server-channel=server channel
-        client-channel=client channel
-        ",
-        CustomName = "connector name"
+        CubeGrid = new MockCubeGrid() {
+          GridSizeEnum = VRage.Game.MyCubeSize.Small
+        },
+        CustomData = @"[connection-client]
+  connector-name=connector name
+  server-channel=server channel
+  client-channel=client channel
+",
+        CustomName = "connector name",
+        DisplayNameText = "connector name",
+        WorldMatrix = MatrixD.Identity,
+        WorldPosition = new Vector3D(5, 15, 25)
       };
       this.gts = new MockGridTerminalSystem() { 
         this.connector
@@ -59,17 +65,123 @@ namespace IngameScript.MDK {
     public void CreateNew() {
       Program.ConnectionClient client = this.getConnectionClient(null);
 
-      Assert.AreEqual(client.State, Program.ConnectionState.Ready);
+      Assert.AreEqual(Program.ConnectionState.Ready, client.State);
+      Assert.AreEqual("client channel", client.ClientChannel);
+    }
+
+    public void CreateNewWithState() {
+      Program.ConnectionClient client = this.getConnectionClient("Standby");
+
+      Assert.AreEqual(Program.ConnectionState.Standby, client.State);
     }
 
     public void Connection() {
-      Program.ConnectionClient client = this.getConnectionClient("Ready");
+      Program.ConnectionClient client = this.getConnectionClient(null);
 
       this.startCmd("-ac-connect");
 
+      this.tick(1);
+
+      Assert.AreEqual(0, client.Progress);
+      Assert.AreEqual(Program.ConnectionState.WaitingCon, client.State);
+      Assert.AreEqual("server channel", this.igc.LastMessage.Item1);
+      Assert.AreEqual("-ac-con \"Small\" \"client channel\" \"5\" \"15\" \"25\" \"0\" \"0\" \"-1\"", this.igc.LastMessage.Item2);
+
+      this.listener.QueueMessage("-ac-progress 0.25");
+
       this.tick();
 
-      Assert.AreEqual(client.State, Program.ConnectionState.WaitingCon);
+      Assert.AreEqual(0.25f, client.Progress);
+      Assert.AreEqual(Program.ConnectionState.WaitingCon, client.State);
+
+      this.listener.QueueMessage("-ac-done");
+      this.tick();
+
+      Assert.AreEqual(Program.ConnectionState.Connected, client.State);
+      Assert.AreEqual(0, client.Progress);
+    }
+
+    public void Timeout() {
+      Program.ConnectionClient client = this.getConnectionClient(null);
+
+      this.startCmd("-ac-connect");
+
+      this.tick(55); // enough to timeout
+      Assert.AreEqual(Program.ConnectionState.Ready, client.State);
+      Assert.AreEqual(Program.FailReason.Timeout, client.FailReason);
+      Assert.AreEqual(0, client.Progress);
+
+      this.tick(500); // enough to for the fail reason to be reset
+      Assert.AreEqual(Program.FailReason.None, client.FailReason);
+    }
+
+    public void LongProgress() {
+      Program.ConnectionClient client = this.getConnectionClient(null);
+
+      this.startCmd("-ac-connect");
+
+      this.tick(40); // not enought to timeout
+
+      this.listener.QueueMessage("-ac-progress 0.125");
+
+      this.tick(40);
+
+      Assert.AreEqual(Program.ConnectionState.WaitingCon, client.State);
+
+      this.listener.QueueMessage("-ac-progress 0.25");
+
+      this.tick(40);
+
+      Assert.AreEqual(Program.ConnectionState.WaitingCon, client.State);
+    }
+
+    public void Disconnect() {
+      Program.ConnectionClient client = this.getConnectionClient("Connected");
+
+      this.startCmd("-ac-disconnect");
+
+      this.tick(1);
+
+      Assert.AreEqual(0, client.Progress);
+      Assert.AreEqual(Program.ConnectionState.WaitingDisc, client.State);
+      Assert.AreEqual("server channel", this.igc.LastMessage.Item1);
+      Assert.AreEqual("-ac-disc \"client channel\"", this.igc.LastMessage.Item2);
+
+      this.listener.QueueMessage("-ac-progress 0.25");
+
+      this.tick();
+
+      Assert.AreEqual(0.25f, client.Progress);
+      Assert.AreEqual(Program.ConnectionState.WaitingDisc, client.State);
+
+      this.listener.QueueMessage("-ac-done");
+      this.tick();
+
+      Assert.AreEqual(Program.ConnectionState.Ready, client.State);
+      Assert.AreEqual(0, client.Progress);
+    }
+
+    public void Standby() {
+      Program.ConnectionClient client = this.getConnectionClient("Connected");
+
+      this.listener.QueueMessage("-ac-cancel");
+
+      this.tick(6);
+
+      Assert.AreEqual(0, client.Progress);
+      Assert.AreEqual(Program.ConnectionState.Standby, client.State);
+
+      this.tick(200);
+
+      Assert.AreEqual(0, client.Progress);
+      Assert.AreEqual(Program.ConnectionState.Standby, client.State);
+
+      this.listener.QueueMessage("-ac-progress 0.5");
+
+      this.tick(6);
+
+      Assert.AreEqual(0.5f, client.Progress);
+      Assert.AreEqual(Program.ConnectionState.WaitingCon, client.State);
     }
   }
 }

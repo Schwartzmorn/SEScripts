@@ -9,6 +9,6 @@
     <Import_RootNamespace>TestRunner</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)TestRunner.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TestRunner.debug.cs" />
   </ItemGroup>
 </Project>

@@ -26,7 +26,7 @@ namespace IngameScript {
     /// <param name="key">Key</param>
     /// <returns>The value corresponding to the key in the section</returns>
     public static MyIniValue GetThrow(this MyIni ini, string section, string key) {
-      var res = ini.Get(section, key);
+      MyIniValue res = ini.Get(section, key);
       if (res.IsEmpty) {
         throw new InvalidOperationException($"Need key '{key}' in section '{section}' in custom data");
       }

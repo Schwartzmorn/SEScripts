@@ -83,6 +83,13 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MDK-Mockups", "..\MDK-Mocku
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoNotDelete", "DoNotDelete\DoNotDelete.csproj", "{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UTestAutopilot", "UnitTests\Autopilot\UTestAutopilot.csproj", "{8996C7E3-184E-4D2C-ADAA-F5D3623780C6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{164DDD28-FA98-49D4-9941-CB2268596E1C}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Mixins\AutoRoutine\AutoRoutine.projitems*{015514ba-9e70-4a3b-b2c9-189772f8770c}*SharedItemsImports = 4
@@ -161,6 +168,16 @@ Global
 		Mixins\PilotAssist\PilotAssist.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\Process\Process.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
 		Mixins\WheelsController\WheelsController.projitems*{82ca7a8b-bb91-47ec-8270-a7fdf58d1f54}*SharedItemsImports = 4
+		..\MDK-Mockups\MDK-Mockups.projitems*{8996c7e3-184e-4d2c-adaa-f5d3623780c6}*SharedItemsImports = 4
+		Mixins\Autopilot\Autopilot.projitems*{8996c7e3-184e-4d2c-adaa-f5d3623780c6}*SharedItemsImports = 4
+		Mixins\CommandLine\CommandLine.projitems*{8996c7e3-184e-4d2c-adaa-f5d3623780c6}*SharedItemsImports = 4
+		Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems*{8996c7e3-184e-4d2c-adaa-f5d3623780c6}*SharedItemsImports = 4
+		Mixins\IniWatcher\IniWatcher.projitems*{8996c7e3-184e-4d2c-adaa-f5d3623780c6}*SharedItemsImports = 4
+		Mixins\PilotAssist\PilotAssist.projitems*{8996c7e3-184e-4d2c-adaa-f5d3623780c6}*SharedItemsImports = 4
+		Mixins\Process\Process.projitems*{8996c7e3-184e-4d2c-adaa-f5d3623780c6}*SharedItemsImports = 4
+		Mixins\WheelsController\WheelsController.projitems*{8996c7e3-184e-4d2c-adaa-f5d3623780c6}*SharedItemsImports = 4
+		UnitTests\Common\ProcessMocks\ProcessMocks.projitems*{8996c7e3-184e-4d2c-adaa-f5d3623780c6}*SharedItemsImports = 4
+		UnitTests\Common\TestRunner\TestRunner.projitems*{8996c7e3-184e-4d2c-adaa-f5d3623780c6}*SharedItemsImports = 4
 		Mixins\Item\Item.projitems*{8ca46b0b-4b6e-44de-8f23-0540e977da88}*SharedItemsImports = 13
 		Mixins\IniWatcher\IniWatcher.projitems*{b1a6c2d1-a796-4118-8517-90f17b6c178f}*SharedItemsImports = 13
 		..\MDK-Mockups\MDK-Mockups.projitems*{bc763bbb-58a1-41be-be2d-36eaeaf123c6}*SharedItemsImports = 4
@@ -326,6 +343,13 @@ Global
 		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Release|Any CPU.Build.0 = Debug|x64
 		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Release|x64.ActiveCfg = Debug|x64
 		{CB975B05-F42C-4446-BFC1-4D3FB4E0CC71}.Release|x64.Build.0 = Debug|x64
+		{8996C7E3-184E-4D2C-ADAA-F5D3623780C6}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{8996C7E3-184E-4D2C-ADAA-F5D3623780C6}.Debug|x64.ActiveCfg = Debug|x64
+		{8996C7E3-184E-4D2C-ADAA-F5D3623780C6}.Debug|x64.Build.0 = Debug|x64
+		{8996C7E3-184E-4D2C-ADAA-F5D3623780C6}.Release|Any CPU.ActiveCfg = Debug|x64
+		{8996C7E3-184E-4D2C-ADAA-F5D3623780C6}.Release|Any CPU.Build.0 = Debug|x64
+		{8996C7E3-184E-4D2C-ADAA-F5D3623780C6}.Release|x64.ActiveCfg = Debug|x64
+		{8996C7E3-184E-4D2C-ADAA-F5D3623780C6}.Release|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -365,6 +389,7 @@ Global
 		{BC763BBB-58A1-41BE-BE2D-36EAEAF123C6} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
 		{D4FE2AC0-EC0C-4071-BA4F-262213C954D2} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
 		{E1CAC091-909E-4090-B726-A4EAAFA5E8E2} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
+		{8996C7E3-184E-4D2C-ADAA-F5D3623780C6} = {D48E986A-21D4-4B43-85F1-5051E72BBDB3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4B1EACEE-0472-40F0-8708-5BDC579549E2}

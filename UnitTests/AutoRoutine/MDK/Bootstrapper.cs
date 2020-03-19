@@ -6,12 +6,12 @@ namespace IngameScript.MDK {
       MDKUtilityFramework.Load();
     }
 
-    public static void Main() {
+    public static int Main() {
       var runner = new TestRunner.TestRunner();
       runner.AddTest(new InstructionsTest());
       runner.AddTest(new RoutineParserTest());
       runner.AddTest(new AutoRoutineHandlerTest());
-      runner.RunTests();
+      return runner.RunTests();
     }
   }
 }

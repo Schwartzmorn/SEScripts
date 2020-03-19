@@ -30,7 +30,7 @@ namespace IngameScript {
       private static readonly double DISTANCE_CUTOFF = 2;
       private static readonly string INI_SECTION = "connection-server-";
 
-      public string Name => _connector.Name;
+      public string Name => this._connector.Name;
       public ConnectionRequest? CurrentRequest { get; private set; }
       public ConnectionRequest? PreviousRequest { get; private set; }
 
@@ -40,137 +40,137 @@ namespace IngameScript {
 
       public AutoConnectionServer(MyIni ini, IMyIntergridCommunicationSystem igc, AutoConnector connector)
           : this(igc, connector) {
-        _deserialize(ini);
+        this._deserialize(ini);
       }
 
       public AutoConnectionServer(IMyIntergridCommunicationSystem igc, AutoConnector connector) {
-        _connector = connector;
-        _igc = igc;
+        this._connector = connector;
+        this._igc = igc;
       }
 
-      public bool IsInRange(Vector3D position) => _connector.GetDistance(position) < DISTANCE_CUTOFF;
+      public bool IsInRange(Vector3D position) => this._connector.GetDistance(position) < DISTANCE_CUTOFF;
 
-      public bool HasPendingRequest(long address) => address == CurrentRequest?.Address || address == PreviousRequest?.Address;
+      public bool HasPendingRequest(long address) => address == this.CurrentRequest?.Address || address == this.PreviousRequest?.Address;
 
       public void Connect(ConnectionRequest request) {
-        if (CurrentRequest != null && CurrentRequest?.Address == request.Address) {
-          CurrentRequest = request;
+        if (this.CurrentRequest != null && this.CurrentRequest?.Address == request.Address) {
+          this.CurrentRequest = request;
         } else {
-          if (PreviousRequest != null && PreviousRequest.Value.Address != request.Address) {
-            _sendCancel(PreviousRequest.Value);
+          if (this.PreviousRequest != null && this.PreviousRequest.Value.Address != request.Address) {
+            this._sendCancel(this.PreviousRequest.Value);
           }
-          PreviousRequest = CurrentRequest;
-          CurrentRequest = request;
+          this.PreviousRequest = this.CurrentRequest;
+          this.CurrentRequest = request;
         }
-        if(PreviousRequest != null) {
-          _sendCancel(PreviousRequest.Value);
+        if(this.PreviousRequest != null) {
+          this._sendCancel(this.PreviousRequest.Value);
         }
-        _connector.Connect(CurrentRequest.Value.Size, CurrentRequest.Value.Position, CurrentRequest.Value.Orientation);
-        _startConnectionCallback(CurrentRequest.Value);
+        this._connector.Connect(this.CurrentRequest.Value.Size, this.CurrentRequest.Value.Position, this.CurrentRequest.Value.Orientation);
+        this._startConnectionCallback(this.CurrentRequest.Value);
       }
 
       public void Disconnect(long address) {
         Log("Disconnecting");
-        if(PreviousRequest != null && (PreviousRequest?.Address == address)) {
-          PreviousRequest = null;
-        } else if (CurrentRequest != null && (CurrentRequest?.Address == address)) {
-          var requestToNotify = CurrentRequest.Value;
-          CurrentRequest = PreviousRequest;
-          PreviousRequest = null;
-          if (CurrentRequest != null) {
-            Connect(CurrentRequest.Value);
+        if(this.PreviousRequest != null && (this.PreviousRequest?.Address == address)) {
+          this.PreviousRequest = null;
+        } else if (this.CurrentRequest != null && (this.CurrentRequest?.Address == address)) {
+          var requestToNotify = this.CurrentRequest.Value;
+          this.CurrentRequest = this.PreviousRequest;
+          this.PreviousRequest = null;
+          if (this.CurrentRequest != null) {
+            this.Connect(this.CurrentRequest.Value);
           } else {
-            _connector.Disconnect();
-            _clearCallbacks();
+            this._connector.Disconnect();
+            this._clearCallbacks();
           }
-          double totalLength = _connector.GetRemainingLength();
-          _scheduleCallback(new ScheduledAction(
-              () => _checkDisconnectionProgress(requestToNotify, totalLength),
+          double totalLength = this._connector.GetRemainingLength();
+          this._scheduleCallback(new ScheduledAction(
+              () => this._checkDisconnectionProgress(requestToNotify, totalLength),
               period: 20,
-              name: $"con-serv-prog-{_connector.Name}"));
+              name: $"con-serv-prog-{this._connector.Name}"));
         }
       }
 
       public void Reset() {
-        _clearCallbacks();
-        if (CurrentRequest != null) {
-          _sendCancel(CurrentRequest.Value);
+        this._clearCallbacks();
+        if (this.CurrentRequest != null) {
+          this._sendCancel(this.CurrentRequest.Value);
         }
-        if(PreviousRequest != null) {
-          _sendCancel(PreviousRequest.Value);
+        if(this.PreviousRequest != null) {
+          this._sendCancel(this.PreviousRequest.Value);
         }
-        CurrentRequest = null;
-        PreviousRequest = null;
-        _connector.Disconnect();
+        this.CurrentRequest = null;
+        this.PreviousRequest = null;
+        this._connector.Disconnect();
       }
 
       public void Save(MyIni ini) {
-        if(CurrentRequest != null) {
-          string sectionName = $"{INI_SECTION}{_connector.Name}";
-          _saveRequest(ini, sectionName, "current", CurrentRequest.Value);
-          if(PreviousRequest != null) {
-            _saveRequest(ini, sectionName, "previous", PreviousRequest.Value);
+        if(this.CurrentRequest != null) {
+          string sectionName = $"{INI_SECTION}{this._connector.Name}";
+          this._saveRequest(ini, sectionName, "current", this.CurrentRequest.Value);
+          if(this.PreviousRequest != null) {
+            this._saveRequest(ini, sectionName, "previous", this.PreviousRequest.Value);
           }
         }
-        _connector.Save(ini);
+        this._connector.Save(ini);
       }
 
-      public bool Update() => _connector.Update();
+      public bool Update() => this._connector.Update();
 
       private void _startConnectionCallback(ConnectionRequest request) {
-        _clearCallbacks();
-        double length = _connector.GetRemainingLength();
-        _scheduleCallback(new ScheduledAction(() => _checkConnectionProgress(request, length), period: 20));
+        this._clearCallbacks();
+        double length = this._connector.GetRemainingLength();
+        this._scheduleCallback(new ScheduledAction(() => this._checkConnectionProgress(request, length), period: 20));
       }
 
       private void _checkConnectionProgress(ConnectionRequest request, double totalLength) {
-        float progress = (float)((totalLength - _connector.GetRemainingLength()) / totalLength);
-        if (_connector.IsMoving()) {
-          _sendMessage(request, $"-ac-progress {MathHelper.Clamp(progress, 0, 1)}");
+        float progress = (float)((totalLength - this._connector.GetRemainingLength()) / totalLength);
+        if (this._connector.IsMoving()) {
+          this._sendMessage(request, $"-ac-progress {MathHelper.Clamp(progress, 0, 1)}");
         } else {
-          _clearCallbacks();
-          if (_connector.IsConnected()) {
-            _sendMessage(request, "-ac-done");
-            _scheduleCallback(new ScheduledAction(_checkManualDisconnection, period: 20));
+          this._clearCallbacks();
+          if (this._connector.IsConnected()) {
+            this._sendMessage(request, "-ac-done");
+            this._scheduleCallback(new ScheduledAction(_checkManualDisconnection, period: 20));
           } else {
-            _sendMessage(request, "-ac-ko");
-            Disconnect(request.Address);
+            this._sendMessage(request, "-ac-ko");
+            this.Disconnect(request.Address);
           }
         }
       }
 
       private void _checkManualDisconnection() {
-        if (!_connector.IsConnected()) {
-          _clearCallbacks();
-          if (CurrentRequest != null) {
-            Disconnect(CurrentRequest.Value.Address);
+        if (!this._connector.IsConnected()) {
+          this._clearCallbacks();
+          if (this.CurrentRequest != null) {
+            this.Disconnect(this.CurrentRequest.Value.Address);
           } else {
-            Reset();
+            this.Reset();
           }
         }
       }
 
       private void _checkDisconnectionProgress(ConnectionRequest request, double totalLength) {
-        float progress = (float)((totalLength - _connector.GetRemainingLength()) / totalLength) * 3;
+        float progress = (float)((totalLength - this._connector.GetRemainingLength()) / totalLength) * 3;
         if (progress > 1) {
-          Scheduler.Inst.Remove($"con-serv-prog-{_connector.Name}");
-          _sendMessage(request, "-ac-done");
+          Scheduler.Inst.Remove($"con-serv-prog-{this._connector.Name}");
+          this._sendMessage(request, "-ac-done");
         } else {
-          _sendMessage(request, $"-ac-progress {MathHelper.Clamp(progress, 0, 1)}");
+          this._sendMessage(request, $"-ac-progress {MathHelper.Clamp(progress, 0, 1)}");
         }
       }
 
-      private void _sendCancel(ConnectionRequest request) => _sendMessage(request, "-ac-cancel");
+      private void _sendCancel(ConnectionRequest request) => this._sendMessage(request, "-ac-cancel");
 
-      private void _sendMessage(ConnectionRequest request, string message) => _igc.SendUnicastMessage(request.Address, request.Channel, message);
+      private void _sendMessage(ConnectionRequest request, string message) => this._igc.SendUnicastMessage(request.Address, request.Channel, message);
 
       private void _clearCallbacks() {
-        _callbacks.ForEach(c => c.Dispose());
-        _callbacks.Clear();
+        this._callbacks.ForEach(c => c.Dispose());
+        this._callbacks.Clear();
       }
 
       private void _scheduleCallback(ScheduledAction action) {
-        _callbacks.Add(action);
+        this._callbacks.Add(action);
         Schedule(action);
       }
 
@@ -183,17 +183,17 @@ namespace IngameScript {
       }
 
       private void _deserialize(MyIni ini) {
-        string sectionName = $"{INI_SECTION}{_connector.Name}";
+        string sectionName = $"{INI_SECTION}{this._connector.Name}";
         if (ini.ContainsSection(sectionName)) {
-          CurrentRequest = _deserializeRequest(ini, sectionName, "current");
+          this.CurrentRequest = this._deserializeRequest(ini, sectionName, "current");
           if (ini.ContainsKey(sectionName, "previous")) {
-            PreviousRequest = _deserializeRequest(ini, sectionName, "previous");
+            this.PreviousRequest = this._deserializeRequest(ini, sectionName, "previous");
           }
         }
-        if (_connector.IsConnected()) {
-          _scheduleCallback(new ScheduledAction(_checkManualDisconnection, period: 20));
-        } else if (CurrentRequest != null) {
-          _startConnectionCallback(CurrentRequest.Value);
+        if (this._connector.IsConnected()) {
+          this._scheduleCallback(new ScheduledAction(_checkManualDisconnection, period: 20));
+        } else if (this.CurrentRequest != null) {
+          this._startConnectionCallback(this.CurrentRequest.Value);
         }
       }
 

@@ -5,10 +5,10 @@ namespace IngameScript.MDK {
     static TestBootstrapper() {
       MDKUtilityFramework.Load();
     }
-    public static void Main() {
+    public static int Main() {
       var runner = new TestRunner.TestRunner();
       runner.AddTest(new CircularBufferTest());
-      runner.RunTests();
+      return runner.RunTests();
     }
   }
 }

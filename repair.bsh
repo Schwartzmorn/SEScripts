@@ -11,10 +11,11 @@ function fixProject() {
     do
       cp $file $path/MDK
     done
-    if [[ $1 == "UnitTests" ]]
-    then
-      cat $additionalWhitelistFile | grep -v -e "\(\*\*\)\|\(\`\`\`\)" >> $path/MDK/whitelist.cache
-    fi
+    # Not actually necessary
+    #if [[ $1 == "UnitTests" ]]
+    #then
+    #  cat $additionalWhitelistFile | grep -v -e "\(\*\*\)\|\(\`\`\`\)" >> $path/MDK/whitelist.cache
+    #fi
   done
 }
 

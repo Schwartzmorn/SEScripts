@@ -23,10 +23,10 @@ partial class Program {
     readonly Dictionary<string, int> _miningRoutes = new Dictionary<string, int>();
     readonly Autopilot _ap;
     public MiningRoutines(Ini ini, CmdLine cmd, Autopilot ap) {
-      _ap = ap;
+        this._ap = ap;
       var keys = new List<MyIniKey>();
       ini.GetKeys("mining-routine", keys);
-      keys.ForEach(k => _miningRoutes[k.Name] = ini.Get(k).ToInt32());
+      keys.ForEach(k => this._miningRoutes[k.Name] = ini.Get(k).ToInt32());
       cmd.AddCmd(new Cmd("mine-recall", "Goes to the given mining position", (s, c) => _recall(s[0], c), nArgs: 1));
       cmd.AddCmd(new Cmd("mine-save", "Saves the current mining position", s => _savePos(s[0]), nArgs: 1));
       ScheduleOnSave(_save);
@@ -34,22 +34,22 @@ partial class Program {
 
     void _savePos(string wpName) {
       int i;
-      _miningRoutes.TryGetValue(wpName, out  i);
-      string prev = _name(wpName, i++);
-      _ap.Network.AddLinkedWP(_name(wpName, i), prev);
-      _miningRoutes[wpName] = i;
+        this._miningRoutes.TryGetValue(wpName, out  i);
+      string prev = this._name(wpName, i++);
+        this._ap.Network.AddLinkedWP(this._name(wpName, i), prev);
+        this._miningRoutes[wpName] = i;
     }
 
     void _recall(string wpName, Action<string> s) {
       int i;
-      _miningRoutes.TryGetValue(wpName, out i);
-      _ap.StartJob(_ap.GoTo, _name(wpName, i), s);
+        this._miningRoutes.TryGetValue(wpName, out i);
+        this._ap.StartJob(this._ap.GoTo, this._name(wpName, i), s);
     }
 
     string _name(string wpName, int i) => i == 0 ? wpName : $"$mine-{wpName}-{i}";
 
     void _save(MyIni ini) {
-      foreach(var kv in _miningRoutes)
+      foreach(KeyValuePair<string, int> kv in this._miningRoutes)
         ini.Set("mining-routine", kv.Key, kv.Value);
     }
   }

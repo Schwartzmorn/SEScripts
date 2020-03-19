@@ -99,7 +99,7 @@ namespace IngameScript {
         if (trigger < this.RequiredTrigger) {
           logger?.Invoke($"Permission denied for '{this.Name}'");
         } else if (args.Count <= this.MaxArgs && args.Count >= this.MinArgs) {
-          var parameters = this.actionProvider(args, logger);
+          MyTuple<int, bool, Action<Process>> parameters = this.actionProvider(args, logger);
           return spawner.Spawn(parameters.Item3, this.Name, onDone, parameters.Item1, parameters.Item2);
         } else {
           logger?.Invoke($"Wrong number of arguments for '{this.Name}'");

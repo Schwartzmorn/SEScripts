@@ -31,28 +31,28 @@ namespace IngameScript {
 
       public AutoConnectionDispatcher(MyGridProgram program, CmdLine command, MyIni ini) {
         // Station level initialization
-        _stationName = ini.GetThrow(INI_GENERAL_SECTION, INI_NAME_KEY).ToString();
-        _referenceName = ini.GetThrow(INI_GENERAL_SECTION, INI_REFERENCE_KEY).ToString();
-        var reference = program.GridTerminalSystem.GetBlockWithName(_referenceName);
+        this._stationName = ini.GetThrow(INI_GENERAL_SECTION, INI_NAME_KEY).ToString();
+        this._referenceName = ini.GetThrow(INI_GENERAL_SECTION, INI_REFERENCE_KEY).ToString();
+        var reference = program.GridTerminalSystem.GetBlockWithName(this._referenceName);
         if (reference == null) {
-          throw new ArgumentException($"Could not find reference block '{_referenceName}'");
+          throw new ArgumentException($"Could not find reference block '{this._referenceName}'");
         }
-        _igc = program.IGC;
-        _transformer = new CoordsTransformer(reference, false);
-        _log($"initializing");
+        this._igc = program.IGC;
+        this._transformer = new CoordsTransformer(reference, false);
+        this._log($"initializing");
         // Connectors initialization
         var sections = new List<string>();
         ini.GetSections(sections);
         foreach (string sectionName in sections.Where(s => s.StartsWith(AutoConnector.IniConnectorPrefix))) {
-          var connector = new AutoConnector(_stationName, sectionName, program, _transformer.Pos, _transformer.Dir, ini);
-          _autoConnectors.Add(new AutoConnectionServer(ini, _igc, connector));
+          var connector = new AutoConnector(this._stationName, sectionName, program, this._transformer.Pos, this._transformer.Dir, ini);
+          this._autoConnectors.Add(new AutoConnectionServer(ini, this._igc, connector));
         }
-        _log($"has {_autoConnectors.Count} auto connectors");
-        _registerCommands(command, program);
-        _updateAction = new ScheduledAction(_update);
-        Schedule(_updateAction);
+        this._log($"has {this._autoConnectors.Count} auto connectors");
+        this._registerCommands(command, program);
+        this._updateAction = new ScheduledAction(_update);
+        Schedule(this._updateAction);
 
-        var listener = _igc.RegisterBroadcastListener("StationConnectionRequests");
+        var listener = this._igc.RegisterBroadcastListener("StationConnectionRequests");
         Schedule(() => {
           if(listener.HasPendingMessage) {
             var msg = listener.AcceptMessage();
@@ -64,36 +64,36 @@ namespace IngameScript {
       }
 
       private void _save(MyIni ini) {
-        ini.Set(INI_GENERAL_SECTION, INI_NAME_KEY, _stationName);
-        ini.Set(INI_GENERAL_SECTION, INI_REFERENCE_KEY, _referenceName);
+        ini.Set(INI_GENERAL_SECTION, INI_NAME_KEY, this._stationName);
+        ini.Set(INI_GENERAL_SECTION, INI_REFERENCE_KEY, this._referenceName);
         ini.SetSectionComment(INI_GENERAL_SECTION, "Automatically generated, do not modify anything beside this section");
-        foreach (var autoConnector in _autoConnectors) {
+        foreach (var autoConnector in this._autoConnectors) {
           autoConnector.Save(ini);
         }
       }
 
       public void AddNewConnector(string connectorName, MyGridProgram program) {
-        foreach(var con in _autoConnectors) {
+        foreach(var con in this._autoConnectors) {
           if (con.Name == connectorName) {
-            _log($"connector {connectorName} already exists");
+            this._log($"connector {connectorName} already exists");
             return;
           }
         }
         try {
 
-          var connector = new AutoConnector(_stationName, connectorName, program, _transformer.Pos, _transformer.Dir);
-          _autoConnectors.Add(new AutoConnectionServer(_igc, connector));
+          var connector = new AutoConnector(this._stationName, connectorName, program, this._transformer.Pos, this._transformer.Dir);
+          this._autoConnectors.Add(new AutoConnectionServer(this._igc, connector));
         } catch (InvalidOperationException e) {
-          _log($"could not create connector '{connectorName}': {e.Message}");
+          this._log($"could not create connector '{connectorName}': {e.Message}");
         }
       }
 
       private void _connect(MyCubeSize size, string channel, Vector3D wPos, Vector3D wOrientation, long address) {
-        Vector3D pos = _transformer.Pos(wPos);
-        Vector3D orientation = _transformer.Dir(wOrientation);
-        var connector = _autoConnectors.FirstOrDefault(con => con.IsInRange(pos));
+        Vector3D pos = this._transformer.Pos(wPos);
+        Vector3D orientation = this._transformer.Dir(wOrientation);
+        var connector = this._autoConnectors.FirstOrDefault(con => con.IsInRange(pos));
         if (connector != null) {
-          _log($"found eligible connector for connection: '{connector.Name}'");
+          this._log($"found eligible connector for connection: '{connector.Name}'");
           connector.Connect(new ConnectionRequest {
             Address = address,
             Channel = channel,
@@ -102,35 +102,35 @@ namespace IngameScript {
             Size = size
           });
         } else {
-          _log($"found no eligible connector");
+          this._log($"found no eligible connector");
         }
       }
 
       private void _disconnect(string channel, long address) {
-        var connector = _autoConnectors.FirstOrDefault(con => con.HasPendingRequest(address));
+        var connector = this._autoConnectors.FirstOrDefault(con => con.HasPendingRequest(address));
         if (connector != null) {
-          _log($"found eligible connector for disconnection: '{connector.Name}'");
+          this._log($"found eligible connector for disconnection: '{connector.Name}'");
           connector.Disconnect(address);
         } else {
-          _log($"found no eligible connector");
+          this._log($"found no eligible connector");
         }
       }
 
       private void _resetConnector(string name) {
-        var connector = _autoConnectors.FirstOrDefault(c => c.Name == name);
+        var connector = this._autoConnectors.FirstOrDefault(c => c.Name == name);
         if (connector != null) {
           connector.Reset();
         }
       }
 
       private void _removeConnector(string name) {
-        int count = _autoConnectors.Count;
-        _autoConnectors.RemoveAll(c => c.Name == name);
-        count -= _autoConnectors.Count;
+        int count = this._autoConnectors.Count;
+        this._autoConnectors.RemoveAll(c => c.Name == name);
+        count -= this._autoConnectors.Count;
         if (count == 0) {
-          _log($"could not find connector '{name}'");
+          this._log($"could not find connector '{name}'");
         } else {
-          _log($"removed {count} connectors");
+          this._log($"removed {count} connectors");
         }
       }
 
@@ -159,37 +159,37 @@ Will disconnect or cancel a request based on the requestor", minArgs: 2, maxArgs
       }
 
       private void _connect(List<string> args) {
-        _log($"received a connection request");
+        this._log($"received a connection request");
         try {
           var size = MyCubeSize.Small;
           Enum.TryParse(args[0], out size);
           var wPos = new Vector3D(double.Parse(args[2]), double.Parse(args[3]), double.Parse(args[4]));
           var wOrientation = new Vector3D(double.Parse(args[5]), double.Parse(args[6]), double.Parse(args[7]));
           long address = long.Parse(args[8]);
-          _connect(size, args[1], wPos, wOrientation, address);
+          this._connect(size, args[1], wPos, wOrientation, address);
         } catch (Exception e) {
-          _log($"could not parse value received: {e.Message}");
+          this._log($"could not parse value received: {e.Message}");
         }
       }
 
       private void _disconnect(List<string> args) {
-        _log($"received a disconnection request");
+        this._log($"received a disconnection request");
         try {
-          _disconnect(args[0], long.Parse(args[1]));
+          this._disconnect(args[0], long.Parse(args[1]));
         } catch (Exception e) {
-          _log($"could not parse value received: {e.Message}");
+          this._log($"could not parse value received: {e.Message}");
         }
       }
 
       private void _update() {
         bool hasUpdated = false;
-        foreach (var connector in _autoConnectors) {
+        foreach (var connector in this._autoConnectors) {
           hasUpdated |= connector.Update();
         }
-        _updateAction.Period = hasUpdated ? 1 : 10;
+        this._updateAction.Period = hasUpdated ? 1 : 10;
       }
 
-      private void _log(string log) => Log($"Dispatcher '{_stationName}': {log}");
+      private void _log(string log) => Log($"Dispatcher '{this._stationName}': {log}");
     }
   }
 }

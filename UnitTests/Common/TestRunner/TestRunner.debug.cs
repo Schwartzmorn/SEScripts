@@ -36,7 +36,7 @@ namespace TestRunner {
       }
     }
 
-    public void RunTests() {
+    public int RunTests() {
       foreach(UnitTest test in this.tests) {
         try {
           Debug.WriteLine($"====== Running {test.Name}");
@@ -52,6 +52,7 @@ namespace TestRunner {
         }
       }
       Debug.WriteLine($"{this.tests.Count} test(s) run. {this.failedTests} failed.");
+      return this.failedTests;
     }
   }
 }

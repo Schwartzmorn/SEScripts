@@ -57,17 +57,17 @@ namespace IngameScript {
           MyIni ini)
           : this(stationName, sectionName.Substring(IniConnectorPrefix.Length), program, posTransformer, orientationTransformer) {
         // Parse ini
-        _log($"parsing configuration");
-        _initializationStage = ini.GetThrow(sectionName, INI_STAGE).ToInt32();
-        _log($"at stage {_initializationStage} ({(IsInitialized() ? "" : "not ")}initialized)");
-        if(_initializationStage > 1) {
-          _max = ini.GetVector(sectionName, "max");
+        this._log($"parsing configuration");
+        this._initializationStage = ini.GetThrow(sectionName, INI_STAGE).ToInt32();
+        this._log($"at stage {this._initializationStage} ({(this.IsInitialized() ? "" : "not ")}initialized)");
+        if(this._initializationStage > 1) {
+          this._max = ini.GetVector(sectionName, "max");
         }
-        if(_initializationStage > 3) {
-          _min = ini.GetVector(sectionName, "min");
-          _initRestPosition();
+        if(this._initializationStage > 3) {
+          this._min = ini.GetVector(sectionName, "min");
+          this._initRestPosition();
         }
-        _deserializeWaypoints(sectionName, ini);
+        this._deserializeWaypoints(sectionName, ini);
       }
 
       public AutoConnector(
@@ -77,105 +77,105 @@ namespace IngameScript {
           VectorTransformer posTransformer,
           VectorTransformer orientationTransformer) {
         var gts = program.GridTerminalSystem;
-        Name = name;
-        _log($"initialization");
+        this.Name = name;
+        this._log($"initialization");
         // initialize moving parts
-        _initMandatoryField(gts, $"{stationName} Connector {Name} Down", out _downConnector);
-        _initMandatoryField(gts, $"{stationName} Connector {Name} Front", out _frontConnector);
-        _initMandatoryField(gts, $"{stationName} Rotor {Name}", out _stator);
-        _posTransformer = posTransformer;
-        _orientationTransformer = orientationTransformer;
-        string pistonPrefix = $"{stationName} Piston {Name}";
+        this._initMandatoryField(gts, $"{stationName} Connector {this.Name} Down", out this._downConnector);
+        this._initMandatoryField(gts, $"{stationName} Connector {this.Name} Front", out this._frontConnector);
+        this._initMandatoryField(gts, $"{stationName} Rotor {this.Name}", out this._stator);
+        this._posTransformer = posTransformer;
+        this._orientationTransformer = orientationTransformer;
+        string pistonPrefix = $"{stationName} Piston {this.Name}";
         var pistons = new List<IMyPistonBase>();
         gts.GetBlocksOfType(pistons, p => p.DisplayNameText.StartsWith(pistonPrefix));
-        _x = new Actuator(4);
-        _y = new Actuator(1);
-        _z = new Actuator(2);
+        this._x = new Actuator(4);
+        this._y = new Actuator(1);
+        this._z = new Actuator(2);
         foreach(var piston in pistons) {
-          var up = _orientationTransformer(piston.WorldMatrix.Up);
+          var up = this._orientationTransformer(piston.WorldMatrix.Up);
           var dot = FORWARD.Dot(up);
           if(Math.Abs(dot) > 0.95) {
             bool isNegative = dot < 0;
             piston.CustomName = pistonPrefix + " " + (isNegative ? "-" : "") + "Z";
-            _z.AddPiston(piston, isNegative);
+            this._z.AddPiston(piston, isNegative);
             continue;
           }
           dot = LEFT.Dot(up);
           if(Math.Abs(dot) > 0.95) {
             bool isNegative = dot < 0;
             piston.CustomName = pistonPrefix + " " + (isNegative ? "-" : "") + "X";
-            _x.AddPiston(piston, isNegative);
+            this._x.AddPiston(piston, isNegative);
             continue;
           }
           dot = UP.Dot(up);
           if(Math.Abs(dot) > 0.95) {
             bool isNegative = dot < 0;
             piston.CustomName = pistonPrefix + " " + (isNegative ? "-" : "") + "Y";
-            _y.AddPiston(piston, isNegative);
+            this._y.AddPiston(piston, isNegative);
             continue;
           }
-          _log($"Could not place piston '{piston.DisplayNameText}'");
+          this._log($"Could not place piston '{piston.DisplayNameText}'");
         }
-        if(!_x.IsValid) {
-          throw new InvalidOperationException($"Connector '{Name}': no piston on axis X");
+        if(!this._x.IsValid) {
+          throw new InvalidOperationException($"Connector '{this.Name}': no piston on axis X");
         }
-        if(!_y.IsValid) {
-          throw new InvalidOperationException($"Connector '{Name}': no piston on axis Y");
+        if(!this._y.IsValid) {
+          throw new InvalidOperationException($"Connector '{this.Name}': no piston on axis Y");
         }
-        if(!_z.IsValid) {
-          throw new InvalidOperationException($"Connector '{Name}': no piston on axis Z");
+        if(!this._z.IsValid) {
+          throw new InvalidOperationException($"Connector '{this.Name}': no piston on axis Z");
         }
-        if(_frontConnector.Status == MyShipConnectorStatus.Connected) {
-          _lastConnectionType = ConnectionType.Front;
-        } else if(_downConnector.Status == MyShipConnectorStatus.Connected) {
-          _lastConnectionType = ConnectionType.Down;
+        if(this._frontConnector.Status == MyShipConnectorStatus.Connected) {
+          this._lastConnectionType = ConnectionType.Front;
+        } else if(this._downConnector.Status == MyShipConnectorStatus.Connected) {
+          this._lastConnectionType = ConnectionType.Down;
         }
       }
 
-      public bool IsInitialized() => _initializationStage >= 4;
+      public bool IsInitialized() => this._initializationStage >= 4;
 
-      public bool IsMoving() => _waypoints.Count != 0;
+      public bool IsMoving() => this._waypoints.Count != 0;
 
-      public bool IsConnected() => _getCurrentConnected() != null;
+      public bool IsConnected() => this._getCurrentConnected() != null;
 
       private void _initialize() {
         bool hasReachedNextStep = true;
-        if(_initializationStage == 0) {
-          hasReachedNextStep &= _x.Move(10);
-          hasReachedNextStep &= _y.Move(10);
-          hasReachedNextStep &= _z.Move(10);
+        if(this._initializationStage == 0) {
+          hasReachedNextStep &= this._x.Move(10);
+          hasReachedNextStep &= this._y.Move(10);
+          hasReachedNextStep &= this._z.Move(10);
           if(hasReachedNextStep) {
-            _max = _posTransformer(_stator.GetPosition());
+            this._max = this._posTransformer(this._stator.GetPosition());
           }
-        } else if(_initializationStage == 1) {
-          hasReachedNextStep &= _x.Move(-10);
-          hasReachedNextStep &= _z.Move(-10);
-        } else if(_initializationStage == 2) {
-          hasReachedNextStep &= _y.Move(-10);
+        } else if(this._initializationStage == 1) {
+          hasReachedNextStep &= this._x.Move(-10);
+          hasReachedNextStep &= this._z.Move(-10);
+        } else if(this._initializationStage == 2) {
+          hasReachedNextStep &= this._y.Move(-10);
           if(hasReachedNextStep) {
-            _min = _posTransformer(_stator.GetPosition());
-            _initRestPosition();
+            this._min = this._posTransformer(this._stator.GetPosition());
+            this._initRestPosition();
           }
-        } else if(_initializationStage == 3) {
-          hasReachedNextStep &= _y.Move(10);
+        } else if(this._initializationStage == 3) {
+          hasReachedNextStep &= this._y.Move(10);
         }
         if(hasReachedNextStep) {
-          ++_initializationStage;
-          _log($"is now at initialization step {_initializationStage}");
+          ++this._initializationStage;
+          this._log($"is now at initialization step {this._initializationStage}");
         }
       }
 
       public void Save(MyIni ini) {
-        var sectionName = IniConnectorPrefix + Name;
-        ini.Set(sectionName, INI_STAGE, _initializationStage);
-        if(_max != null) {
-          ini.SetVector(sectionName, "max", _max);
+        var sectionName = IniConnectorPrefix + this.Name;
+        ini.Set(sectionName, INI_STAGE, this._initializationStage);
+        if(this._max != null) {
+          ini.SetVector(sectionName, "max", this._max);
         }
-        if(_min != null) {
-          ini.SetVector(sectionName, "min", _min);
+        if(this._min != null) {
+          ini.SetVector(sectionName, "min", this._min);
         }
         int i = 1;
-        foreach(var waypoint in _waypoints) {
+        foreach(var waypoint in this._waypoints) {
           var prefix = $"waypoint-{i}";
           ini.SetVector(sectionName, prefix, waypoint.Position);
           if(waypoint.Angle != 0) {
@@ -191,72 +191,72 @@ namespace IngameScript {
         }
       }
 
-      public double GetDistance(Vector3D position) => IsInitialized()
-          ? GetDistance(_min.X, _max.X, position.X)
-              + GetDistance(_min.Y, _max.Y, position.Y)
-              + GetDistance(_min.Z, _max.Z, position.Z)
+      public double GetDistance(Vector3D position) => this.IsInitialized()
+          ? GetDistance(this._min.X, this._max.X, position.X)
+              + GetDistance(this._min.Y, this._max.Y, position.Y)
+              + GetDistance(this._min.Z, this._max.Z, position.Z)
           : double.MaxValue;
 
       public void Connect(MyCubeSize size, Vector3D position, Vector3D orientation) {
         double offset = (size == MyCubeSize.Small) ? CONNECTION_OFFSET_SMALL : CONNECTION_OFFSET_LARGE;
         Vector3D finalTarget = position + (offset * orientation);
-        _queueConnectionRoute(finalTarget, orientation);
+        this._queueConnectionRoute(finalTarget, orientation);
       }
 
       public void Disconnect() {
-        _waypoints.Clr();
-        var connector = _getCurrentConnected()
-            ?? _getConnector(_lastConnectionType)
-            ?? _frontConnector;
-        Vector3D curPos = _posTransformer(connector.GetPosition());
-        Vector3D curOrientation = _orientationTransformer(connector.WorldMatrix.Backward);
+        this._waypoints.Clr();
+        var connector = this._getCurrentConnected()
+            ?? this._getConnector(this._lastConnectionType)
+            ?? this._frontConnector;
+        Vector3D curPos = this._posTransformer(connector.GetPosition());
+        Vector3D curOrientation = this._orientationTransformer(connector.WorldMatrix.Backward);
         connector.Disconnect();
         Vector3D safetyTarget = curPos + (curOrientation * CONNECTION_SAFETY_OFFSET);
-        _waypoints.Enqueue(new Waypoint(
+        this._waypoints.Enqueue(new Waypoint(
             new Vector3D(safetyTarget.X, safetyTarget.Y, safetyTarget.Z),
-            _stator.Angle,
+            this._stator.Angle,
             needPrecision: true
           )).Enqueue(new Waypoint(
-            new Vector3D(safetyTarget.X, _max.Y, safetyTarget.Z)
+            new Vector3D(safetyTarget.X, this._max.Y, safetyTarget.Z)
           )).Enqueue(new Waypoint(
-            _restPosition
+            this._restPosition
           ));
       }
 
       // returns true if it is updating
       public bool Update() {
-        if(IsInitialized()) {
-          if(_waypoints.Count > 0) {
-            var block = _getPositionBlock();
-            _currentPosition = _posTransformer(block.GetPosition());
-            _currentOrientation = _frontConnector.WorldMatrix.Forward;
-            var isReached = _goToWaypoint(_waypoints.Peek());
+        if(this.IsInitialized()) {
+          if(this._waypoints.Count > 0) {
+            var block = this._getPositionBlock();
+            this._currentPosition = this._posTransformer(block.GetPosition());
+            this._currentOrientation = this._frontConnector.WorldMatrix.Forward;
+            var isReached = _goToWaypoint(this._waypoints.Peek());
             if(isReached) {
-              var waypoint = _waypoints.Dequeue();
-              _log($"reached a waypoint, {_waypoints.Count} to go");
-              _x.Stop();
-              _y.Stop();
-              _z.Stop();
-              _stator.TargetVelocityRad = 0;
+              var waypoint = this._waypoints.Dequeue();
+              this._log($"reached a waypoint, {this._waypoints.Count} to go");
+              this._x.Stop();
+              this._y.Stop();
+              this._z.Stop();
+              this._stator.TargetVelocityRad = 0;
 
               // We only try to connect on the last point
-              if(_waypoints.Count == 0) {
+              if(this._waypoints.Count == 0) {
                 _getConnector(waypoint.Connection)?.Connect();
               }
-              _lastConnectionType = waypoint.Connection;
+              this._lastConnectionType = waypoint.Connection;
             }
           }
-          return _waypoints.Count != 0;
+          return this._waypoints.Count != 0;
         } else {
-          _initialize();
+          this._initialize();
         }
         return false;
       }
 
       public double GetRemainingLength() {
         double length = 0;
-        Vector3D curPos = _currentPosition;
-        foreach(var waypoint in _waypoints) {
+        Vector3D curPos = this._currentPosition;
+        foreach(var waypoint in this._waypoints) {
           Vector3D delta = curPos - waypoint.Position;
           // because of the way pistons move, we take the max of the distance
           double dist = Math.Max(Math.Max(Math.Abs(delta.X), Math.Abs(delta.Y)), Math.Abs(delta.Z));
@@ -269,33 +269,33 @@ namespace IngameScript {
       }
 
       private void _queueConnectionRoute(Vector3D target, Vector3D orientation) {
-        _waypoints.Clr();
+        this._waypoints.Clr();
         var connectionType = Math.Abs(orientation.Dot(UP)) > 0.8 ? ConnectionType.Down : ConnectionType.Front;
-        float angle = connectionType == ConnectionType.Front ? _getTargetAngle(orientation) : 0;
-        var con = _getCurrentConnected();
-        var curPos = _posTransformer((con ?? _stator as IMyTerminalBlock).GetPosition());
+        float angle = connectionType == ConnectionType.Front ? this._getTargetAngle(orientation) : 0;
+        var con = this._getCurrentConnected();
+        var curPos = this._posTransformer((con ?? this._stator as IMyTerminalBlock).GetPosition());
         ConnectionType firstType = ConnectionType.None;
         if(con != null) {
           con.Disconnect();
-          var firstPos = curPos + (_orientationTransformer(con.WorldMatrix.Backward) * CONNECTION_SAFETY_OFFSET);
+          var firstPos = curPos + (this._orientationTransformer(con.WorldMatrix.Backward) * CONNECTION_SAFETY_OFFSET);
           // we give a connection type to have the correct connector positioned
-          _waypoints.Enqueue(new Waypoint(
+          this._waypoints.Enqueue(new Waypoint(
             firstPos,
-            angle: _stator.Angle,
+            angle: this._stator.Angle,
             needPrecision: true
           ));
-          firstType = con == _frontConnector ? ConnectionType.Front : ConnectionType.Down;
+          firstType = con == this._frontConnector ? ConnectionType.Front : ConnectionType.Down;
           curPos = firstPos;
         }
         Vector3D safetyTarget = target + (orientation * CONNECTION_SAFETY_OFFSET);
         // we give a connection type to have the correct connector positioned for the first points
-        _waypoints.Enqueue(new Waypoint(
-            new Vector3D(curPos.X, _max.Y, curPos.Z),
+        this._waypoints.Enqueue(new Waypoint(
+            new Vector3D(curPos.X, this._max.Y, curPos.Z),
             connection: firstType
           )).Enqueue(new Waypoint(
-            new Vector3D(safetyTarget.X, _max.Y, safetyTarget.Z)
+            new Vector3D(safetyTarget.X, this._max.Y, safetyTarget.Z)
           )).Enqueue(new Waypoint(
-            new Vector3D(safetyTarget.X, _max.Y - 3, safetyTarget.Z)
+            new Vector3D(safetyTarget.X, this._max.Y - 3, safetyTarget.Z)
           )).Enqueue(new Waypoint(
             new Vector3D(safetyTarget.X, safetyTarget.Y, safetyTarget.Z),
             angle
@@ -309,14 +309,14 @@ namespace IngameScript {
 
       private bool _goToWaypoint(Waypoint waypoint) {
         if(waypoint.Connection == ConnectionType.None) {
-          _downConnector.Disconnect();
-          _frontConnector.Disconnect();
+          this._downConnector.Disconnect();
+          this._frontConnector.Disconnect();
         }
         bool isReached = true;
-        isReached &= _x.Move(waypoint.Position.X - _currentPosition.X, waypoint.NeedPrecision);
-        isReached &= _y.Move(waypoint.Position.Y - _currentPosition.Y, waypoint.NeedPrecision);
-        isReached &= _z.Move(waypoint.Position.Z - _currentPosition.Z, waypoint.NeedPrecision);
-        isReached &= _moveRotor(AngleProxy(_stator.Angle, waypoint.Angle), waypoint.NeedPrecision);
+        isReached &= this._x.Move(waypoint.Position.X - this._currentPosition.X, waypoint.NeedPrecision);
+        isReached &= this._y.Move(waypoint.Position.Y - this._currentPosition.Y, waypoint.NeedPrecision);
+        isReached &= this._z.Move(waypoint.Position.Z - this._currentPosition.Z, waypoint.NeedPrecision);
+        isReached &= this._moveRotor(AngleProxy(this._stator.Angle, waypoint.Angle), waypoint.NeedPrecision);
         return isReached;
       }
 
@@ -325,7 +325,7 @@ namespace IngameScript {
         while(true) {
           string prefix = $"waypoint-{waypointNumber++}";
           if(ini.ContainsKey(sectionName, $"{prefix}-x")) {
-            _waypoints.Enqueue(new Waypoint(
+            this._waypoints.Enqueue(new Waypoint(
                 ini.GetVector(sectionName, prefix),
                 ini.Get(sectionName, $"{prefix}-angle").ToSingle(0),
                 (ConnectionType)Enum.Parse(
@@ -337,26 +337,26 @@ namespace IngameScript {
             break;
           }
         }
-        _log($"has {_waypoints.Count} pending waypoints");
+        this._log($"has {this._waypoints.Count} pending waypoints");
       }
 
       private void _initMandatoryField<T>(IMyGridTerminalSystem gts, string name, out T field) where T : class, IMyTerminalBlock {
         field = gts.GetBlockWithName(name) as T;
         if(field == null) {
-          throw new InvalidOperationException($"Connector '{Name}': could not find {typeof(T)} '{name}'");
+          throw new InvalidOperationException($"Connector '{this.Name}': could not find {typeof(T)} '{name}'");
         }
       }
 
       private IMyTerminalBlock _getPositionBlock() {
-        ConnectionType type = _waypoints
+        ConnectionType type = this._waypoints
             .Select(w => w.Connection)
             .FirstOrDefault(c => c != ConnectionType.None);
-        return _getConnector(type) ?? (_getConnector(_lastConnectionType) ?? _stator as IMyTerminalBlock);
+        return this._getConnector(type) ?? (this._getConnector(this._lastConnectionType) ?? this._stator as IMyTerminalBlock);
       }
 
       private float _getTargetAngle(Vector3D targetOrientation) {
-        return (float)Mod(_getAngle(targetOrientation) - _getAngle(_orientationTransformer(_frontConnector.WorldMatrix.Backward))
-            + _stator.Angle, Math.PI * 2);
+        return (float)Mod(this._getAngle(targetOrientation) - this._getAngle(this._orientationTransformer(this._frontConnector.WorldMatrix.Backward))
+            + this._stator.Angle, Math.PI * 2);
       }
 
       private float _getAngle(Vector3D orientation) {
@@ -368,29 +368,29 @@ namespace IngameScript {
       }
 
       private bool _moveRotor(float delta, bool needPrecision) {
-        _stator.TargetVelocityRad = MathHelper.Clamp(delta * (needPrecision ? 1 : 4), -1, +1);
+        this._stator.TargetVelocityRad = MathHelper.Clamp(delta * (needPrecision ? 1 : 4), -1, +1);
         return Math.Abs(delta) < DELTA_TARGET;
       }
 
-      private void _initRestPosition() => _restPosition = new Vector3D(
-          (_min.X + _max.X) / 2,
-          _max.Y,
-          (_min.Z + _max.Z) / 2);
+      private void _initRestPosition() => this._restPosition = new Vector3D(
+          (this._min.X + this._max.X) / 2,
+          this._max.Y,
+          (this._min.Z + this._max.Z) / 2);
 
-      private void _log(string log) => Log($"Connector {Name}: {log}");
+      private void _log(string log) => Log($"Connector {this.Name}: {log}");
 
       private IMyShipConnector _getCurrentConnected() {
-        return _frontConnector.Status == MyShipConnectorStatus.Connected
-          ? _frontConnector
-          : _downConnector.Status == MyShipConnectorStatus.Connected
-            ? _downConnector : null;
+        return this._frontConnector.Status == MyShipConnectorStatus.Connected
+          ? this._frontConnector
+          : this._downConnector.Status == MyShipConnectorStatus.Connected
+            ? this._downConnector : null;
       }
 
       private IMyShipConnector _getConnector(ConnectionType type) {
         if(type == ConnectionType.Down) {
-          return _downConnector;
+          return this._downConnector;
         } else if(type == ConnectionType.Front) {
-          return _frontConnector;
+          return this._frontConnector;
         }
         return null;
       }

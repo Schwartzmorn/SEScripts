@@ -29,10 +29,10 @@ namespace IngameScript {
       public readonly bool NeedPrecision;
 
       public Waypoint(Vector3D position, float angle = 0, ConnectionType connection = ConnectionType.None, bool needPrecision = false) {
-        Position = position;
-        Angle = angle;
-        Connection = connection;
-        NeedPrecision = needPrecision;
+        this.Position = position;
+        this.Angle = angle;
+        this.Connection = connection;
+        this.NeedPrecision = needPrecision;
       }
     }
   }

@@ -20,21 +20,21 @@ using VRageMath;
 namespace IngameScript {
 partial class Program {
   public class ArmRotor {
-    public float Angle => _rev ? -_rot.Angle : _rot.Angle;
-    public float Max => _rev ? -_rot.LowerLimitRad : _rot.UpperLimitRad;
-    public float Min => _rev ? -_rot.UpperLimitRad : _rot.LowerLimitRad;
+    public float Angle => this._rev ? -this._rot.Angle : this._rot.Angle;
+    public float Max => this._rev ? -this._rot.LowerLimitRad : this._rot.UpperLimitRad;
+    public float Min => this._rev ? -this._rot.UpperLimitRad : this._rot.LowerLimitRad;
 
     readonly IMyMotorStator _rot;
     readonly bool _rev;
 
     public ArmRotor(IMyMotorStator rotor, bool reversed) {
-      _rot = rotor;
-      _rev = reversed;
+        this._rot = rotor;
+        this._rev = reversed;
     }
 
     public void Move(float speed) {
-      _rot.TargetVelocityRad = speed * (_rev ? -0.1f : 0.1f);
-      _rot.Enabled = true;
+        this._rot.TargetVelocityRad = speed * (this._rev ? -0.1f : 0.1f);
+        this._rot.Enabled = true;
     }
   }
 }
