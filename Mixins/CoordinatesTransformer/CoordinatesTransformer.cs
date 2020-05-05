@@ -10,7 +10,7 @@ namespace IngameScript
     {
       readonly IMyTerminalBlock reference;
       Vector3D position;
-      MatrixD directionMatrix;
+      MatrixD dirMatrix;
       /// <summary>Creates a new transformer</summary>
       /// <param name="block">Reference block, coordinates will then be </param>
       /// <param name="spawner">If present, a <see cref="Process"/> will be spawned to update the transformer each tick</param>
@@ -23,15 +23,15 @@ namespace IngameScript
       /// <summary>Returns the coordinates <paramref name="pos"/> in the transformer's referential.</summary>
       /// <param name="pos">Position to transform</param>
       /// <returns>The transformed coordinates</returns>
-      public Vector3D Pos(Vector3D pos) => Vector3D.TransformNormal(pos - this.position, this.directionMatrix);
+      public Vector3D Pos(Vector3D pos) => Vector3D.TransformNormal(pos - this.position, this.dirMatrix);
       /// <summary>Returns the direction <paramref name="dir"/> in the transformer's referential.</summary>
       /// <param name="dir">Direction to transform</param>
       /// <returns>The transformed direction</returns>
-      public Vector3D Dir(Vector3D dir) => Vector3D.TransformNormal(dir, this.directionMatrix);
+      public Vector3D Dir(Vector3D dir) => Vector3D.TransformNormal(dir, this.dirMatrix);
       void update(Process p)
       {
         this.position = this.reference.GetPosition();
-        this.directionMatrix = MatrixD.Transpose(this.reference.WorldMatrix);
+        this.dirMatrix = MatrixD.Transpose(this.reference.WorldMatrix);
       }
     }
   }

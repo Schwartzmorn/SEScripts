@@ -21,21 +21,21 @@ namespace IngameScript {
     public class Sas {
       public readonly string Name;
 
-      private readonly List<IMyDoor> _doors = new List<IMyDoor>(2);
+      private readonly List<IMyDoor> doors = new List<IMyDoor>(2);
 
       public Sas(string name, IMyDoor doorA, IMyDoor doorB) {
-        Name = name;
-        _doors.Add(doorA);
-        _doors.Add(doorB);
+        this.Name = name;
+        this.doors.Add(doorA);
+        this.doors.Add(doorB);
       }
 
-      public bool IsOpen() => _doors.Any(d => d.OpenRatio > 0);
+      public bool IsOpen() => this.doors.Any(d => d.OpenRatio > 0);
 
-      public void Lock() => _doors.ForEach(d => d.Enabled = d.OpenRatio > 0);
+      public void Lock() => this.doors.ForEach(d => d.Enabled = d.OpenRatio > 0);
 
-      public void Close() => _doors.ForEach(d => d.CloseDoor());
+      public void Close() => this.doors.ForEach(d => d.CloseDoor());
 
-      public void Unlock() => _doors.ForEach(d => d.Enabled = true);
+      public void Unlock() => this.doors.ForEach(d => d.Enabled = true);
     }
   }
 }

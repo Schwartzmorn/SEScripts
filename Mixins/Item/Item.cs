@@ -41,6 +41,6 @@ namespace IngameScript {
     /// <summary>Returns the actual type of the object</summary>
     /// <param name="item">This</param>
     /// <returns>The type, as a string</returns>
-    public static string GetItemSubype(this MyInventoryItem item) => item.Type.SubtypeId;
+    public static string GetItemSubtype(this MyInventoryItem item) => item.Type.SubtypeId;
   }
 }

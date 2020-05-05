@@ -35,7 +35,7 @@ namespace IngameScript {
       /// </summary>
       public bool Active {
         get { return this.Counter >= 0; }
-        private set { if (!value) this.Counter = -1; }
+        private set { if (!value) { this.Counter = -1; } }
       }
       /// <summary>Even if no longer active, a process is alive if it still has children.</summary>
       public bool Alive => this.Active || (this.children != null && this.children.Count > 0);
@@ -46,18 +46,18 @@ namespace IngameScript {
       /// <summary>Name of the process.</summary>
       public readonly string Name;
       /// <summary>Number of ticks between each run.</summary>
-      public readonly int Period;
+      public int Period;
       public ProcessResult Result { get; private set; } = ProcessResult.OK;
       /// <summary>Whether the process will execute its action only once or not.</summary>
       public bool UseOnce { get; private set; }
+      public readonly Process Parent;
 
-      private static int PCOUNTER = 0;
-      private readonly Action<Process> action;
-      private List<Process> children;
-      private readonly Action<string> logger;
-      private readonly Action<Process> onDone;
-      private readonly Process parent;
-      private readonly ISchedulerManager scheduler;
+      static int PCOUNTER = 0;
+      readonly Action<Process> action;
+      List<Process> children;
+      readonly Action<string> logger;
+      readonly Action<Process> onDone;
+      readonly ISchedulerManager scheduler;
 
       /// <summary>Ends the process so that the <see cref="action"/> will no longer be executed.</summary>
       /// <remarks>It will remain alive until all its children are either done or killed</remarks>
@@ -67,7 +67,6 @@ namespace IngameScript {
           this.Active = false;
           if ((this.children?.Count ?? 0) == 0) {
             this.invokeDone();
-            this.parent?.notifyDone(this);
           }
         }
       }
@@ -87,7 +86,21 @@ namespace IngameScript {
       public void Kill() {
         if (this.Alive) {
           this.killNoNotify();
-          this.parent?.notifyDone(this);
+          this.Parent?.notifyDone(this);
+        }
+      }
+
+      /// <summary>Kill all the process' children</summary>
+      public void KillChildren() {
+        if (this.children != null) {
+          bool hadChildren = this.children.Where(p => p.Alive).Count() > 0;
+          foreach (Process p in this.children) {
+            p.killNoNotify();
+          }
+          this.children.Clear();
+          if (hadChildren && !this.Active) {
+            this.invokeDone();
+          }
         }
       }
 
@@ -120,7 +133,7 @@ namespace IngameScript {
 
       public override string ToString() {
         var sb = new StringBuilder();
-        this.ToString(0, s => sb.Append(s).Append('\n'));
+        this.ToString(0, s => sb.Append(s));
         return sb.ToString();
       }
 
@@ -131,10 +144,10 @@ namespace IngameScript {
         }
       }
 
-      private void tick() {
+      void tick() {
         if (this.Active && (++this.Counter >= this.Period)) {
           this.action?.Invoke(this);
-          this.Counter = 0;
+          this.Counter = Math.Min(0, this.Counter);
           if (this.UseOnce) {
             this.Done();
           }
@@ -144,7 +157,7 @@ namespace IngameScript {
       /// <summary>Protected constructor for unit tests only</summary>
       protected Process() { }
 
-      private Process(Action<Process> action, Action<string> logger, string name, Action<Process> onDone, Process parent, int period, ISchedulerManager scheduler, bool useOnce) {
+      Process(Action<Process> action, Action<string> logger, string name, Action<Process> onDone, Process parent, int period, ISchedulerManager scheduler, bool useOnce) {
         this.ID = ++PCOUNTER;
         this.Name = name ?? "<anonymous>";
         this.Period = Math.Max(1, period);
@@ -152,22 +165,21 @@ namespace IngameScript {
         this.action = action;
         this.logger = logger;
         this.onDone = onDone;
-        this.parent = parent;
+        this.Parent = parent;
         this.scheduler = scheduler;
         scheduler.Schedule(this);
       }
 
       // called by a child when it is done
-      private void notifyDone(Process child) {
+      void notifyDone(Process child) {
         this.children.Remove(child);
         if (!this.Active && this.children.Count == 0) {
           this.invokeDone();
-          this.parent?.notifyDone(this);
         }
       }
 
       // Unschedule itself, kill all children
-      private void killNoNotify() {
+      void killNoNotify() {
         bool wasAlive = this.Alive;
         this.Active = false;
         if (wasAlive) {
@@ -178,13 +190,16 @@ namespace IngameScript {
         }
         if (wasAlive) {
           this.children?.Clear();
-          this.invokeDone();
+          this.invokeDone(false);
         }
       }
 
-      private void invokeDone() {
+      void invokeDone(bool notify = true) {
         try {
           this.onDone?.Invoke(this);
+          if (notify) {
+            this.Parent?.notifyDone(this);
+          }
         } catch (Exception e) {
           this.logger?.Invoke($"Failed while terminating {this.Name}: {e.Message}");
         }

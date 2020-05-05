@@ -21,6 +21,7 @@ namespace IngameScript {
   partial class Program {
     public interface IOutputInventoryCollection {
       IEnumerable<IMyInventory> GetOutputInventories();
+      string Name { get; }
     }
     public interface IInputInventoryCollection {
       IEnumerable<IMyInventory> GetInputInventories();

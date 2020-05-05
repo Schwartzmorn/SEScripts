@@ -19,14 +19,14 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program {
-    private class Inventory {
-      private readonly IMyCargoContainer _container;
+    class Inventory {
+      readonly IMyCargoContainer _container;
       public readonly double Z;
-      public IMyInventory Inv => _container.GetInventory();
+      public IMyInventory Inv => this._container.GetInventory();
 
       public Inventory(IMyCargoContainer container, double z) {
-        _container = container;
-        Z = z;
+        this._container = container;
+        this.Z = z;
       }
     }
   }

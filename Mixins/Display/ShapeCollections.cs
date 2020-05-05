@@ -89,7 +89,7 @@ namespace IngameScript {
             this.throwIf(sprts == null, count, "found sprite before collection name");
             string[] vals = line.Split(SEP);
             this.throwIf(vals.Count() < 4 || vals.Count() > 6, count, "not enough or too many values");
-            var color = this.parseColor(vals[1], count);
+            Color color = this.parseColor(vals[1], count);
             float rotation = 0;
             if (vals.Count() > 4) {
               this.throwIf(!float.TryParse(vals[4], out rotation), count, "could not parse rotation");

@@ -41,7 +41,7 @@ namespace IngameScript {
             }
           }
         }
-        readonly Action<string> logger;
+        Action<string> logger;
         readonly List<Process> processes = new List<Process>();
         readonly List<Action<MyIni>> onSave = new List<Action<MyIni>>();
         readonly List<Process> toAdd = new List<Process>();
@@ -50,6 +50,8 @@ namespace IngameScript {
         public ProcessManager(Action<string> logger = null) {
           this.logger = logger;
         }
+
+        public void SetLogger(Action<string> logger) => this.logger = logger;
 
         public void AddOnSave(Action<MyIni> a) => this.onSave.Add(a);
 
@@ -67,8 +69,9 @@ namespace IngameScript {
           }
         }
 
-        public void Save(Action<string> onSave) {
-          var ini = new MyIni();
+        public void Save(Action<string> onSave) => this.Save(onSave, new MyIni());
+
+        public void Save(Action<string> onSave, MyIni ini) {
           this.onSave.ForEach(a => a(ini));
           onSave(ini.ToString());
         }
@@ -99,13 +102,14 @@ namespace IngameScript {
               p.tick();
             } catch (Exception e) {
               this.logger?.Invoke($"Failed on {p.Name}: {e.Message}");
+              this.logger?.Invoke($"{e.StackTrace}");
             }
           }
           this.processes.RemoveAll(p => !p.Alive);
         }
 
         public void Log(Action<string> log) {
-          foreach (Process p in this.AllProcesses.Where(p => p.Alive && p.parent == null)) {
+          foreach (Process p in this.AllProcesses.Where(p => p.Alive && p.Parent == null)) {
             p.ToString(0, log);
           }
         }

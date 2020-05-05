@@ -22,9 +22,9 @@ namespace IngameScript {
     public class CommandSerializer {
       readonly StringBuilder builder;
       /// <summary>Creates a new serializer</summary>
-      /// <param name="command">Name of the command to execute</param>
-      public CommandSerializer(string command) {
-        this.builder = new StringBuilder($"-{command}");
+      /// <param name="cmd">Name of the command to execute</param>
+      public CommandSerializer(string cmd) {
+        this.builder = new StringBuilder($"-{cmd}");
       }
       /// <summary>Add the <see cref="ToString"/> result of the object as argument. Takes care of wrapping it in quotes.</summary>
       /// <param name="o">Object to add as argument</param>

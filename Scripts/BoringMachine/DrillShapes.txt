@@ -10,8 +10,8 @@ RightTriangle: Light: 171, 93:   3, 4: 0
 RightTriangle: Light: 180, 97:  10,12: 0
 
 =drillLights
-Triangle: MedDark: 175,160: 80,80: -1.570796
-Triangle: Light  : 180,160: 80,80: -1.570796
+Triangle: MedDark: 45, -45: 80,80: -1.570796
+Triangle: Light  : 50, -45: 80,80: -1.570796
 
 =drillsShapesForeground
 ;ribs
@@ -41,9 +41,9 @@ SquareSimple : Dark: 175, 99: 5,9: 0
 RightTriangle: Dark: 181,101: 5,7: 0
 
 =drillShapesArm
-Circle       : Dark    : 148, 92: 26,26: 0
-Circle       : MedLight: 150, 94: 22,22: 0
-SquareSimple : MedLight: 164,103: 10, 8: 0
-RightTriangle: MedLight: 174,107:  7,-4: 0
-Circle       : MedLight: 226, 91: 18,18: 0
-SquareSimple : MedLight: 162, 93: 68,14: 0
+Circle       : Dark    :  0,   0: 26,26: 0: center
+Circle       : MedLight:  0,   0: 22,22: 0: center
+SquareSimple : MedLight:  3,  -2: 10, 8: 0
+RightTriangle: MedLight: 13,   2:  7,-4: 0
+Circle       : MedLight: 65, -14: 18,18: 0
+SquareSimple : MedLight:  1, -12: 68,14: 0

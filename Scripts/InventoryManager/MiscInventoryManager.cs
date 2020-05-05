@@ -21,25 +21,32 @@ namespace IngameScript {
   partial class Program {
     public class MiscInventoryManager: LazyFilter, IOutputInventoryCollection {
       readonly List<IMyTerminalBlock> _inventoryOwners = new List<IMyTerminalBlock>();
+      readonly Action<string> logger;
 
-      public MiscInventoryManager(IMyGridTerminalSystem gts, GridManager gridManager) {
-        Scan(gts, gridManager);
-        Schedule(new ScheduledAction(
-          () => Scan(gts, gridManager), period: 300));
+      public string Name => "Misc. inventories manager";
+
+      public MiscInventoryManager(IMyGridTerminalSystem gts, GridManager gridManager, IProcessSpawner spawner, Action<string> logger) {
+        this.Scan(gts, gridManager);
+        spawner.Spawn(p => this.Scan(gts, gridManager), "misc-inventory-groomer", period: 300);
+        this.logger = logger;
       }
 
       public void Scan(IMyGridTerminalSystem gts, GridManager gridManager) {
-        gts.GetBlocksOfType(_inventoryOwners, i => _filter(i, gridManager));
+        this.log("Scanning...");
+        gts.GetBlocksOfType(this._inventoryOwners, i => _filter(i, gridManager));
+        this.log($"Found {this._inventoryOwners.Count} inventories");
       }
 
       public IEnumerable<IMyInventory> GetOutputInventories() {
-        FilterLazily();
-        return _inventoryOwners.Select(i => i.GetInventory());
+        this.FilterLazily();
+        return this._inventoryOwners.Select(i => i.GetInventory());
       }
 
       protected override void Filter() {
-        _inventoryOwners.RemoveAll(i => i.GetInventory() == null);
+        this._inventoryOwners.RemoveAll(i => i.GetInventory() == null);
       }
+
+      void log(string s) => this.logger?.Invoke("MIM: " + s);
 
       static bool _filter(IMyTerminalBlock block, GridManager gridManager) => block.GetInventory() != null &&
           gridManager.Manages(block.CubeGrid) &&

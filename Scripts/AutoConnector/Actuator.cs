@@ -7,29 +7,60 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program {
+
+    /// <summary>Wraps a <see cref="IMyPistonBase"/></summary>
+    public class Piston {
+      static readonly float OFFSET = 0.157f; // average offset introduced by a piston
+
+      public float CurrentPosition => this.isNegative ? 10 - (OFFSET * 2) - this.piston.CurrentPosition : this.piston.CurrentPosition;
+      public float Velocity => this.isNegative ? -this.piston.Velocity : this.piston.Velocity;
+
+      readonly bool isNegative;
+      readonly IMyPistonBase piston;
+
+      public Piston(IMyPistonBase piston, bool isNegative) {
+        piston.Enabled = true;
+        piston.Velocity = 0;
+        piston.MinLimit = 0;
+        piston.MaxLimit = 10 - (OFFSET * 2);
+        this.piston = piston;
+        this.isNegative = isNegative;
+      }
+
+      public bool HasReachedEnd() => (this.piston.Velocity > 0 && this.piston.CurrentPosition > this.piston.MaxLimit - 0.05) ||
+        (this.piston.Velocity < 0 && this.piston.CurrentPosition < this.piston.MinLimit + 0.05);
+
+      public void Move(float speed, float averagePos) {
+        // We want to make the pistons that lag behind behind and vice versa
+        float deltaPos = averagePos - this.CurrentPosition;
+        float speedMult = 1 + (MathHelper.Clamp(deltaPos, -0.5f, 0.5f) * Math.Sign(speed));
+        float actualSpeed = speed * (this.isNegative ? -1 : 1);
+        this.piston.Velocity = actualSpeed * speedMult;
+      }
+
+      public void Stop() => this.piston.Velocity = 0;
+    }
+
     public class Actuator {
       static readonly double DELTA_CUTOFF = 0.02;
 
-      readonly List<IMyPistonBase> positive = new List<IMyPistonBase>();
-      readonly List<IMyPistonBase> negative = new List<IMyPistonBase>();
+      readonly List<Piston> pistons = new List<Piston>();
       readonly float velocityFactor;
-      float speed;
+      float maxAverageSpeed;
+      int PistonCount => this.pistons.Count;
 
+      /// <summary>Creates a new Actuator which is a collection of piston working in parallel on a single axis</summary>
+      /// <param name="velocityFactor">Speed will be multiplied by this factor</param>
       public Actuator(float velocityFactor) {
-        this.velocityFactor = velocityFactor * 2;
+        this.velocityFactor = Math.Abs(velocityFactor);
       }
 
-      public bool IsValid => this.negative.Count + this.positive.Count > 0;
+      /// <summary>Returns true if there is at least one piston</summary>
+      public bool IsValid => this.PistonCount > 0;
 
       public void AddPiston(IMyPistonBase piston, bool isNegative) {
-        piston.Enabled = true;
-        piston.Velocity = 0;
-        if (isNegative) {
-          this.negative.Add(piston);
-        } else {
-          this.positive.Add(piston);
-        }
-        this.speed = Math.Abs(this.velocityFactor) / (this.positive.Count + this.negative.Count);
+        this.pistons.Add(new Piston(piston, isNegative));
+        this.maxAverageSpeed = this.velocityFactor / this.PistonCount;
       }
 
       // returns whether it has reached end of course or position
@@ -39,32 +70,27 @@ namespace IngameScript {
           this.Stop();
           return true;
         } else {
-          bool positiveEnd = this.positive.Count > 0;
-          float speed = MathHelper.Clamp((float)delta, -1f, 1f) * this.speed * (needPrecision ? 1 : 2);
-          foreach (IMyPistonBase piston in this.positive) {
-            positiveEnd &= MovePiston(piston, speed);
+          float speed = this.getNextSpeed(delta, needPrecision);
+          float averagePos = this.pistons.Average(p => p.CurrentPosition);
+          foreach (Piston piston in this.pistons) {
+            piston.Move(speed, averagePos);
           }
-          bool negativeEnd = this.negative.Count > 0;
-          speed *= -1;
-          foreach (IMyPistonBase piston in this.negative) {
-            negativeEnd &= MovePiston(piston, speed);
-          }
-          return positiveEnd || negativeEnd;
+          return this.pistons.All(p => p.HasReachedEnd());
         }
       }
 
       public void Stop() {
-        foreach (IMyPistonBase piston in this.positive.Concat(this.negative)) {
-          piston.Velocity = 0;
+        foreach (Piston piston in this.pistons) {
+          piston.Stop();
         }
       }
-      public override string ToString() => $"Actuator at speed {this.velocityFactor}: +{this.positive.Count} -{this.negative.Count} pistons";
+      public override string ToString() => $"Actuator at speed {this.velocityFactor}: {this.PistonCount} pistons";
 
-      // returns true if the piston has reached the end of its range
-      private static bool MovePiston(IMyPistonBase piston, float speed) {
-        piston.Velocity = speed;
-        return ((speed < 0) && (piston.CurrentPosition < piston.MinLimit + 0.05))
-          || ((speed > 0) && (piston.CurrentPosition > piston.MaxLimit - 0.05));
+      float getNextSpeed(double delta, bool needPrecision) {
+        // TODO take into account the rotor speed
+        return MathHelper.Clamp((float)delta, -1f, 1f) * this.maxAverageSpeed * (needPrecision ? 1 : 2);
+        //float prev = this.pistons.Average(p => p.Velocity);
+        //return MathHelper.Clamp(targetSpeed, prev - 0.1f, prev + 0.1f);
       }
     }
   }

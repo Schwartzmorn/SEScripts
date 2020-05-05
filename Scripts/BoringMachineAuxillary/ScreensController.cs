@@ -31,52 +31,61 @@ namespace IngameScript {
       readonly Display _wheelSurface;
 
       public ScreensController(GeneralStatus status, InventoriesController inventoryController, IMyTextSurface drillStatusSurface,
-          IMyTextSurface wheelStatusSurface, ColorScheme scheme, string sprites) {
-        _scheme = scheme;
+          IMyTextSurface wheelStatusSurface, ColorScheme scheme, string sprites, IProcessSpawner spawner) {
+        this._scheme = scheme;
         if(drillStatusSurface != null) {
           var offset = new Vector2(2, 25);
-          var sprts = new ShapeCollections(_scheme);
+          var sprts = new ShapeCollections(this._scheme);
           sprts.Parse(sprites);
-          _drillSurface = new Display(drillStatusSurface, offset, _scheme, sprts);
+          this._drillSurface = new Display(drillStatusSurface, offset, scheme: this._scheme, sprites: sprts);
         }
         if(wheelStatusSurface != null) {
-          _wheelSurface = new Display(wheelStatusSurface, scheme: _scheme);
+          this._wheelSurface = new Display(wheelStatusSurface, scheme: this._scheme);
         }
-        _status = status;
-        Schedule(new ScheduledAction(() => _updateScreens(status, inventoryController), 20, name: "screens-update"));
+        this._status = status;
+        spawner.Spawn(p => this._updateScreens(status, inventoryController), "screens-update", period: 20);
       }
 
       void _updateScreens(GeneralStatus status, InventoriesController inventoryController) {
-        if(_drillSurface != null)
-          _drawDrillStatus(_drillSurface, status, inventoryController.LoadFactor, -status.ArmAngle, -status.ArmTarget);
+        if(this._drillSurface != null) {
+          this._drawDrillStatus(this._drillSurface, status, inventoryController.LoadFactor, -status.ArmAngle, -status.ArmTarget);
+        }
       }
 
       void _drawDrillStatus(Display screen, GeneralStatus status, float loadFactor, float angle, float targetAngle) {
-        using(var f = screen.DrawFrame()) {
-          if(status.AreFrontLightsOn)
+        using(Display.Frame f = screen.DrawFrame()) {
+          if(status.AreFrontLightsOn) {
             f.DrawCollection("drillLights");
-          if(!float.IsNaN(angle) && !float.IsNaN(targetAngle))
-            f.DrawCollectionTform("drillShapesArm", centerOfRotation: DRILL_ARM_CENTER, rotation: targetAngle, color: _scheme.MedDark);
-          if(status.AreArmLightsOn)
-            f.DrawCollectionTform("drillLights", translation: DRILL_LIGHTS_OFFSET, centerOfRotation: DRILL_ARM_CENTER, rotation: angle);
+          }
+
+          if (!float.IsNaN(angle) && !float.IsNaN(targetAngle)) {
+            f.DrawCollection("drillShapesArm", translation: DRILL_ARM_CENTER, rotation: targetAngle, color: this._scheme.MedDark);
+          }
+
+          if (status.AreArmLightsOn) {
+            f.DrawCollection("drillLights", translation: DRILL_LIGHTS_OFFSET, rotation: angle);
+          }
+
           f.DrawCollection("drillsShapesBackground");
-          f.Draw(new Shape("SquareSimple", _scheme.MedDark, position: new Vector2(32, 93), size: new Vector2(loadFactor * 108, 45)));
+          f.Draw(new Shape("SquareSimple", this._scheme.MedDark, position: new Vector2(32, 93), size: new Vector2(loadFactor * 108, 45)));
           f.DrawCollection("drillsShapesForeground");
           if(!float.IsNaN(angle)) {
-            if(!float.IsNaN(targetAngle))
-              f.DrawCollectionTform("drillShapesArm", centerOfRotation: DRILL_ARM_CENTER, rotation: targetAngle, color: _scheme.MedDark);
-            f.DrawCollectionTform("drillShapesArm", centerOfRotation: DRILL_ARM_CENTER, rotation: angle);
+            if(!float.IsNaN(targetAngle)) {
+              f.DrawCollection("drillShapesArm", rotation: targetAngle, color: this._scheme.MedDark);
+            }
+
+            f.DrawCollection("drillShapesArm", rotation: angle);
           }
           f.DrawText($"Full at {loadFactor * 100:000}%", INV_TEXT_POS, scale: 0.5f, alignment: TextAlignment.LEFT);
-          f.DrawText(_conStatus(), CON_TEXT_POS, scale: 0.5f, alignment: TextAlignment.LEFT);
+          f.DrawText(this._conStatus(), CON_TEXT_POS, scale: 0.5f, alignment: TextAlignment.LEFT);
         }
       }
 
       string _conStatus() {
-        switch(_status.ConnectionState) {
+        switch(this._status.ConnectionState) {
           case ConnectionState.Connected: return "Connected";
           case ConnectionState.Ready:
-            switch(_status.FailReason) {
+            switch(this._status.FailReason) {
               case FailReason.Cancellation: return "Request cancelled";
               case FailReason.Failure: return "Request failed";
               case FailReason.User: return "Disconnected";
@@ -84,8 +93,8 @@ namespace IngameScript {
               case FailReason.Timeout: default: return "No answer";
             }
           case ConnectionState.Standby: return "Connecting:\n  waitlisted";
-          case ConnectionState.WaitingCon: return $"Connecting:\n  {_status.Progress * 100:000}%";
-          case ConnectionState.WaitingDisc: return $"Disconnecting:\n  {_status.Progress * 100:000}%";
+          case ConnectionState.WaitingCon: return $"Connecting:\n  {this._status.Progress * 100:000}%";
+          case ConnectionState.WaitingDisc: return $"Disconnecting:\n  {this._status.Progress * 100:000}%";
         }
         return "";
       }

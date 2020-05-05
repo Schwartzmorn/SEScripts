@@ -32,15 +32,11 @@ namespace IngameScript {
       }
 
       const string SECTION = "wheels-controller";
-      // Empirically determined to have a compression ratio of 0.35
-      const float STRENGTH_MULT = 0.00086f;
-      const float TARGET_RATIO = 0.35f;
-      const float TARGET_RATIO_HIGH = 0.05f;
 
-      readonly WheelBase wheelBase = new WheelBase();
+      public readonly WheelBase WheelBase = new WheelBase();
       Calibration? calibration = null;
       readonly IMyShipController controller;
-      bool high = false;
+      float targetRatio;
       float power = 0;
       float roll = 0;
       float steer = 0;
@@ -60,7 +56,7 @@ namespace IngameScript {
         this.controller = controller;
         var wheels = new List<IMyMotorSuspension>();
         gts.GetBlocksOfType(wheels, w => w.CubeGrid == controller.CubeGrid && w.DisplayNameText.Contains("Power"));
-        this.wheels = wheels.Select(w => new PowerWheel(w, this.wheelBase, transformer)).ToList();
+        this.wheels = wheels.Select(w => new PowerWheel(w, this.WheelBase, transformer)).ToList();
         this.wheels.Sort((w1, w2) => Math.Sign(w1.Position.Z - w2.Position.Z)); // needed for calibration
 
         this.registerCommands(command);
@@ -77,20 +73,22 @@ namespace IngameScript {
           };
         }
 
-        this.high = ini.Get(SECTION, "is-high").ToBoolean();
+        this.targetRatio = ini.Get(SECTION, "target-ratio").ToSingle(0.35f);
+        this.WheelBase.CenterOfTurnZOffset = ini.Get(SECTION, "turn-center-offset").ToDouble();
+        this.WheelBase.TurnRadiusOverride = ini.Get(SECTION, "turn-radius").ToDouble();
       }
 
-      /// <summary>Adjusts the suspsensions to have the vehicle more level with the ground. Should be activated on level ground</summary>
+      /// <summary>Adjusts the suspensions to have the vehicle more level with the ground. Should be activated on level ground</summary>
       public void Calibrate() {
         PowerWheel minW = this.wheels[0], maxW = this.wheels.Last();
         double minZ = minW.Position.Z, maxZ = maxW.Position.Z;
-        float target = this.high ? TARGET_RATIO_HIGH : TARGET_RATIO;
+        float weightPerWheel = this.getShipWeight() / this.wheels.Count;
         this.calibration = new Calibration() {
-          Weight = this.getShipWeight(),
+          Weight = this.getShipWeight(), // not yet used
           MaxZ = maxZ,
           MinZ = minZ,
-          MaxMult = (float)Math.Sqrt(Math.Max(maxW.GetCompressionRatio(), 0) / target) * this.getCalibratedMult(maxZ),
-          MinMult = (float)Math.Sqrt(Math.Max(minW.GetCompressionRatio(), 0) / target) * this.getCalibratedMult(minZ),
+          MaxMult = maxW.GetForce() / weightPerWheel,
+          MinMult = minW.GetForce() / weightPerWheel,
         };
       }
 
@@ -130,13 +128,13 @@ namespace IngameScript {
         Vector3D frontPoc = Vector3D.Zero;
         int count = 0;
         foreach (PowerWheel w in this.wheels) {
-          if (w.Position.Z < this.wheelBase.CenterOfTurnZ + 0.2) {
+          if (w.Position.Z < this.WheelBase.CenterOfTurnZ + 0.2) {
             frontPoc += w.GetPointOfContactW();
             ++count;
           }
         }
         Vector3D res = frontPoc / count;
-        double resO = this.transformer.Pos(res).Z - this.wheelBase.MinZ;
+        double resO = this.transformer.Pos(res).Z - this.WheelBase.MinZ;
         return res + (resO * frontDir);
       }
 
@@ -144,9 +142,9 @@ namespace IngameScript {
       public void Reset() => this.calibration = null;
 
       /// <summary>Changes the stance of the vehicle(high or normal)</summary>
-      /// <param name="arg">"high", "normal" or "switch"</param>
+      /// <param name="arg">the compression ratio</param>
       public void SetPosition(string arg) {
-        this.high = arg == "high" ? true : arg == "normal" ? false : !this.high;
+        this.targetRatio = MathHelper.Clamp(float.Parse(arg), 0, 1);
         this.updateWheels(null);
       }
 
@@ -155,8 +153,17 @@ namespace IngameScript {
       public void SetPower(float power) => this.power = power;
 
       /// <summary>Makes the vehicle roll</summary>
-      /// <param name="steer">Amount of roll, positive values to roll right, negative to roll left</param>
-      public void SetRoll(float roll) => this.roll = roll;
+      /// <param name="roll">Amount of roll, positive values to roll right, negative to roll left, or "left", "right", "reset"</param>
+      public void SetRoll(string roll) {
+        if (roll == "left") {
+          this.roll -= 0.1f;
+        } else if (roll == "right") {
+          this.roll += 0.1f;
+        } else {
+          this.roll = roll == "reset" ? 0 : float.Parse(roll);
+        }
+        this.roll = MathHelper.Clamp(this.roll, -0.4f, 0.4f);
+      }
 
       /// <summary>Overrides the steering</summary>
       /// <param name="steer">Amount of steering, positive values to turn right, negative to turn left,  0 to deactivate override</param>
@@ -169,31 +176,44 @@ namespace IngameScript {
         this.updateWheels(null);
       }
 
-      float getCalibratedMult(double z) {
-        float ratioMult = this.high ? TARGET_RATIO_HIGH / TARGET_RATIO : 1;
-        return this.calibration == null ? ratioMult : this.calibration.Value.GetMult(z) * ratioMult;
+      public float GetAverageCompressionRatio() => this.wheels.Average(w => w.GetCompressionRatio());
+
+      float getCalibratedWeight(float defaultWeight, double positionZ) {
+        if (this.calibration == null) {
+          return defaultWeight;
+        } else {
+          Calibration calibration = this.calibration.Value;
+          double relPos = (positionZ - calibration.MinZ) / (calibration.MaxZ - calibration.MinZ);
+          return defaultWeight * MathHelper.Lerp(calibration.MinMult, calibration.MaxMult, (float)relPos);
+        }
       }
 
       double getCenterOfMass() => this.transformer.Pos(this.controller.CenterOfMass).Z;
-
-      float getDefaultStrength() => (float)Math.Sqrt(this.getShipWeight() * STRENGTH_MULT / this.wheels.Count);
 
       float getShipWeight() => (float)this.controller.GetNaturalGravity().Length() * (this.controller.CalculateShipMass().PhysicalMass - this.wheels.Sum(w => w.Mass));
 
       void registerCommands(CommandLine command) {
         command.RegisterCommand(new Command("wc-calibrate", Command.Wrap(this.Calibrate), "Calibrates the suspensions", nArgs: 0));
-        command.RegisterCommand(new Command("wc-position", Command.Wrap(this.SetPosition), "Changes between normal and high position",
-                                detailedHelp: "Possible values:\n  high\n  normal\n  switch", nArgs: 1));
+        command.RegisterCommand(new Command("wc-position", Command.Wrap(this.SetPosition), "Changes the position on the wheels",
+                                detailedHelp: "From 0 (no compression) to 1 (completely compressed)", nArgs: 1));
         command.RegisterCommand(new Command("wc-power", Command.Wrap(args => this.SetPower(float.Parse(args[0]))), "Set power override", nArgs: 1));
         command.RegisterCommand(new Command("wc-reset", Command.Wrap(this.Reset), "Delete all suspension calibrations", nArgs: 0));
-        command.RegisterCommand(new Command("wc-roll", Command.Wrap(args => this.SetRoll(float.Parse(args[0]))), "Set roll override", nArgs: 1));
+        command.RegisterCommand(new Command("wc-roll", Command.Wrap(this.SetRoll), "Set roll override", nArgs: 1));
         command.RegisterCommand(new Command("wc-steer", Command.Wrap(args => this.SetSteer(float.Parse(args[0]))), "Set power override", nArgs: 1));
         command.RegisterCommand(new Command("wc-strafe", Command.Wrap(this.SetStrafing), "Set power override",
                                 detailedHelp: "Possible values:\n  on\n  off\n  switch", nArgs: 1));
+        command.RegisterCommand(new Command("wc-turn-radius", Command.Wrap(this.turnRadius), "Overrides the turn radius", nArgs: 1));
+        command.RegisterCommand(new Command("wc-turn-center", Command.Wrap(this.turnCenter), "Offsets the turn center", nArgs: 1));
       }
 
+      void turnCenter(string arg) => this.WheelBase.CenterOfTurnZOffset = double.Parse(arg);
+
+      void turnRadius(string arg) => this.WheelBase.TurnRadiusOverride = double.Parse(arg);
+
       void save(MyIni ini) {
-        ini.Set(SECTION, "is-high", this.high);
+        ini.Set(SECTION, "target-ratio", this.targetRatio);
+        ini.Set(SECTION, "turn-center-offset", this.WheelBase.CenterOfTurnZOffset);
+        ini.Set(SECTION, "turn-radius", this.WheelBase.TurnRadiusOverride);
         if (this.calibration != null) {
           Calibration c = this.calibration.Value;
           ini.Set(SECTION, "cal-weight", c.Weight);
@@ -205,12 +225,9 @@ namespace IngameScript {
       }
 
       void updateStrength() {
-        float defaultStrength = this.getDefaultStrength();
+        float defaultWeight = this.getShipWeight() / this.wheels.Count;
         foreach (PowerWheel wheel in this.wheels) {
-          float strength = defaultStrength * this.getCalibratedMult(wheel.Position.Z);
-          if (Math.Abs(wheel.Strength - strength) > 0.01) {
-            wheel.Strength = strength;
-          }
+          wheel.SetStrength(getCalibratedWeight(defaultWeight, wheel.Position.Z), this.targetRatio);
         }
       }
 
@@ -224,6 +241,9 @@ namespace IngameScript {
           foreach (PowerWheel wheel in this.wheels) {
             wheel.Turn(comPos);
           }
+        }
+        if (this.controller.GetShipSpeed() > 4) {
+          this.roll = 0;
         }
         foreach (PowerWheel wheel in this.wheels) {
           wheel.Power = this.power;

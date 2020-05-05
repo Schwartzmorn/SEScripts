@@ -18,18 +18,20 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program: MyGridProgram {
-    private readonly DoorManager _doorManager;
+    readonly DoorManager doorManager;
+    readonly IProcessManager manager;
 
     public Program() {
-      Runtime.UpdateFrequency = UpdateFrequency.Update1;
-      Logger.SetupGlobalInstance(new Logger(Me.GetSurface(0)), Echo);
-      _doorManager = new DoorManager(this);
-      Schedule(Logger.Flush);
+      this.Runtime.UpdateFrequency = UpdateFrequency.Update1;
+      this.manager = Process.CreateManager(Echo);
+      var logger = new Logger(this.manager, this.Me.GetSurface(0), echo: this.Echo);
+
+      this.doorManager = new DoorManager(this, this.manager, logger.Log);
     }
 
     public void Save() {
     }
 
-    public void Main(string argument, UpdateType updateSource) => Scheduler.Inst.Tick();
+    public void Main(string argument, UpdateType updateSource) => this.manager.Tick();
   }
 }

@@ -45,7 +45,7 @@ namespace IngameScript.MDK {
 
       Assert.AreEqual(new Vector3D(0, -1.75, -1), wc.GetPointOfContactW(new Vector3D(0, 0, -1)));
 
-      wc.SetPosition("normal"); // too anoying to test
+      wc.SetPosition("0.5"); // too anoying to test
     }
   }
 }

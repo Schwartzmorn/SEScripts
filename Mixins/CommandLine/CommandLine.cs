@@ -69,7 +69,6 @@ Otherwise, it kills all the process with the given name."));
             this.log($"Unknown command {parsed.Item1}");
           }
         }
-        this.log("Run -help for more info.");
         return null;
       }
       /// <summary>Parses the command</summary>
@@ -78,7 +77,8 @@ Otherwise, it kills all the process with the given name."));
       public MyTuple<string, List<string>> ParseCommand(string cmd) {
         string cmdName = "";
         var args = new List<string>();
-        if (string.IsNullOrWhiteSpace(cmd) || !this.parser.TryParse(cmd) || this.parser.Switches.Count != 1) {
+        if (string.IsNullOrWhiteSpace(cmd)) {
+        } else if (!this.parser.TryParse(cmd) || this.parser.Switches.Count != 1) {
           this.log($"Failed to parse {cmd}");
         } else {
           cmdName = this.parser.Switches.ElementAt(0);

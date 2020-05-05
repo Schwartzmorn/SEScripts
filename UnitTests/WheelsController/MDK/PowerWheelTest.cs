@@ -7,6 +7,7 @@ using VRageMath;
 using IngameScript.Mockups;
 using IngameScript.Mockups.Blocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestRunner;
 
 namespace IngameScript.MDK {
   class PowerWheelTest {
@@ -85,12 +86,12 @@ namespace IngameScript.MDK {
       // Test roll
       leftPowerWheel.Roll(0.25f);
       rightPowerWheel.Roll(0.25f);
-      Assert.AreEqual(leftWheel.Height, -2);
-      Assert.AreEqual(rightWheel.Height, -1.72f);
+      Assert.AreEqual(-2, leftWheel.Height);
+      Assert.AreEqual(-1.75f, rightWheel.Height);
       leftPowerWheel.Roll(0);
       rightPowerWheel.Roll(0);
-      Assert.AreEqual(leftWheel.Height, -2);
-      Assert.AreEqual(rightWheel.Height, -2);
+      Assert.AreEqual(-2, leftWheel.Height);
+      Assert.AreEqual(-2, rightWheel.Height);
     }
 
     public void WheelBase() {
@@ -144,6 +145,58 @@ namespace IngameScript.MDK {
         }
       }
       Assert.AreEqual(2, nInverted);
+    }
+
+    public void WheelBaseTurn() {
+      var transformer = new Program.CoordinatesTransformer(this.controller);
+      MockMotorSuspension frontLeftWheel = GetSuspension(new Vector3D(-1.5, 0, -2), true);
+      var frontLeft = new Program.PowerWheel(frontLeftWheel, this.wheelBase, transformer);
+      MockMotorSuspension frontRightWheel = GetSuspension(new Vector3D(1.5, 0, -2), false);
+      var frontRight = new Program.PowerWheel(frontRightWheel, this.wheelBase, transformer);
+
+      MockMotorSuspension middleLeftWheel = GetSuspension(new Vector3D(-1.5, 0, 0), true);
+      var middleLeft = new Program.PowerWheel(middleLeftWheel, this.wheelBase, transformer);
+      MockMotorSuspension middleRightWheel = GetSuspension(new Vector3D(1.5, 0, 0), false);
+      var middleRight = new Program.PowerWheel(middleRightWheel, this.wheelBase, transformer);
+
+      MockMotorSuspension rearLeftWheel = GetSuspension(new Vector3D(-1.5, 0, 2), true);
+      var rearLeft = new Program.PowerWheel(rearLeftWheel, this.wheelBase, transformer);
+      MockMotorSuspension rearRightWheel = GetSuspension(new Vector3D(1.5, 0, 2), false);
+      var rearRight = new Program.PowerWheel(rearRightWheel, this.wheelBase, transformer);
+
+      Assert.AreEqual(6, this.wheelBase.TurnRadius);
+
+      Assert.AreEqual(new Vector3D(-6, 0, 0), this.wheelBase.LeftCenterOfTurn);
+      Assert.AreEqual(new Vector3D(6, 0, 0), this.wheelBase.RightCenterOfTurn);
+
+      this.wheelBase.TurnRadiusOverride = 4;
+
+      Assert.AreEqual(4, this.wheelBase.TurnRadius);
+
+      Assert.AreEqual(new Vector3D(-4, 0, 0), this.wheelBase.LeftCenterOfTurn);
+      Assert.AreEqual(new Vector3D(4, 0, 0), this.wheelBase.RightCenterOfTurn);
+
+      Asserts.AreClose(18.43f, 0.01f, this.wheelBase.GetAngle(frontLeft, false));
+      Assert.AreEqual(0, this.wheelBase.GetAngle(middleLeft, false));
+      Asserts.AreClose(18.43f, 0.01f, this.wheelBase.GetAngle(rearLeft, false));
+      Assert.AreEqual(45, this.wheelBase.GetAngle(frontRight, false));
+      Assert.AreEqual(0, this.wheelBase.GetAngle(middleRight, false));
+      Assert.AreEqual(45, this.wheelBase.GetAngle(rearRight, false));
+
+      Assert.AreEqual(45, this.wheelBase.GetAngle(frontLeft, true));
+      Assert.AreEqual(0, this.wheelBase.GetAngle(middleLeft, true));
+      Assert.AreEqual(45, this.wheelBase.GetAngle(rearLeft, true));
+      Asserts.AreClose(18.43f, 0.01f, this.wheelBase.GetAngle(frontRight, true));
+      Assert.AreEqual(0, this.wheelBase.GetAngle(middleRight, true));
+      Asserts.AreClose(18.43f, 0.01f, this.wheelBase.GetAngle(rearRight, true));
+    }
+
+    public void SetStrength() {
+      // TODO test wheel.SetStrength
+    }
+
+    public void GetForce() {
+      // TODO test wheel.GetForce()
     }
   }
 }

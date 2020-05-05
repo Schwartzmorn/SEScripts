@@ -31,50 +31,50 @@ namespace IngameScript {
 
       /// <summary><see cref="IDisposable"/> wrapper around a <see cref="MySpriteDrawFrame"/> with a more convenient interface</summary>
       public class Frame : IDisposable {
-        readonly MySpriteDrawFrame frame;
-        readonly Display display;
+        readonly MySpriteDrawFrame f;
+        readonly Display d;
         /// <summary>Creates a frame for a <see cref="Display"/>. Inherits its offset and <see cref="ShapeCollections"/></summary>
         /// <param name="display">Display on which to draw the frame</param>
         public Frame(Display display) {
-          this.display = display;
-          this.frame = this.display.surface.DrawFrame();
-          this.frame.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", this.display.surface.TextureSize / 2, this.display.surface.TextureSize, this.display.scheme.Dark));
+          this.d = display;
+          this.f = this.d.surface.DrawFrame();
+          this.f.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", this.d.surface.TextureSize / 2, this.d.surface.TextureSize, this.d.scheme.Dark));
         }
         /// <summary>Adds some texture and commits the frame</summary>
         public void Dispose() {
-          this.frame.Add(new MySprite(SpriteType.TEXTURE, "Grid", this.display.surface.TextureSize / 2, this.display.surface.TextureSize * 2, this.display.scheme.Light));
-          this.frame.Dispose();
+          this.f.Add(new MySprite(SpriteType.TEXTURE, "Grid", this.d.surface.TextureSize / 2, this.d.surface.TextureSize * 2, this.d.scheme.Light));
+          this.f.Dispose();
         }
         /// <summary>Draws a <see cref="Shape"/> on the frame</summary>
         /// <param name="shape">Shape to draw</param>
         public void Draw(Shape shape) {
-          Vector2 realSize = shape.Size * this.display.scale;
+          Vector2 realSize = shape.Size * this.d.scale;
           Vector2 realPos = shape.Centered ? Vector2.Zero : (new Vector2(Math.Abs(realSize.X), Math.Abs(realSize.Y)) / 2);
-          realPos += shape.Position * this.display.scale;
-          this.frame.Add(new MySprite(SpriteType.TEXTURE, shape.Sprite, realPos + this.display.offset, realSize, shape.Color, rotation: shape.Rotation));
+          realPos += shape.Position * this.d.scale;
+          this.f.Add(new MySprite(SpriteType.TEXTURE, shape.Sprite, realPos + this.d.offset, realSize, shape.Color, rotation: shape.Rotation));
         }
         /// <summary>Draws some text on the frame</summary>
         /// <param name="text">Text to draw</param>
         /// <param name="position">Where to draw the text, in conjunction with <paramref name="alignment"/>. Affected by the display's scale</param>
-        /// <param name="color">Color of the text, by default it will be the <see cref="display"/>'s <see cref="ColorScheme.Light"/> color</param>
+        /// <param name="color">Color of the text, by default it will be the <see cref="d"/>'s <see cref="ColorScheme.Light"/> color</param>
         /// <param name="scale">Scale of the text. Compounded with the display's scale</param>
         /// <param name="alignment">Alignment</param>
         public void DrawText(string text, Vector2 position, Color? color = null, float scale = 1, TextAlignment alignment = TextAlignment.CENTER) {
-          var sprite = MySprite.CreateText(text, "Monospace", color ?? this.display.scheme.Light, scale * this.display.scale, alignment);
-          sprite.Position = (position * this.display.scale) + this.display.offset;
-          this.frame.Add(sprite);
+          var sprite = MySprite.CreateText(text, "Monospace", color ?? this.d.scheme.Light, scale * this.d.scale, alignment);
+          sprite.Position = (position * this.d.scale) + this.d.offset;
+          this.f.Add(sprite);
         }
-        /// <summary>Draws a collection of sprites from the <see cref="display"/>'s <see cref="ShapeCollections"/>. The rotation is made before the translation around 0, 0</summary>
+        /// <summary>Draws a collection of sprites from the <see cref="d"/>'s <see cref="ShapeCollections"/>. The rotation is made before the translation around 0, 0</summary>
         /// <param name="name">Name of the collection to draw</param>
         /// <param name="translation">By how much the shape will be offset. Affected by the display's scale</param>
         /// <param name="rotation">By how much the collection will be rotated. It will always be rotated around the 0, 0 point of the collection</param>
         /// <param name="color">If not null, will override the color from the collection</param>
-        public void DrawCollection(string name, Vector2? translation = null, float rotation = 0f, Color? color = null) => this.frame.AddRange(this.display.sprites.Get(name).Select(sprite => {
-          Vector2 size = (sprite.Size ?? Vector2.One) * this.display.scale;
-          Vector2 realPos = (sprite.Position ?? Vector2.Zero) * this.display.scale;
+        public void DrawCollection(string name, Vector2? translation = null, float rotation = 0f, Color? color = null) => this.f.AddRange(this.d.sprites.Get(name).Select(sprite => {
+          Vector2 size = (sprite.Size ?? Vector2.One) * this.d.scale;
+          Vector2 realPos = (sprite.Position ?? Vector2.Zero) * this.d.scale;
           realPos.Rotate(rotation);
-          realPos += (translation ?? Vector2.Zero) * this.display.scale;
-          return new MySprite(SpriteType.TEXTURE, sprite.Data, realPos + this.display.offset, size, color ?? sprite.Color, rotation: sprite.RotationOrScale + rotation);
+          realPos += (translation ?? Vector2.Zero) * this.d.scale;
+          return new MySprite(SpriteType.TEXTURE, sprite.Data, realPos + this.d.offset, size, color ?? sprite.Color, rotation: sprite.RotationOrScale + rotation);
         }));
       }
       /// <summary>Creates a <see cref="Display"/></summary>

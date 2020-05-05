@@ -63,37 +63,34 @@ namespace IngameScript {
 
       // connector initialization
       var cockpit = GridTerminalSystem.GetBlockWithName("W1 Cockpit") as IMyCockpit;
-      Logger.SetupGlobalInstance(new Logger(cockpit.GetSurface(0), size: 1), Echo);
-      _commandline = new CmdLine("MarmOS", Log);
-      var ini = new MyIni();
-      if(!ini.TryParse(Me.CustomData)) {
-        Log("Could not parse ini");
-      }
+      this.manager = Process.CreateManager(this.Echo);
+      var logger = new Logger(this.manager, cockpit.GetSurface(0), echo: this.Echo, size: 1);
+      this.commandline = new CommandLine("MarmOS", logger.Log, this.manager);
+      var ini = new IniWatcher(Me, this.manager);
       var connector = GridTerminalSystem.GetBlockWithName("W1 Connector (Front)") as IMyShipConnector;
-      var connectionClient = new ConnectionClient(this, ini, _commandline, "StationConnectionRequests", "W1Connections");
-      var autoHandbrake = new PilotAssist(ini, GridTerminalSystem);
-      autoHandbrake.AddBraker(connectionRequestor);
-      var wheelsController = new WheelsController(this, ini, _commandline, new CoordsTransformer(cockpit, true), cockpit);
+      var connectionClient = new ConnectionClient(ini, this.GridTerminalSystem, this.IGC, this.commandline, this.manager, logger.Log);
+      var wheelsController = new WheelsController(this.commandline, cockpit, this.GridTerminalSystem, ini, this.manager, new CoordinatesTransformer(cockpit, this.manager));
+      var autoHandbrake = new PilotAssist(this.GridTerminalSystem, ini, logger.Log, this.manager, wheelsController);
+      autoHandbrake.AddBraker(connectionClient);
 
-      _marmosMain = new ScheduledAction(() => {
-          MArmOS_Main(_arguments);
-          _arguments = "";
-        }, period: 10);
-      Schedule(_marmosMain);
-      Schedule(Logger.Flush);
+      this.marmosMain = this.manager.Spawn(p => {
+        this.MArmOS_Main(arguments);
+        this.arguments = "";
+      }, period: 10);
     }
 
     public void Main(string argument, UpdateType updateSource) {
-      _commandline.HandleCmd(argument, true);
+      this.commandline.StartCmd(argument, CommandTrigger.User);
       if (argument != "") {
-        _arguments = argument;
+        this.arguments = argument;
       }
-      Scheduler.Inst.Tick();
+      this.manager.Tick();
     }
 
-    private ScheduledAction _marmosMain;
-    private CmdLine _commandline;
-    private string _arguments;
+    Process marmosMain;
+    CommandLine commandline;
+    string arguments;
+    IProcessManager manager;
     /////////////////////////////////   G L O B A L   S E T T I N G S
     static String DefaultName = "";
     static double DefaultSpeed = 2;
@@ -170,12 +167,12 @@ namespace IngameScript {
         Controller.UpdateControllers(argument);
         if (SleepMode) {
           if (Sleep != SleepMode)
-            _marmosMain.Period = 10;
+            marmosMain.Period = 10;
           MyEcho("Script running in Sleep mode for performance friendlyness");
           GlobStep += 9;
         } else {
           if (Sleep != SleepMode)
-            _marmosMain.Period = 1;
+            marmosMain.Period = 1;
           MyEcho("Script running at max speed");
         }
         Sleep = SleepMode;
@@ -814,7 +811,7 @@ namespace IngameScript {
       }
       public double AngleProxy(double A1 = 0, double A2 = 0) {  // Give the smallest difference between two angles in rad
         A1 = A2 - A1;
-        A1 = Mod(A1 + Math.PI, (double)2 * Math.PI) - Math.PI;
+        A1 = Mod(A1 + Math.PI, 2 * Math.PI) - Math.PI;
         return A1;
       }
       public double Mod(double A, double N) => A - (Math.Floor(A / N) * N);
@@ -1017,28 +1014,9 @@ namespace IngameScript {
       }
       public override void GoHome(double Speed) {
         if (Home != Angle && AllowHome) {
-          var ang = -Clamp(AngleProxy(Angle, Home) * Speed, -Speed * dt, Speed * dt) * dt;
-          // Check if it would make us cross a limit
-          // COPY PASTE THIS STUFF
-          if (ang > 0 && motor.UpperLimitRad < 7) {
-            var targetHome = Home;
-            while (targetHome < Angle) {
-              targetHome += 2 * Math.PI;
-            }
-            if (targetHome > motor.UpperLimitRad + Offset + 0.001) {
-              ang *= -1;
-            }
-          } else if (ang < 0 && motor.LowerLimitRad > -7) {
-            var targetHome = Home;
-            while (targetHome > Angle) {
-              targetHome -= 2 * Math.PI;
-            }
-            if (targetHome < motor.LowerLimitRad + Offset - 0.001) {
-              ang *= -1;
-            }
-          }
+          // TODO check this sign
+          var ang = -Clamp(this.motor.AngleProxy((float)Home) * Speed, -Speed * dt, Speed * dt) * dt;
           dAngle = ang;
-          // END COPY PASTE THIS STUFF
         }
       }
       // << ---- P R I V A T E   V A R I A B L E S ---- >>

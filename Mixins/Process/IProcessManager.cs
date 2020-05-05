@@ -33,13 +33,17 @@ namespace IngameScript {
       Process Spawn(Action<Process> action, string name = null, Action<Process> onDone = null, int period = 1, bool useOnce = false);
     }
     /// <summary>No good reason for to expand IProcessSpawner, it's just more convenient than having two objects</summary>
-    public interface ISaveManager: IProcessSpawner {
+    public interface ISaveManager: IProcessSpawner  {
       /// <summary>Adds an action to execute when saving.</summary>
       /// <param name="action">Action to execute</param>
       void AddOnSave(Action<MyIni> action);
       /// <summary>Executes all the actions added with <see cref="AddOnSave(Action{MyIni})"/> and execute the <paramref name="action"/> on the result of <see cref="MyIni.ToString"/>.</summary>
       /// <param name="action">Action to execute with the serialized <see cref="MyIni"/> string.</param>
       void Save(Action<string> action);
+      /// <summary>Executes all the actions added with <see cref="AddOnSave(Action{MyIni})"/> on the provided <paramref name="ini"/> and execute the <paramref name="action"/> on the result of <see cref="MyIni.ToString"/>.</summary>
+      /// <param name="action">Action to execute with the serialized <see cref="MyIni"/> string.</param>
+      /// <param name="ini">Ini object to start with <see cref="MyIni"/> string.</param>
+      void Save(Action<string> action, MyIni ini);
     }
     /// <summary>
     /// The class allows to conveniently schedule actions, repeating or not. It does so by using <see cref="Process"/>.
@@ -65,6 +69,7 @@ namespace IngameScript {
       /// <summary>Dumps all the alive processes</summary>
       /// <param name="log">Action to run for each process</param>
       void Log(Action<string> log);
+      void SetLogger(Action<string> logger);
     }
   }
 }

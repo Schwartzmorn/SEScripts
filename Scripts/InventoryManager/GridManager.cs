@@ -28,29 +28,35 @@ namespace IngameScript {
 
       readonly List<IMyMechanicalConnectionBlock> _tmpMechs = new List<IMyMechanicalConnectionBlock>();
       readonly List<IMyShipConnector> _tmpCons = new List<IMyShipConnector>();
+      
+      readonly Action<string> logger;
 
-      public GridManager(MyGridProgram program, MyIni ini) {
-        _block = program.Me;
-        Scan(program.GridTerminalSystem);
-        Schedule(new ScheduledAction(() => Scan(program.GridTerminalSystem), period: 100));
-        _managedGrids = new HashSet<string>(ini.Get(INI_SECTION, "managed-grids").ToString().Split(SPLIT_VALUES_CHAR, StringSplitOptions.RemoveEmptyEntries));
+      public GridManager(MyGridProgram program, MyIni ini, IProcessSpawner spawner, Action<string> logger) {
+        this.logger = logger;
+        this._block = program.Me;
+        this.Scan(program.GridTerminalSystem);
+        spawner.Spawn(p => this.Scan(program.GridTerminalSystem), "grid-scanner", period: 100);
+        this._managedGrids = new HashSet<string>(ini.Get(INI_SECTION, "managed-grids").ToString().Split(SPLIT_VALUES_CHAR, StringSplitOptions.RemoveEmptyEntries));
+        this.log($"We manage {this._managedGrids.Count} grids");
       }
 
       public void Scan(IMyGridTerminalSystem gts) {
-        _metaGrids.Clear();
-        gts.GetBlocksOfType(_tmpMechs, mech => mech.TopGrid != null);
-        gts.GetBlocksOfType(_tmpCons);
+        this.log("Scanning...");
+        this._metaGrids.Clear();
+        gts.GetBlocksOfType(this._tmpMechs, mech => mech.TopGrid != null);
+        gts.GetBlocksOfType(this._tmpCons);
 
         var connectedGrids = new HashSet<IMyCubeGrid>();
+        connectedGrids.Add(this._block.CubeGrid);
         connectedGrids.UnionWith(
-          _tmpCons.Select(c => c.CubeGrid)
-            .Concat(_tmpMechs.Select(m => m.CubeGrid))
-            .Concat(_tmpMechs.Select(m => m.TopGrid)));
+          this._tmpCons.Select(c => c.CubeGrid)
+            .Concat(this._tmpMechs.Select(m => m.CubeGrid))
+            .Concat(this._tmpMechs.Select(m => m.TopGrid).Where(g => g != null)));
 
         var grids = new Dictionary<int, IMyCubeGrid>();
         foreach(IMyCubeGrid grid in connectedGrids) {
           bool found = false;
-          foreach(var mg in _metaGrids) {
+          foreach(MetaGrid mg in this._metaGrids) {
             if(mg.IsSameMetaGrid(grid)) {
               mg.AddGrid(grid);
               found = true;
@@ -58,17 +64,21 @@ namespace IngameScript {
             }
           }
           if(!found) {
-            _metaGrids.Add(new MetaGrid(grid));
+            this._metaGrids.Add(new MetaGrid(grid));
           }
         }
+        this.log($"We found {this._metaGrids.Count} grids");
       }
 
       public bool Manages(IMyCubeGrid grid) {
-        var metaGrid = _metaGrids.FirstOrDefault(sg => sg.IsSameMetaGrid(grid));
-        return metaGrid != null && _managedGrids.Contains(metaGrid.Name);
+        var metaGrid = this._metaGrids.FirstOrDefault(sg => sg.IsSameMetaGrid(grid));
+        bool res = metaGrid != null && this._managedGrids.Contains(metaGrid.Name);
+        return res;
       }
 
-      public override string ToString() => string.Join("\n",_metaGrids.Select(mg => mg.ToString()));
+      public override string ToString() => string.Join("\n", this._metaGrids.Select(mg => mg.ToString()));
+
+      void log(string s) => this.logger?.Invoke("GM: " + s);
     }
   }
 }

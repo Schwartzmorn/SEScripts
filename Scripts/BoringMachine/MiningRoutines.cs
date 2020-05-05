@@ -19,37 +19,37 @@ using VRageMath;
 
 namespace IngameScript {
 partial class Program {
-  public class MiningRoutines: JobProvider {
-    readonly Dictionary<string, int> _miningRoutes = new Dictionary<string, int>();
-    readonly Autopilot _ap;
-    public MiningRoutines(Ini ini, CmdLine cmd, Autopilot ap) {
-        this._ap = ap;
+  public class MiningRoutines {
+    readonly Dictionary<string, int> miningRoutes = new Dictionary<string, int>();
+    readonly Autopilot ap;
+    public MiningRoutines(MyIni ini, CommandLine cmd, Autopilot ap, ISaveManager manager) {
+        this.ap = ap;
       var keys = new List<MyIniKey>();
       ini.GetKeys("mining-routine", keys);
-      keys.ForEach(k => this._miningRoutes[k.Name] = ini.Get(k).ToInt32());
-      cmd.AddCmd(new Cmd("mine-recall", "Goes to the given mining position", (s, c) => _recall(s[0], c), nArgs: 1));
-      cmd.AddCmd(new Cmd("mine-save", "Saves the current mining position", s => _savePos(s[0]), nArgs: 1));
-      ScheduleOnSave(_save);
+      keys.ForEach(k => this.miningRoutes[k.Name] = ini.Get(k).ToInt32());
+      cmd.RegisterCommand(new Command("mine-recall", Command.Wrap(this._recall), "Goes to the given mining position", nArgs: 1));
+      cmd.RegisterCommand(new Command("mine-save", Command.Wrap(this._savePos), "Saves the current mining position", nArgs: 1));
+      manager.AddOnSave(_save);
     }
 
     void _savePos(string wpName) {
       int i;
-        this._miningRoutes.TryGetValue(wpName, out  i);
+        this.miningRoutes.TryGetValue(wpName, out  i);
       string prev = this._name(wpName, i++);
-        this._ap.Network.AddLinkedWP(this._name(wpName, i), prev);
-        this._miningRoutes[wpName] = i;
+        this.ap.Network.AddLinkedWP(this._name(wpName, i), prev);
+        this.miningRoutes[wpName] = i;
     }
 
-    void _recall(string wpName, Action<string> s) {
+    void _recall(string wpName) {
       int i;
-        this._miningRoutes.TryGetValue(wpName, out i);
-        this._ap.StartJob(this._ap.GoTo, this._name(wpName, i), s);
+      this.miningRoutes.TryGetValue(wpName, out i);
+      this.ap.GoTo(this._name(wpName, i));
     }
 
     string _name(string wpName, int i) => i == 0 ? wpName : $"$mine-{wpName}-{i}";
 
     void _save(MyIni ini) {
-      foreach(KeyValuePair<string, int> kv in this._miningRoutes)
+      foreach(KeyValuePair<string, int> kv in this.miningRoutes)
         ini.Set("mining-routine", kv.Key, kv.Value);
     }
   }

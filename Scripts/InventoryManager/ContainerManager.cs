@@ -20,33 +20,40 @@ using VRageMath;
 namespace IngameScript {
   partial class Program {
     public class ContainerManager : LazyFilter {
-      private readonly List<Container> _containers = new List<Container>();
+      readonly List<Container> _containers = new List<Container>();
 
-      private readonly List<IMyCargoContainer> _tmpList = new List<IMyCargoContainer>();
+      readonly List<IMyCargoContainer> _tmpList = new List<IMyCargoContainer>();
 
-      public ContainerManager(IMyGridTerminalSystem gts, GridManager gridManager) {
-        Schedule(new ScheduledAction(() => Scan(gts, gridManager), period: 100));
-        Scan(gts, gridManager);
+      readonly Action<string> logger;
+
+      public ContainerManager(IMyGridTerminalSystem gts, GridManager gridManager, IProcessSpawner spawner, Action<string> logger) {
+        this.logger = logger;
+        spawner.Spawn(p => this.Scan(gts, gridManager), "container-scanner", period: 100);
+        this.Scan(gts, gridManager);
       }
 
       public void Scan(IMyGridTerminalSystem GTS, GridManager gridManager) {
-        _containers.Clear();
-        GTS.GetBlocksOfType(_tmpList, cont => cont.GetInventory() != null && gridManager.Manages(cont.CubeGrid));
-        _containers.AddRange(_tmpList.Select(c => new Container(c)));
+        this.log($"Scanning... {gridManager ==  null}");
+        this._containers.Clear();
+        GTS.GetBlocksOfType(this._tmpList, cont => cont.GetInventory() != null && gridManager.Manages(cont.CubeGrid));
+        this._containers.AddRange(this._tmpList.Select(c => new Container(c)));
+        this.log($"Found {this._containers.Count} containers");
       }
 
       public List<Container> GetSortedContainers(MyInventoryItem item) {
-        FilterLazily();
-        _containers.Sort((a, b) => Container.CompareTo(a, b, item));
-        return _containers;
+        this.FilterLazily();
+        this._containers.Sort((a, b) => Container.CompareTo(a, b, item));
+        return this._containers;
       }
 
       public List<Container> GetContainers() {
-        FilterLazily();
-        return _containers.ToList();
+        this.FilterLazily();
+        return this._containers.ToList();
       }
 
-      protected override void Filter() => _containers.RemoveAll(c => c.GetInventory() == null);
+      protected override void Filter() => this._containers.RemoveAll(c => c.GetInventory() == null);
+
+      void log(string s) => this.logger?.Invoke("CM: " + s);
     }
 
   }

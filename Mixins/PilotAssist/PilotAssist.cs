@@ -45,17 +45,18 @@ namespace IngameScript {
       /// <param name="gts">To get the different blocks</param>
       /// <param name="ini">Parsed ini that contains the configuration. See <see cref="Read(Ini)"/> for more information</param>
       /// <param name="logger">Optional logger</param>
-      /// <param name="spawner">Used to schedule itself</param>
+      /// <param name="manager">Used to schedule itself</param>
       /// <param name="wc">Wheel controller used to actually controll the wheels</param>
-      public PilotAssist(IMyGridTerminalSystem gts, MyIni ini, Action<string> logger, ISaveManager spawner, WheelsController wc) {
+      public PilotAssist(IMyGridTerminalSystem gts, IniWatcher ini, Action<string> logger, ISaveManager manager, WheelsController wc) {
         this.logger = logger;
         this.wheelControllers = wc;
         this.gts = gts;
         this.Read(ini);
         this.ManuallyBraked = !this.shouldBrake() && this.Braked;
         this.wasPreviouslyAutoBraked = this.shouldBrake();
-        spawner.Spawn(this.handle, "pilot-assist");
-        spawner.AddOnSave(this.save);
+        manager.Spawn(this.handle, "pilot-assist");
+        manager.AddOnSave(this.save);
+        ini.Add(this);
       }
       /// <summary>Adds an object that is polled to see if the automatic handbrake should be engaged, on top of the default behaviour.</summary>
       /// <param name="d">Deactivator. If any registered braker returns true, the automatic brakes are engaged, unless deactivated.</param>

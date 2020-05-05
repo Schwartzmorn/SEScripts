@@ -327,11 +327,27 @@ namespace IngameScript.MDK {
       Assert.AreEqual(Program.ProcessResult.OK, mock.GetCallResult(2));
     }
 
-    public void SelfKillingProcess() {
+    public void SelfKillingInCallbackProcess() {
       var mock = new Program.MockAction(p => p.Kill());
       Program.Process process = this.manager.Spawn(null, onDone: mock.Action);
 
       process.Kill();
+
+      Assert.IsFalse(process.Alive);
+    }
+
+    public void SelfKillingProcess() {
+      Program.Process process = this.manager.Spawn(p => p.Kill());
+
+      this.tick();
+
+      Assert.IsFalse(process.Alive);
+    }
+
+    public void SelfTerminatingProcess() {
+      Program.Process process = this.manager.Spawn(p => p.Done());
+
+      this.tick();
 
       Assert.IsFalse(process.Alive);
     }

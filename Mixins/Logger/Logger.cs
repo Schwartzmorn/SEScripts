@@ -12,37 +12,36 @@ namespace IngameScript {
       readonly CircularBuffer<string> messages;
       bool changed;
       readonly IMyTextSurface surface;
-      public Logger(IProcessSpawner spawner, IMyTextSurface surface, Color? bgdCol = null, Color? col = null, Action<string> echo = null, float size = 0.5f) {
+      public Logger(IProcessSpawner spawner, IMyTextSurface s, Color? bgdCol = null, Color? col = null, Action<string> echo = null, float size = 0.5f) {
         int nMsgs = 1;
-        if (surface != null) {
-          surface.TextPadding = 0;
-          surface.ContentType = (ContentType)1;
-          surface.Alignment = (TextAlignment)0;
-          surface.Font = "Monospace";
-          surface.FontSize = size;
-          surface.FontColor = col ?? Color.White;
-          surface.BackgroundColor = bgdCol ?? Color.Black;
+        if (s != null) {
+          s.TextPadding = 0;
+          s.ContentType = (ContentType)1;
+          s.Alignment = 0;
+          s.Font = "Monospace";
+          s.FontSize = size;
+          s.FontColor = col ?? Color.White;
+          s.BackgroundColor = bgdCol ?? Color.Black;
           var sb = new StringBuilder("G");
-          nMsgs = (int)((GetMultiplier(surface) * surface.SurfaceSize.Y / surface.MeasureStringInPixels(sb, surface.Font, surface.FontSize).Y) + 0.1f);
-          this.surface = surface;
+          nMsgs = (int)((GetMultiplier(s) * s.SurfaceSize.Y / s.MeasureStringInPixels(sb, s.Font, s.FontSize).Y) + 0.1f);
+          this.surface = s;
         }
         this.messages = new CircularBuffer<string>(nMsgs);
-        spawner.Spawn(this.flush, "logger");
+        spawner.Spawn(p => this.flush(), "logger");
         this.echo = echo;
       }
       public void Log(string log) {
         this.changed = true;
-        string[] logs = log.Split('\n');
-        foreach (string l in logs) {
-          this.messages.Enqueue(l + '\n');
+        foreach (string l in log.Split('\n')) {
+          this.messages.Enqueue(l);
         }
 
         this.echo?.Invoke(log);
       }
-      void flush(Process p) {
+      void flush() {
         if (this.changed) {
           this.changed = false;
-          this.surface?.WriteText(this.messages.ToString());
+          this.surface?.WriteText(string.Join("\n", this.messages));
         }
       }
       static float GetMultiplier(IMyTextSurface s) {
@@ -58,7 +57,7 @@ namespace IngameScript {
             return sy < 200 ? 4 : sy < 300 ? 2 : 1;//flt sit,small prog blk
           } else if (nm == "Keyboard") {
             return (sy < 110) ? 4 : 2;//fter cpit and small prog blk
-          } else if (nm.Contains("Screen")) {
+          } else if ((nm ?? "").Contains("Screen")) {
             return (sy < 100 && nm.Contains("Top") && (nm.Contains("Left") || nm.Contains("Right"))) ? 4 : 2;//fter cpit top left right screens
           }
         }

@@ -24,74 +24,79 @@ namespace IngameScript {
       readonly double _idealCoM;
       readonly List<Inventory> _invs = new List<Inventory>();
       readonly List<IMyReflectorLight> _lights = new List<IMyReflectorLight>();
-      readonly ScheduledAction _invAction;
+      readonly Process _invAction;
 
-      public float LoadFactor => (float)_invs.Sum(i => i.Inv.CurrentVolume.ToIntSafe()) / _invs.Sum(i => i.Inv.MaxVolume.ToIntSafe());
+      public float LoadFactor => (float)this._invs.Sum(i => i.Inv.CurrentVolume.ToIntSafe()) / this._invs.Sum(i => i.Inv.MaxVolume.ToIntSafe());
 
-      public InventoriesController(CmdLine cmd, CoordsTransformer tformer,
-          IMyGridTerminalSystem gts, IMyCockpit cockpit, double idealCenterOfMass) {
-        _cpit = cockpit;
-        _idealCoM = idealCenterOfMass;
+      public InventoriesController(CoordinatesTransformer tformer, IMyGridTerminalSystem gts, IMyCockpit cockpit, double idealCenterOfMass, IProcessSpawner spawner) {
+        this._cpit = cockpit;
+        this._idealCoM = idealCenterOfMass;
         var containers = new List<IMyCargoContainer>();
         gts.GetBlocksOfType(containers, c => c.CubeGrid == cockpit.CubeGrid);
-        _invs = containers
+        this._invs = containers
           .Select(c => new Inventory(c, tformer.Pos(c.GetPosition()).Z))
           .OrderBy(inv => inv.Z)
           .ToList();
-        gts.GetBlocksOfType(_lights, light => light.DisplayNameText.StartsWith("BM Spotlight")
+        gts.GetBlocksOfType(this._lights, light => light.DisplayNameText.StartsWith("BM Spotlight")
             && !light.DisplayNameText.Contains("Rear"));
-        Schedule(_updateDrills);
-        _invAction = new ScheduledAction(() => _updateInventories(tformer.Pos(cockpit.CenterOfMass).Z), 100, name: "inv-handle");
-        Schedule(_invAction);
+        spawner.Spawn(p => this.updateDrills(), "drill-updater");
+
+        this._invAction = spawner.Spawn(p => this.updateInventories(tformer.Pos(cockpit.CenterOfMass).Z), "inv-handle", period: 100);
       }
 
-      void _updateInventories(double centerOfMass) {
+      void updateInventories(double centerOfMass) {
         bool updating = false;
-        double delta = _idealCoM - centerOfMass;
-        if(Math.Abs(delta) > 0.2)
-          updating = _moveCargo(delta > 0);
-        _invAction.Period = updating ? 1 : 100;
+        double delta = this._idealCoM - centerOfMass;
+        if(Math.Abs(delta) > 0.2) {
+          updating = this.moveCargo(delta > 0);
+        }
+        this._invAction.Period = updating ? 1 : 100;
       }
 
-      void _updateDrills() {
-        if(LoadFactor > 0.95)
-          _lights.ForEach(l => l.Color = Color.Red);
-        else
-          _lights.ForEach(l => l.Color = Color.White);
+      void updateDrills() {
+        if(this.LoadFactor > 0.95) {
+          this._lights.ForEach(l => l.Color = Color.Red);
+        } else {
+          this._lights.ForEach(l => l.Color = Color.White);
+        }
       }
 
-      bool _moveCargo(bool frontToRear) {
+      bool moveCargo(bool frontToRear) {
         MyFixedPoint remaining = 200;
-        int fromIdx = 0, toIdx = _invs.Count - 1;
+        int fromIdx = 0, toIdx = this._invs.Count - 1;
         while(fromIdx < toIdx) {
-          IMyInventory from = _invs[frontToRear ? fromIdx : _invs.Count - 1 - fromIdx].Inv;
-          IMyInventory to = _invs[frontToRear ? toIdx : _invs.Count - 1 - toIdx].Inv;
+          IMyInventory from = this._invs[frontToRear ? fromIdx : this._invs.Count - 1 - fromIdx].Inv;
+          IMyInventory to = this._invs[frontToRear ? toIdx : this._invs.Count - 1 - toIdx].Inv;
           bool isToFull = false;
           var items = new List<MyInventoryItem>();
           from.GetItems(items);
 
           isToFull = true;
-          foreach(var item in items) {
-            var previousAmount = item.Amount;
+          foreach(MyInventoryItem item in items) {
+            MyFixedPoint previousAmount = item.Amount;
             from.TransferItemTo(to, item, remaining);
             if(from.GetItemAt(fromIdx).HasValue) {
-              var amountTransfered = previousAmount - from.GetItemAt(fromIdx).Value.Amount;
+              MyFixedPoint amountTransfered = previousAmount - from.GetItemAt(fromIdx).Value.Amount;
               remaining -= amountTransfered;
               if(remaining > 1) {
                 isToFull = true;
                 break;
               }
-            } else
+            } else {
               remaining -= previousAmount;
-            if(remaining < 1)
+            }
+
+            if (remaining < 1) {
               break;
+            }
           }
-          if(isToFull)
+          if(isToFull) {
             --toIdx;
-          else if(remaining > 1)
+          } else if(remaining > 1) {
             ++fromIdx;
-          else
+          } else {
             break;
+          }
         }
         return remaining < 1;
       }

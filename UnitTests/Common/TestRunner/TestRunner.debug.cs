@@ -6,8 +6,18 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestRunner {
-  class TestRunner {
 
+  class Asserts {
+    public static void AreClose(float expected, float error, float actual) {
+      if (Math.Abs(expected - actual) > error) {
+        throw new AssertFailedException($"Expected:<{expected} ± {error}>, Actual:<{actual}>");
+      }
+    }
+  }
+
+
+  class TestRunner {
+    
     class UnitTest {
       public readonly Action BeforeEach;
       public readonly string Name;

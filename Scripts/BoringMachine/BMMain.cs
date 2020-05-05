@@ -18,59 +18,74 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
 namespace IngameScript {
-partial class Program : MyGridProgram {
-  readonly CmdLine _cmd;
+  partial class Program : MyGridProgram {
+    readonly CommandLine cmd;
+    readonly IProcessManager manager;
+    ColorScheme scheme = new ColorScheme();
 
-  public Program() {
+    public Program() {
       this.Runtime.UpdateFrequency = UpdateFrequency.Update1;
-    IMyTextSurface keyboard;
-    IMyCockpit cockpit;
-      this._initCockpit(out cockpit, out keyboard);
-    var ct = new CoordsTransformer(cockpit, true);
-    Logger.SetupGlobalInstance(new Logger(keyboard, 1.0f, new Color(27, 228, 33), new Color(0, 39, 15)), this.Echo);
-      this._cmd = new CmdLine("Boring machine", Log);
-    var ini = new Ini(this.Me);
-    var wc = new WheelsController(ini, this, this._cmd, ct, cockpit);
-    var ac = new ArmController(ini, this, this._cmd, cockpit, wc);
-    var ic = new InventoryWatcher(this._cmd, this.GridTerminalSystem, cockpit);
-    var client = new ConnectionClient(ini, this, this._cmd);
-    var rcs = new List<IMyRemoteControl>();
+      var topLefts = new List<IMyTextSurface>();
+      var topRights = new List<IMyTextSurface>();
+      IMyTextSurface keyboard;
+      IMyCockpit cockpit;
+      this.manager = Process.CreateManager(this.Echo);
+      this.initCockpit(out cockpit, topLefts, topRights, out keyboard);
+      var ct = new CoordinatesTransformer(cockpit, this.manager);
+      var logger = new Logger(this.manager, keyboard, new Color(0, 39, 15), new Color(27, 228, 33), this.Echo, 1.0f);
+      this.cmd = new CommandLine("Boring machine", logger.Log, this.manager);
+      var ini = new IniWatcher(this.Me, this.manager);
+      var wc = new WheelsController(this.cmd, cockpit, this.GridTerminalSystem, ini, this.manager, ct);
+      var ac = new ArmController(ini, this, this.cmd, cockpit, wc, this.manager);
+      var iw = new InventoryWatcher(this.cmd, this.GridTerminalSystem, cockpit);
+      var cc = new ConnectionClient(ini, this.GridTerminalSystem, this.IGC, this.cmd, this.manager, logger.Log);
+      var rcs = new List<IMyRemoteControl>();
       this.GridTerminalSystem.GetBlocksOfType(rcs, r => r.CubeGrid == this.Me.CubeGrid);
       IMyRemoteControl frc = rcs.First(r => r.DisplayNameText.Contains("Forward"));
       IMyRemoteControl brc = rcs.First(r => r.DisplayNameText.Contains("Backward"));
-    var ap = new Autopilot(ini, wc, this._cmd, frc);
-    var ah = new PilotAssist(ini, wc, this.GridTerminalSystem);
-    ah.AddBraker(client);
-    ah.AddDeactivator(ap);
-    var ar = new ARHandler(ini, this._cmd, brc);
-    new MiningRoutines(ini, this._cmd, ap);
-    var progs = new List<IMyProgrammableBlock>();
+      var ap = new Autopilot(ini, wc, this.cmd, frc, logger.Log, this.manager);
+      var ah = new PilotAssist(this.GridTerminalSystem, ini, logger.Log, this.manager, wc);
+      ah.AddBraker(cc);
+      ah.AddDeactivator(ap);
+      var ar = new AutoRoutineHandler(this.cmd);
+      // TODO parse routines
+      new MiningRoutines(ini, this.cmd, ap, this.manager);
+      var progs = new List<IMyProgrammableBlock>();
       this.GridTerminalSystem.GetBlocksOfType(progs, pr => pr.CubeGrid == this.Me.CubeGrid);
-      IMyProgrammableBlock p = progs.First(pr => pr.DisplayNameText.Contains("Auxillary"));
-    Schedule(new ScheduledAction(() => p.TryRun(new CmdSerializer("gs-arm").AddArg(ac.Angle).AddArg(ac.TargetAngle).ToString()), 10));
-    Schedule(new ScheduledAction(() => p.TryRun(new CmdSerializer("gs-con").AddArg(client.State).AddArg(client.FailReason).AddArg(client.Progress).ToString()), 10));
-  }
+      var genStatus = new GeneralStatus(this, ac, cc);
+      new ScreensController(genStatus, iw, topLefts, topRights, this.scheme, cockpit.CustomData, this.manager);
+    }
 
-  public void Save() => Scheduler.Inst.Save(s => this.Me.CustomData = s);
+    public void Save() => this.manager.Save(s => this.Me.CustomData = s);
 
-  public void Main(string arg, UpdateType us) {
-      this._cmd.HandleCmd(arg, CmdTrigger.User);
-    if ((us & UpdateType.Update1) > 0)
-      Scheduler.Inst.Tick();
-  }
+    public void Main(string arg, UpdateType us) {
+      this.cmd.StartCmd(arg, CommandTrigger.User);
+      if ((us & UpdateType.Update1) > 0) {
+        this.manager.Tick();
+      }
+    }
 
-  void _initCockpit(out IMyCockpit cockpit, out IMyTextSurface keyboard) {
-    var cockpits = new List<IMyCockpit>();
+    void initCockpit(out IMyCockpit cockpit, List<IMyTextSurface> topLefts, List<IMyTextSurface> topRights, out IMyTextSurface keyboard) {
+      var cockpits = new List<IMyCockpit>();
       this.GridTerminalSystem.GetBlocksOfType(cockpits, c => c.CubeGrid == this.Me.CubeGrid);
-    if(cockpits.Count == 0)
-      throw new ArgumentException("No cockpit found");
-    cockpit = cockpits[0];
-    keyboard = null;
-    for(int i = 0; i < cockpit.SurfaceCount; ++i) {
-        IMyTextSurface surface = cockpit.GetSurface(i);
-      if(surface.DisplayName == "Keyboard")
-        keyboard = surface;
+      if (cockpits.Count == 0) {
+        throw new ArgumentException("No cockpit found");
+      }
+
+      cockpit = cockpits[0];
+      keyboard = null;
+      foreach (IMyCockpit cpit in cockpits) {
+        for (int i = 0; i < cpit.SurfaceCount; ++i) {
+          IMyTextSurface surface = cpit.GetSurface(i);
+          if (surface.DisplayName == "Top Left Screen") {
+            topLefts.Add(surface);
+          } else if (surface.DisplayName == "Top Right Screen") {
+            topRights.Add(surface);
+          } else if (surface.DisplayName == "Keyboard") {
+            keyboard = surface;
+          }
+        }
+      }
     }
   }
-}
 }

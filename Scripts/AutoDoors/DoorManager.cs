@@ -19,84 +19,87 @@ using VRageMath;
 namespace IngameScript {
   partial class Program {
     public class DoorManager {
-      private static readonly System.Text.RegularExpressions.Regex SAS_DOOR_RE = new System.Text.RegularExpressions.Regex("^(.*) - (Inner|Outer)\\)$");
-      private static readonly int GRACE_PERIOD = 80;
-      private static readonly int TIME_TO_CLOSE = 120;
+      static readonly System.Text.RegularExpressions.Regex SAS_DOOR_RE = new System.Text.RegularExpressions.Regex("^(.*) - (Inner|Outer)\\)$");
+      static readonly int GRACE_PERIOD = 80;
+      static readonly int TIME_TO_CLOSE = 120;
 
-      private readonly List<IMyDoor> _doors = new List<IMyDoor>();
-      private readonly List<Sas> _sases = new List<Sas>();
-      private readonly HashSet<long> _handledDoors = new HashSet<long>();
-      private readonly HashSet<string> _handledSases = new HashSet<string>();
+      readonly List<IMyDoor> doors = new List<IMyDoor>();
+      readonly HashSet<long> handledDoors = new HashSet<long>();
+      readonly HashSet<string> handledSases = new HashSet<string>();
+      readonly Action<string> logger;
+      readonly List<Sas> sases = new List<Sas>();
+      readonly Process mainProcess;
 
-      private readonly List<IMyDoor> _tmpDoorList = new List<IMyDoor>();
-      private readonly Dictionary<string, IMyDoor> _tmpSases = new Dictionary<string, IMyDoor>();
+      readonly List<IMyDoor> tmpDoorList = new List<IMyDoor>();
+      readonly Dictionary<string, IMyDoor> tmpSases = new Dictionary<string, IMyDoor>();
 
-      public DoorManager(MyGridProgram program) {
-        Scan(program);
-        Schedule(new ScheduledAction(() => Scan(program), period: 431));
-        Schedule(_handleDoors);
+      public DoorManager(MyGridProgram program, IProcessSpawner spawner, Action<string> logger) {
+        this.logger = logger;
+        this.mainProcess = spawner.Spawn(this._handleDoors, "autodoors-main");
+        this.Scan(program);
+        this.mainProcess.Spawn(p => this.Scan(program), "scan", period: 431);
       }
 
       public void Scan(MyGridProgram program) {
-        _doors.Clear();
-        _sases.Clear();
+        this.doors.Clear();
+        this.sases.Clear();
 
-        program.GridTerminalSystem.GetBlocksOfType(_tmpDoorList, d => d.CubeGrid == program.Me.CubeGrid && d.IsFunctional);
-        foreach (var door in _tmpDoorList) {
+        program.GridTerminalSystem.GetBlocksOfType(this.tmpDoorList, d => d.CubeGrid == program.Me.CubeGrid && d.IsFunctional);
+        foreach (IMyDoor door in this.tmpDoorList) {
           var match = SAS_DOOR_RE.Match(door.DisplayNameText);
           if (match != null) {
-            var otherDoor = _tmpSases.GetValueOrDefault(match.Groups[1].Value);
+            IMyDoor otherDoor = this.tmpSases.GetValueOrDefault(match.Groups[1].Value);
             if (otherDoor != null) {
-              _sases.Add(new Sas($"{match.Groups[1].Value})", door, otherDoor));
-              _tmpSases.Remove(match.Groups[1].Value);
+              this.sases.Add(new Sas($"{match.Groups[1].Value})", door, otherDoor));
+              this.tmpSases.Remove(match.Groups[1].Value);
             } else {
-              _tmpSases.Add(match.Groups[1].Value, door);
+              this.tmpSases.Add(match.Groups[1].Value, door);
             }
           } else {
-            _doors.Add(door);
+            this.doors.Add(door);
           }
         }
-        _doors.AddRange(_tmpSases.Values);
-        Log($"Found {_doors.Count} doors and {_sases.Count} sases");
+        this.doors.AddRange(this.tmpSases.Values);
+        this.logger?.Invoke($"Found {this.doors.Count} doors and {this.sases.Count} sases");
 
-        _tmpSases.Clear();
+        this.tmpSases.Clear();
       }
 
-      private void _handleDoors() {
-        foreach(var door in _doors) {
+      void _handleDoors(Process p) {
+        foreach(IMyDoor door in this.doors) {
           if (door.OpenRatio > 0) {
-            if (!_handledDoors.Contains(door.EntityId)) {
-              Log($"Will close door {door.DisplayNameText}");
-              Schedule(new ScheduledAction(() => _closeDoor(door), period: TIME_TO_CLOSE, useOnce: true));
-              _handledDoors.Add(door.EntityId);
+            if (!this.handledDoors.Contains(door.EntityId)) {
+              this.logger?.Invoke($"Will close door {door.DisplayNameText}");
+              this.mainProcess.Spawn(pc => this.closeDoor(door), $"close-door {door.DisplayNameText}", period: TIME_TO_CLOSE, useOnce: true);
+              this.handledDoors.Add(door.EntityId);
             }
           }
         }
-        foreach(var sas in _sases) {
+        foreach(Sas sas in this.sases) {
           if (sas.IsOpen()) {
-            if (!_handledSases.Contains(sas.Name)) {
-              Log($"Will close sas {sas.Name}");
+            if (!this.handledSases.Contains(sas.Name)) {
+              this.logger?.Invoke($"Will close sas {sas.Name}");
               sas.Lock();
-              _handledSases.Add(sas.Name);
-              Schedule(new ScheduledAction(() => _closeSas(sas), period: TIME_TO_CLOSE, useOnce: true));
+              this.handledSases.Add(sas.Name);
+              this.mainProcess.Spawn(pc => this.closeSas(sas), $"close-sas {sas.Name}", period: TIME_TO_CLOSE, useOnce: true);
             }
           }
         }
       }
 
-      private void _closeDoor(IMyDoor door) {
+      void closeDoor(IMyDoor door) {
         door.CloseDoor();
-        Schedule(new ScheduledAction(() => _handledDoors.Remove(door.EntityId), period: GRACE_PERIOD, useOnce: true));
+        this.mainProcess.Spawn(pc => this.handledDoors.Remove(door.EntityId), $"cleanup-door {door.DisplayNameText}", period: GRACE_PERIOD, useOnce: true);
       }
 
-      private void _closeSas(Sas sas) {
+      void closeSas(Sas sas) {
         sas.Close();
-        Schedule(new ScheduledAction(() => _unlockSas(sas), period: GRACE_PERIOD, useOnce: true));
+        this.mainProcess.Spawn(pc => this.unlockSas(sas), $"unlock-sas {sas.Name}", period: GRACE_PERIOD, useOnce: true);
       }
 
-      private void _unlockSas(Sas sas) {
+      void unlockSas(Sas sas) {
         sas.Unlock();
-        _handledSases.Remove(sas.Name);
+        this.handledSases.Remove(sas.Name);
       }
     }
   }

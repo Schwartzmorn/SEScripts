@@ -38,10 +38,8 @@
   <Import Project="MDK/MDK.options.props" />
   <Import Project="MDK/MDK.paths.props" Condition="exists('MDK/MDK.paths.props')" />
   <ItemGroup>
-    <Compile Include="ArmAutoControl.cs" />
-    <Compile Include="ArmController.cs" />
-    <Compile Include="ArmRotor.cs" />
     <Compile Include="BMMain.cs" />
+    <Compile Include="GeneralStatus.cs" />
     <Compile Include="InventoryWatcher.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
     <AdditionalFiles Include="MDK\MDK.options.props">
@@ -52,6 +50,7 @@
     </AdditionalFiles>
     <AdditionalFiles Include="MDK\whitelist.cache" />
     <Compile Include="MiningRoutines.cs" />
+    <Compile Include="ScreensController.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="DrillShapes.txt" />
@@ -66,6 +65,9 @@
   <Import Project="..\..\Mixins\Logger\Logger.projitems" Label="Shared" />
   <Import Project="..\..\Mixins\ConnectionClient\ConnectionClient.projitems" Label="Shared" />
   <Import Project="..\..\Mixins\AutoRoutine\AutoRoutine.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\Display\Display.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\RotorHelper\RotorHelper.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\ArmController\ArmController.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <Copy SourceFiles="MDK\MDK.options.props" DestinationFolder="$(TargetDir)\MDK" />

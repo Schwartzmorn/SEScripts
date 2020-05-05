@@ -12,7 +12,6 @@ namespace IngameScript.MDK {
     Mockups.Blocks.MockShipController controller2;
     Mockups.MockGridTerminalSystem gts;
     Program.WheelsController mockWheelsController;
-    VRage.Game.ModAPI.Ingame.Utilities.MyIni ini;
     Program.ProcessSpawnerMock spawner;
     public void BeforeEach() {
       this.controller1 = new Mockups.Blocks.MockShipController() {
@@ -28,28 +27,29 @@ namespace IngameScript.MDK {
         this.controller2
       };
       this.mockWheelsController = new Program.WheelsController();
-      this.ini = new VRage.Game.ModAPI.Ingame.Utilities.MyIni();
       this.spawner = new Program.ProcessSpawnerMock();
     }
 
     public void InitWithoutController() {
-      this.ini.TryParse(@"[pilot-assist]
-      controllers=Controller 3");
+      this.controller1.CustomData = @"[pilot-assist]
+      controllers=Controller 3";
+      var ini = new Program.IniWatcher(this.controller1, this.spawner);
       try {
-        new Program.PilotAssist(this.gts, this.ini, null, this.spawner, this.mockWheelsController);
+        new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
         Assert.Fail("Should have raised an error as there is no valid controller");
       } catch {}
     }
 
     public void InitWithAssistWithoutHandbrake() {
-      this.ini.TryParse(@"[pilot-assist]
+      this.controller1.CustomData = @"[pilot-assist]
       assist=true
-      controllers=Controller 1,Controller 2");
+      controllers=Controller 1,Controller 2";
+      var ini = new Program.IniWatcher(this.controller1, this.spawner);
 
       Assert.IsTrue(this.controller2.ControlWheels);
       Assert.IsFalse(this.controller1.HandBrake);
 
-      var pa = new Program.PilotAssist(this.gts, this.ini, null, this.spawner, this.mockWheelsController);
+      var pa = new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
 
       Assert.IsFalse(this.controller1.ControlWheels, "When assist is true, the controllers no longer control the wheels directly");
       Assert.IsFalse(this.controller2.ControlWheels);
@@ -60,13 +60,14 @@ namespace IngameScript.MDK {
     }
 
     public void InitWithoutAssistWithHandbrake() {
-      this.ini.TryParse(@"[pilot-assist]
-      controllers=Controller 2");
+      this.controller1.CustomData = @"[pilot-assist]
+      controllers=Controller 2";
+      var ini = new Program.IniWatcher(this.controller1, this.spawner);
 
       this.controller2.ControlWheels = false;
       this.controller2.HandBrake = true;
 
-      var pa = new Program.PilotAssist(this.gts, this.ini, null, this.spawner, this.mockWheelsController);
+      var pa = new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
 
       Assert.IsTrue(this.controller2.ControlWheels);
       Assert.IsTrue(this.controller2.HandBrake);
@@ -74,12 +75,13 @@ namespace IngameScript.MDK {
     }
 
     public void Save() {
-      this.ini.TryParse(@"[pilot-assist]
+      this.controller1.CustomData = @"[pilot-assist]
       assist=true
       controllers=Controller 1,Controller 2,Controller 3
-      sensitivity=4");
+      sensitivity=4";
+      var ini = new Program.IniWatcher(this.controller1, this.spawner);
 
-      new Program.PilotAssist(this.gts, this.ini, null, this.spawner, this.mockWheelsController);
+      new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
 
       string saved = this.spawner.GetSavedString();
 
@@ -87,10 +89,11 @@ namespace IngameScript.MDK {
     }
 
     public void DetectHandbrake() {
-      this.ini.TryParse(@"[pilot-assist]
-      controllers=Controller 1");
+      this.controller1.CustomData = @"[pilot-assist]
+      controllers=Controller 1";
+      var ini = new Program.IniWatcher(this.controller1, this.spawner);
 
-      var pa = new Program.PilotAssist(this.gts, this.ini, null, this.spawner, this.mockWheelsController);
+      var pa = new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
 
       this.spawner.MockProcessTick();
 
@@ -108,12 +111,13 @@ namespace IngameScript.MDK {
     }
 
     public void AutoBrake() {
-      this.ini.TryParse(@"[pilot-assist]
-      controllers=Controller 1");
+      this.controller1.CustomData = @"[pilot-assist]
+      controllers=Controller 1";
+      var ini = new Program.IniWatcher(this.controller1, this.spawner);
       var handbraker = new Program.MockBraker();
       var deactivator = new Program.MockDeactivator();
 
-      var pa = new Program.PilotAssist(this.gts, this.ini, null, this.spawner, this.mockWheelsController);
+      var pa = new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
       pa.AddBraker(handbraker);
       pa.AddDeactivator(deactivator);
 
@@ -158,13 +162,14 @@ namespace IngameScript.MDK {
     }
 
     public void PilotAssist() {
-      this.ini.TryParse(@"[pilot-assist]
+      this.controller1.CustomData = @"[pilot-assist]
       assist=true
       controllers=Controller 1
-      sensitivity=5");
+      sensitivity=5";
+      var ini = new Program.IniWatcher(this.controller1, this.spawner);
       var deactivator = new Program.MockDeactivator();
 
-      var pa = new Program.PilotAssist(this.gts, this.ini, null, this.spawner, this.mockWheelsController);
+      var pa = new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
       pa.AddDeactivator(deactivator);
 
       this.controller1.MoveIndicator = new VRageMath.Vector3(0, 0, 2);

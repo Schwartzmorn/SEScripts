@@ -17,179 +17,174 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program {
+    /// <summary>Holds the <see cref="AutoConnectionServer"/>s and dispatches the auto connection requests to the autoconnector in range</summary>
     public class AutoConnectionDispatcher {
-      private static readonly string INI_GENERAL_SECTION = "sac-general";
-      private static readonly string INI_NAME_KEY = "station-name";
-      private static readonly string INI_REFERENCE_KEY = "reference-name";
+      static readonly string INI_GENERAL_SECTION = "sac-general";
+      static readonly string INI_NAME_KEY = "station-name";
+      static readonly string INI_REFERENCE_KEY = "reference-name";
 
-      private readonly List<AutoConnectionServer> _autoConnectors = new List<AutoConnectionServer>();
-      private readonly IMyIntergridCommunicationSystem _igc;
-      private readonly CoordsTransformer _transformer;
-      private readonly string _referenceName;
-      private readonly string _stationName;
-      private readonly ScheduledAction _updateAction;
+      readonly List<AutoConnectionServer> autoConnectors = new List<AutoConnectionServer>();
+      readonly IMyIntergridCommunicationSystem igc;
+      readonly Action<string> logger;
+      readonly IProcessManager manager;
+      readonly CoordinatesTransformer transformer;
+      readonly string referenceName;
+      readonly string stationName;
 
-      public AutoConnectionDispatcher(MyGridProgram program, CmdLine command, MyIni ini) {
+      public AutoConnectionDispatcher(MyGridProgram program, CommandLine command, MyIni ini, Action<string> logger, IProcessManager manager) {
+        this.logger = logger;
+        this.manager = manager;
         // Station level initialization
-        this._stationName = ini.GetThrow(INI_GENERAL_SECTION, INI_NAME_KEY).ToString();
-        this._referenceName = ini.GetThrow(INI_GENERAL_SECTION, INI_REFERENCE_KEY).ToString();
-        var reference = program.GridTerminalSystem.GetBlockWithName(this._referenceName);
+        this.stationName = ini.GetThrow(INI_GENERAL_SECTION, INI_NAME_KEY).ToString();
+        this.referenceName = ini.GetThrow(INI_GENERAL_SECTION, INI_REFERENCE_KEY).ToString();
+        IMyTerminalBlock reference = program.GridTerminalSystem.GetBlockWithName(this.referenceName);
         if (reference == null) {
-          throw new ArgumentException($"Could not find reference block '{this._referenceName}'");
+          throw new ArgumentException($"Could not find reference block '{this.referenceName}'");
         }
-        this._igc = program.IGC;
-        this._transformer = new CoordsTransformer(reference, false);
-        this._log($"initializing");
+        this.igc = program.IGC;
+        this.transformer = new CoordinatesTransformer(reference, manager);
+        this.log("initializing");
         // Connectors initialization
         var sections = new List<string>();
         ini.GetSections(sections);
         foreach (string sectionName in sections.Where(s => s.StartsWith(AutoConnector.IniConnectorPrefix))) {
-          var connector = new AutoConnector(this._stationName, sectionName, program, this._transformer.Pos, this._transformer.Dir, ini);
-          this._autoConnectors.Add(new AutoConnectionServer(ini, this._igc, connector));
+          var connector = new AutoConnector(this.stationName, sectionName, program, this.logger, this.transformer, ini);
+          this.autoConnectors.Add(new AutoConnectionServer(ini, this.igc, connector, manager, this.logger));
         }
-        this._log($"has {this._autoConnectors.Count} auto connectors");
-        this._registerCommands(command, program);
-        this._updateAction = new ScheduledAction(_update);
-        Schedule(this._updateAction);
+        this.log($"has {this.autoConnectors.Count} auto connectors");
+        this.registerCommands(command, program);
 
-        var listener = this._igc.RegisterBroadcastListener("StationConnectionRequests");
-        Schedule(() => {
-          if(listener.HasPendingMessage) {
-            var msg = listener.AcceptMessage();
-            command.HandleCmd($"{msg.As<string>()} {msg.Source}", false);
+        IMyBroadcastListener listener = this.igc.RegisterBroadcastListener("StationConnectionRequests");
+        this.manager.Spawn(p => {
+          if (listener.HasPendingMessage) {
+            MyIGCMessage msg = listener.AcceptMessage();
+            command.StartCmd($"{msg.As<string>()} {msg.Source}", CommandTrigger.Antenna);
           }
-        });
+        }, "ac-dispatcher");
 
-        ScheduleOnSave(_save);
+        this.manager.AddOnSave(save);
       }
 
-      private void _save(MyIni ini) {
-        ini.Set(INI_GENERAL_SECTION, INI_NAME_KEY, this._stationName);
-        ini.Set(INI_GENERAL_SECTION, INI_REFERENCE_KEY, this._referenceName);
+      void save(MyIni ini) {
+        ini.Set(INI_GENERAL_SECTION, INI_NAME_KEY, this.stationName);
+        ini.Set(INI_GENERAL_SECTION, INI_REFERENCE_KEY, this.referenceName);
         ini.SetSectionComment(INI_GENERAL_SECTION, "Automatically generated, do not modify anything beside this section");
-        foreach (var autoConnector in this._autoConnectors) {
+        foreach (AutoConnectionServer autoConnector in this.autoConnectors) {
           autoConnector.Save(ini);
         }
       }
 
       public void AddNewConnector(string connectorName, MyGridProgram program) {
-        foreach(var con in this._autoConnectors) {
+        foreach(AutoConnectionServer con in this.autoConnectors) {
           if (con.Name == connectorName) {
-            this._log($"connector {connectorName} already exists");
+            this.log($"connector {connectorName} already exists");
             return;
           }
         }
         try {
-
-          var connector = new AutoConnector(this._stationName, connectorName, program, this._transformer.Pos, this._transformer.Dir);
-          this._autoConnectors.Add(new AutoConnectionServer(this._igc, connector));
+          var connector = new AutoConnector(this.stationName, connectorName, program, this.logger, this.transformer);
+          this.autoConnectors.Add(new AutoConnectionServer(this.igc, connector, this.manager));
         } catch (InvalidOperationException e) {
-          this._log($"could not create connector '{connectorName}': {e.Message}");
+          this.log($"could not create connector '{connectorName}': {e.Message}");
         }
       }
 
-      private void _connect(MyCubeSize size, string channel, Vector3D wPos, Vector3D wOrientation, long address) {
-        Vector3D pos = this._transformer.Pos(wPos);
-        Vector3D orientation = this._transformer.Dir(wOrientation);
-        var connector = this._autoConnectors.FirstOrDefault(con => con.IsInRange(pos));
+      void connect(MyCubeSize size, Vector3D wPos, Vector3D wOrientation, long address) {
+        Vector3D pos = this.transformer.Pos(wPos);
+        Vector3D orientation = this.transformer.Dir(wOrientation);
+        AutoConnectionServer connector = this.autoConnectors.FirstOrDefault(con => con.IsInRange(pos));
         if (connector != null) {
-          this._log($"found eligible connector for connection: '{connector.Name}'");
+          this.log($"found eligible connector for connection: '{connector.Name}'");
           connector.Connect(new ConnectionRequest {
             Address = address,
-            Channel = channel,
             Orientation = orientation,
             Position = pos,
             Size = size
           });
         } else {
-          this._log($"found no eligible connector");
+          this.log("found no eligible connector");
         }
       }
 
-      private void _disconnect(string channel, long address) {
-        var connector = this._autoConnectors.FirstOrDefault(con => con.HasPendingRequest(address));
+      void disconnect(long address) {
+        AutoConnectionServer connector = this.autoConnectors.FirstOrDefault(con => con.HasPendingRequest(address));
         if (connector != null) {
-          this._log($"found eligible connector for disconnection: '{connector.Name}'");
+          this.log($"found eligible connector for disconnection: '{connector.Name}'");
           connector.Disconnect(address);
         } else {
-          this._log($"found no eligible connector");
+          this.log("found no eligible connector");
         }
       }
 
-      private void _resetConnector(string name) {
-        var connector = this._autoConnectors.FirstOrDefault(c => c.Name == name);
+      void resetConnector(string name) {
+        AutoConnectionServer connector = this.autoConnectors.FirstOrDefault(c => c.Name == name);
         if (connector != null) {
           connector.Reset();
         }
       }
 
-      private void _removeConnector(string name) {
-        int count = this._autoConnectors.Count;
-        this._autoConnectors.RemoveAll(c => c.Name == name);
-        count -= this._autoConnectors.Count;
+      void removeConnector(string name) {
+        int count = 0;
+        foreach(AutoConnectionServer server in this.autoConnectors.Where(c => c.Name == name)) {
+          server.Kill();
+          ++count;
+        }
         if (count == 0) {
-          this._log($"could not find connector '{name}'");
+          this.log($"could not find connector '{name}'");
         } else {
-          this._log($"removed {count} connectors");
+          this.autoConnectors.RemoveAll(c => c.Name == name);
+          this.log($"removed {count} connectors");
         }
       }
 
-      private void _registerCommands(CmdLine command, MyGridProgram program) {
-        command.AddCmd(new Cmd("ac-add", "Adds and initializes an auto connector", ss => AddNewConnector(ss[0], program),
+      void registerCommands(CommandLine command, MyGridProgram program) {
+        command.RegisterCommand(new Command("ac-add", Command.Wrap(s => this.AddNewConnector(s, program)), "Adds and initializes an auto connector",
           detailedHelp: @"Argument is the name of the auto connector.
 Pistons need to be named:
-  '<base name in CustomData> Piston <Auto connector name> .*'", minArgs: 1, maxArgs: 1));
+  '<base name in CustomData> Piston <Auto connector name> .*'", nArgs: 1));
 
-        command.AddCmd(new Cmd("ac-del", "Removes an auto connector", ss => _removeConnector(ss[0]),
-          detailedHelp: @"Argument is the name of the auto connector", minArgs: 1, maxArgs: 1));
-
-        command.AddCmd(new Cmd("ac-con", "Requests a connection", ss => _connect(ss),
+        command.RegisterCommand(new Command("ac-del", Command.Wrap(this.removeConnector), "Removes an auto connector",
+          detailedHelp: @"Argument is the name of the auto connector", nArgs: 1));
+        
+        command.RegisterCommand(new Command("ac-con", Command.Wrap(this.connect), "Requests a connection",
           detailedHelp: @"Requests for an automatic connection to the base
 An auto connector will chosen based on proximity
 First arg is size (small or large).
 Next six are the world position and orientation of the requesting connector.
-Last is the address of the requestor", minArgs: 9, maxArgs: 9, requirePermission: false));
+Last is the address of the requestor", nArgs: 8, requiredTrigger: CommandTrigger.Antenna));
 
-        command.AddCmd(new Cmd("ac-disc", "Requests a disconnection", ss => _disconnect(ss),
+        command.RegisterCommand(new Command("ac-disc", Command.Wrap(this.disconnect), "Requests a disconnection",
           detailedHelp: @"Requests for an automatic disconnection from the base
-Will disconnect or cancel a request based on the requestor", minArgs: 2, maxArgs: 2, requirePermission: false));
+Will disconnect or cancel a request based on the requestor", nArgs: 1, requiredTrigger: CommandTrigger.Antenna));
 
-        command.AddCmd(new Cmd("ac-reset", "Resets a connector to its starting positions", ss => _resetConnector(ss[0]),
-          detailedHelp: @"Resets the connector with the given name", minArgs: 1, maxArgs: 1, requirePermission: true));
+        command.RegisterCommand(new Command("ac-reset", Command.Wrap(this.resetConnector), "Resets a connector to its starting positions",
+          detailedHelp: @"Resets the connector with the given name", nArgs: 1));
       }
 
-      private void _connect(List<string> args) {
-        this._log($"received a connection request");
+      void connect(List<string> args) {
+        this.log("received a connection request");
         try {
-          var size = MyCubeSize.Small;
+          MyCubeSize size = MyCubeSize.Small;
           Enum.TryParse(args[0], out size);
-          var wPos = new Vector3D(double.Parse(args[2]), double.Parse(args[3]), double.Parse(args[4]));
-          var wOrientation = new Vector3D(double.Parse(args[5]), double.Parse(args[6]), double.Parse(args[7]));
-          long address = long.Parse(args[8]);
-          this._connect(size, args[1], wPos, wOrientation, address);
+          var wPos = new Vector3D(double.Parse(args[1]), double.Parse(args[2]), double.Parse(args[3]));
+          var wOrientation = new Vector3D(double.Parse(args[4]), double.Parse(args[5]), double.Parse(args[6]));
+          long address = long.Parse(args[7]);
+          this.connect(size, wPos, wOrientation, address);
         } catch (Exception e) {
-          this._log($"could not parse value received: {e.Message}");
+          this.log($"could not parse value received: {e.Message}");
         }
       }
 
-      private void _disconnect(List<string> args) {
-        this._log($"received a disconnection request");
+      void disconnect(string arg) {
+        this.log("received a disconnection request");
         try {
-          this._disconnect(args[0], long.Parse(args[1]));
+          this.disconnect(long.Parse(arg));
         } catch (Exception e) {
-          this._log($"could not parse value received: {e.Message}");
+          this.log($"could not parse value received: {e.Message}");
         }
       }
 
-      private void _update() {
-        bool hasUpdated = false;
-        foreach (var connector in this._autoConnectors) {
-          hasUpdated |= connector.Update();
-        }
-        this._updateAction.Period = hasUpdated ? 1 : 10;
-      }
-
-      private void _log(string log) => Log($"Dispatcher '{this._stationName}': {log}");
+      void log(string log) => this.logger?.Invoke($"Dispatcher '{this.stationName}': {log}");
     }
   }
 }

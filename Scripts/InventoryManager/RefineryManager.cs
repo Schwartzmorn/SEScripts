@@ -20,29 +20,31 @@ using VRageMath;
 namespace IngameScript {
   partial class Program {
     public class RefineryManager: LazyFilter, IOutputInventoryCollection, IInputInventoryCollection {
-      private readonly List<IMyRefinery> _refineries = new List<IMyRefinery>();
+      private readonly List<IMyRefinery> refineries = new List<IMyRefinery>();
 
-      public RefineryManager(IMyGridTerminalSystem gts, GridManager gridManager) {
-        Scan(gts, gridManager);
-        Schedule(new ScheduledAction(() => Scan(gts, gridManager), period: 100));
+      public string Name => "Refineries manager";
+
+      public RefineryManager(IMyGridTerminalSystem gts, GridManager gridManager, IProcessSpawner spawner) {
+        this.Scan(gts, gridManager);
+        spawner.Spawn(p => this.Scan(gts, gridManager), "refinery-scanner", period: 100);
       }
 
       public void Scan(IMyGridTerminalSystem gts, GridManager gridManager) {
-        _refineries.Clear();
-        gts.GetBlocksOfType(_refineries, a => a.GetInventory(1) != null && gridManager.Manages(a.CubeGrid));
+        this.refineries.Clear();
+        gts.GetBlocksOfType(this.refineries, a => a.GetInventory(1) != null && gridManager.Manages(a.CubeGrid));
       }
 
       public IEnumerable<IMyInventory> GetOutputInventories() {
-        FilterLazily();
-        return _refineries.Select(a => a.GetInventory(1));
+        this.FilterLazily();
+        return this.refineries.Select(a => a.GetInventory(1));
       }
 
       public IEnumerable<IMyInventory> GetInputInventories() {
-        FilterLazily();
-        return _refineries.Select(a => a.GetInventory(0));
+        this.FilterLazily();
+        return this.refineries.Select(a => a.GetInventory(0));
       }
 
-      protected override void Filter() => _refineries.RemoveAll(c => c.GetInventory(1) == null);
+      protected override void Filter() => this.refineries.RemoveAll(c => c.GetInventory(1) == null);
     }
   }
 }

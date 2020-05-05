@@ -18,7 +18,6 @@ namespace IngameScript.MDK {
     Program.IniWatcher ini;
     MockUnicastListener listener;
     Program.IProcessManager manager;
-    Program program;
     public void BeforeEach() {
       this.connector = new MockShipConnector() {
         CubeGrid = new MockCubeGrid() {
@@ -27,7 +26,6 @@ namespace IngameScript.MDK {
         CustomData = @"[connection-client]
   connector-name=connector name
   server-channel=server channel
-  client-channel=client channel
 ",
         CustomName = "connector name",
         DisplayNameText = "connector name",
@@ -43,7 +41,6 @@ namespace IngameScript.MDK {
       };
       this.manager = Program.Process.CreateManager(null);
       this.commandLine = new Program.CommandLine("test", null, this.manager);
-      this.program = new Program(this.gts, this.igc);
     }
 
     Program.ConnectionClient getConnectionClient(string state) {
@@ -51,7 +48,7 @@ namespace IngameScript.MDK {
         this.connector.CustomData += "state=" + state;
       }
       this.ini = new Program.IniWatcher(this.connector, this.manager);
-      return new Program.ConnectionClient(this.ini, this.program, this.commandLine, this.manager);
+      return new Program.ConnectionClient(this.ini, this.gts, this.igc, this.commandLine, this.manager, null);
     }
 
     void tick(int n = 5) {
@@ -66,7 +63,6 @@ namespace IngameScript.MDK {
       Program.ConnectionClient client = this.getConnectionClient(null);
 
       Assert.AreEqual(Program.ConnectionState.Ready, client.State);
-      Assert.AreEqual("client channel", client.ClientChannel);
     }
 
     public void CreateNewWithState() {
@@ -85,7 +81,7 @@ namespace IngameScript.MDK {
       Assert.AreEqual(0, client.Progress);
       Assert.AreEqual(Program.ConnectionState.WaitingCon, client.State);
       Assert.AreEqual("server channel", this.igc.LastMessage.Item1);
-      Assert.AreEqual("-ac-con \"Small\" \"client channel\" \"5\" \"15\" \"25\" \"0\" \"0\" \"-1\"", this.igc.LastMessage.Item2);
+      Assert.AreEqual("-ac-con \"Small\" \"5\" \"15\" \"25\" \"0\" \"0\" \"-1\"", this.igc.LastMessage.Item2);
 
       this.listener.QueueMessage("-ac-progress 0.25");
 
@@ -145,7 +141,7 @@ namespace IngameScript.MDK {
       Assert.AreEqual(0, client.Progress);
       Assert.AreEqual(Program.ConnectionState.WaitingDisc, client.State);
       Assert.AreEqual("server channel", this.igc.LastMessage.Item1);
-      Assert.AreEqual("-ac-disc \"client channel\"", this.igc.LastMessage.Item2);
+      Assert.AreEqual("-ac-disc", this.igc.LastMessage.Item2);
 
       this.listener.QueueMessage("-ac-progress 0.25");
 

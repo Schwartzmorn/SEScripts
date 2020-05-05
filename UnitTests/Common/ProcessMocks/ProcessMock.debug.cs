@@ -60,6 +60,10 @@ namespace IngameScript {
         this.onSave(ini);
         return ini.ToString();
       }
+
+      public void Save(Action<string> action, MyIni ini) {
+        throw new NotImplementedException();
+      }
     };
   }
 }
