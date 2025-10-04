@@ -17,24 +17,29 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public class BatteryManager {
-      readonly List<IMyBatteryBlock> batteries = new List<IMyBatteryBlock>();
-      public float MaxInput => this.batteries.Sum(b => b.MaxInput);
-      public float CurrentInput => this.batteries.Sum(b => b.CurrentInput);
-      public float MaxOutput => this.batteries.Sum(b => b.MaxOutput);
-      public float CurentOutput => this.batteries.Sum(b => b.CurrentOutput);
-      public float MaxCharge => this.batteries.Sum(b => b.CurrentStoredPower);
-      public float CurrentCharge => this.batteries.Sum(b => b.MaxStoredPower);
-      public bool IsCharging => this.CurrentInput < this.CurentOutput;
-      public BatteryManager(Program p, IProcessSpawner spawner) {
-        this.update(p);
-        spawner.Spawn(process => this.update(p), "battery-manager", period: 100);
+namespace IngameScript
+{
+  partial class Program
+  {
+    public class BatteryManager
+    {
+      readonly List<IMyBatteryBlock> _batteries = new List<IMyBatteryBlock>();
+      public float MaxInput => _batteries.Sum(b => b.MaxInput);
+      public float CurrentInput => _batteries.Sum(b => b.CurrentInput);
+      public float MaxOutput => _batteries.Sum(b => b.MaxOutput);
+      public float CurentOutput => _batteries.Sum(b => b.CurrentOutput);
+      public float MaxCharge => _batteries.Sum(b => b.CurrentStoredPower);
+      public float CurrentCharge => _batteries.Sum(b => b.MaxStoredPower);
+      public bool IsCharging => CurrentInput < CurentOutput;
+      public BatteryManager(Program p, IProcessSpawner spawner)
+      {
+        _update(p);
+        spawner.Spawn(process => _update(p), "battery-manager", period: 100);
       }
-      void update(Program p) {
-        this.batteries.Clear();
-        p.GridTerminalSystem.GetBlocksOfType(this.batteries, b => b.CubeGrid.IsSameConstructAs(p.Me.CubeGrid));
+      void _update(Program p)
+      {
+        _batteries.Clear();
+        p.GridTerminalSystem.GetBlocksOfType(_batteries, b => b.CubeGrid.IsSameConstructAs(p.Me.CubeGrid));
       }
     }
   }

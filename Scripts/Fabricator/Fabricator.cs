@@ -42,11 +42,11 @@ namespace IngameScript {
             this.log);
 
         var pistons = new List<IMyPistonBase>();
-        gts.GetBlocksOfType(pistons, p => p.DisplayNameText == this.name + " Piston");
+        gts.GetBlocksOfType(pistons, p => p.CustomName == this.name + " Piston");
         var welders = new List<IMyShipWelder>();
-        gts.GetBlocksOfType(welders, w => w.DisplayNameText == this.name + " Welder");
+        gts.GetBlocksOfType(welders, w => w.CustomName == this.name + " Welder");
         var lights = new List<IMyLightingBlock>();
-        gts.GetBlocksOfType(lights, l => l.DisplayNameText == this.name + " Light");
+        gts.GetBlocksOfType(lights, l => l.CustomName == this.name + " Light");
         this.welder = new Welder(
             AssertNonEmpty(pistons, $"Could not find any '{this.name + " Piston"}'"),
             AssertNonNull(gts.GetBlockWithName(this.name + " Sensor") as IMySensorBlock, $"Could not find '{this.name + " Sensor"}'"),

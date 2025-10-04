@@ -19,8 +19,6 @@ using VRageMath;
 
 namespace IngameScript {
   public static class ConversionHelper {
-    public static readonly string MAX_OUTPUT = "Max Possible Output";
-    public static readonly float POWER_FACTOR = 1000000;
     public static readonly System.Text.RegularExpressions.Regex AMOUNT_REGEX = new System.Text.RegularExpressions.Regex("([0-9.,]+)\\s*([A-Za-z]+)");
     static readonly List<MyTuple<char, float>> PREFIXES = new List<MyTuple<char, float>> { MyTuple.Create('G', 1000000000f), MyTuple.Create('M', 1000000f), MyTuple.Create('K', 1000f) };
     public static float GetAmount(this string amountString) {

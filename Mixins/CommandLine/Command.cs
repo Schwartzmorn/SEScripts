@@ -21,12 +21,12 @@ namespace IngameScript {
   partial class Program {
     public delegate MyTuple<int, bool, Action<Process>> ActionProvider(List<string> arguments, Action<string> logger);
     /// <summary>
-    /// <para>The most important in this class is the <see cref="ActionProvider"/> <see cref="provider"/>:</para>
+    /// <para>The most important in this class is the <see cref="ActionProvider"/> <see cref="_provider"/>:</para>
     /// <para>It is a function that takes the arguments <see cref="List{string}"/> from a parsed command, an optional logger <see cref="Action{string}"/> and returns a <see cref="MyTuple"/> that contains:
     /// <list type="bullet">
     ///   <item>The <see cref="Process.Period"/></item>
     ///   <item>Whether the process is <see cref="Process.UseOnce"/></item>
-    ///   <item>The <see cref="Process.action"/></item>
+    ///   <item>The <see cref="Process._action"/></item>
     /// </list>
     /// </para>
     /// </summary>
@@ -38,8 +38,8 @@ namespace IngameScript {
       public readonly string Name;
       public readonly CommandTrigger RequiredTrigger;
 
-      readonly List<string> help;
-      readonly ActionProvider provider;
+      readonly List<string> _help;
+      readonly ActionProvider _provider;
       /// <summary>Method to wrap an <see cref="Action"/> as a command</summary>
       public static ActionProvider Wrap(Action action, int period = 1, bool useOnce = true) => (args, logger) => MyTuple.Create<int, bool, Action<Process>>(period, useOnce, _ => action());
       /// <summary>Method to wrap an <see cref="Action{Process}"/> as a command</summary>
@@ -64,19 +64,19 @@ namespace IngameScript {
       /// <param name="nArgs">Number of argguments required by the command</param>
       /// <param name="requiredTrigger"></param>
       public Command(string name, ActionProvider actionProvider, string briefHelp, string detailedHelp = null, int maxArgs = int.MaxValue, int minArgs = 0, int nArgs = -1, CommandTrigger requiredTrigger = CommandTrigger.User) {
-        this.Name = name;
-        this.provider = actionProvider;
-        this.BriefHelp = briefHelp;
+        Name = name;
+        _provider = actionProvider;
+        BriefHelp = briefHelp;
         if (detailedHelp != null) {
-          this.help = detailedHelp.Split(new char[] { '\n' }).ToList();
+          _help = detailedHelp.Split(new char[] { '\n' }).ToList();
         }
         if (nArgs >= 0) {
-          this.MaxArgs = this.MinArgs = nArgs;
+          MaxArgs = MinArgs = nArgs;
         } else {
-          this.MaxArgs = maxArgs;
-          this.MinArgs = minArgs;
+          MaxArgs = maxArgs;
+          MinArgs = minArgs;
         }
-        this.RequiredTrigger = requiredTrigger;
+        RequiredTrigger = requiredTrigger;
       }
       /// <summary>Spawns a new <see cref="Process"/>, taking into account the arguments. Can fail and return null if the arguments are incorrect.</summary>
       /// <param name="args">The arguments given to the command line.</param>
@@ -86,44 +86,44 @@ namespace IngameScript {
       /// <param name="trigger">What triggered the command</param>
       /// <returns>The spawned process, if successful.</returns>
       public Process Spawn(List<string> args, Action<string> logger, Action<Process> onDone, IProcessSpawner spawner, CommandTrigger trigger) {
-        if (trigger < this.RequiredTrigger) {
-          logger?.Invoke($"Permission denied for '{this.Name}'");
-        } else if (args.Count <= this.MaxArgs && args.Count >= this.MinArgs) {
-          MyTuple<int, bool, Action<Process>> parameters = this.provider(args, logger);
-          return spawner.Spawn(parameters.Item3, this.Name, onDone, parameters.Item1, parameters.Item2);
+        if (trigger < RequiredTrigger) {
+          logger?.Invoke($"Permission denied for '{Name}'");
+        } else if (args.Count <= MaxArgs && args.Count >= MinArgs) {
+          MyTuple<int, bool, Action<Process>> parameters = _provider(args, logger);
+          return spawner.Spawn(parameters.Item3, Name, onDone, parameters.Item1, parameters.Item2);
         } else {
-          logger?.Invoke($"Wrong number of arguments for '{this.Name}'");
-          logger?.Invoke($"Run -help '{this.Name}' for more info");
+          logger?.Invoke($"Wrong number of arguments for '{Name}'");
+          logger?.Invoke($"Run -help '{Name}' for more info");
         }
         return null;
       }
       /// <summary>Returns some help on the command</summary>
       /// <param name="logger">Logger to use to display the help</param>
       public void DetailedHelp(Action<string> logger) {
-        string s = $"-{this.Name}: ";
-        if (this.MaxArgs == 0) {
+        string s = $"-{Name}: ";
+        if (MaxArgs == 0) {
           s += "(no argument)";
         } else {
           s += "takes ";
-          if (this.MinArgs == this.MaxArgs) {
-            s += $"{this.MinArgs}";
-          } else if (this.MinArgs == 0) {
-            s += $"{(this.MaxArgs < int.MaxValue ? $"up to {this.MaxArgs}" : "any number of")}";
-          } else if (this.MaxArgs < int.MaxValue) {
-            s += $"{this.MinArgs}-{this.MaxArgs}";
+          if (MinArgs == MaxArgs) {
+            s += $"{MinArgs}";
+          } else if (MinArgs == 0) {
+            s += $"{(MaxArgs < int.MaxValue ? $"up to {MaxArgs}" : "any number of")}";
+          } else if (MaxArgs < int.MaxValue) {
+            s += $"{MinArgs}-{MaxArgs}";
           } else {
-            s += $"at least {this.MinArgs}";
+            s += $"at least {MinArgs}";
           }
 
-          s += $" argument{(this.MaxArgs > 1 ? "s" : "")}";
+          s += $" argument{(MaxArgs > 1 ? "s" : "")}";
         }
         logger(s);
-        if (this.help != null) {
-          foreach (string h in this.help) {
+        if (_help != null) {
+          foreach (string h in _help) {
             logger("  " + h);
           }
         } else {
-          logger("  " + this.BriefHelp);
+          logger("  " + BriefHelp);
         }
       }
     }

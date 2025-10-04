@@ -16,90 +16,112 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public class DoorManager {
-      static readonly System.Text.RegularExpressions.Regex SAS_DOOR_RE = new System.Text.RegularExpressions.Regex("^(.*) - (Inner|Outer)\\)$");
+namespace IngameScript
+{
+  partial class Program
+  {
+    public class DoorManager
+    {
+      static readonly System.Text.RegularExpressions.Regex SAS_DOOR_RE = new System.Text.RegularExpressions.Regex("^(.*) - (Inner|Outer)$");
       static readonly int GRACE_PERIOD = 80;
       static readonly int TIME_TO_CLOSE = 120;
 
-      readonly List<IMyDoor> doors = new List<IMyDoor>();
-      readonly HashSet<long> handledDoors = new HashSet<long>();
-      readonly HashSet<string> handledSases = new HashSet<string>();
-      readonly Action<string> logger;
-      readonly List<Sas> sases = new List<Sas>();
-      readonly Process mainProcess;
+      readonly List<IMyDoor> _doors = new List<IMyDoor>();
+      readonly HashSet<long> _handledDoors = new HashSet<long>();
+      readonly HashSet<string> _handledSases = new HashSet<string>();
+      readonly Action<string> _logger;
+      readonly List<Sas> _sases = new List<Sas>();
+      readonly Process _mainProcess;
 
-      readonly List<IMyDoor> tmpDoorList = new List<IMyDoor>();
-      readonly Dictionary<string, IMyDoor> tmpSases = new Dictionary<string, IMyDoor>();
+      readonly List<IMyDoor> _tmpDoorList = new List<IMyDoor>();
+      readonly Dictionary<string, IMyDoor> _tmpSases = new Dictionary<string, IMyDoor>();
 
-      public DoorManager(MyGridProgram program, IProcessSpawner spawner, Action<string> logger) {
-        this.logger = logger;
-        this.mainProcess = spawner.Spawn(this._handleDoors, "autodoors-main");
-        this.Scan(program);
-        this.mainProcess.Spawn(p => this.Scan(program), "scan", period: 431);
+      public DoorManager(MyGridProgram program, IProcessSpawner spawner, Action<string> logger)
+      {
+        _logger = logger;
+        _mainProcess = spawner.Spawn(_handleDoors, "autodoors-main");
+        Scan(program);
+        _mainProcess.Spawn(p => Scan(program), "scan", period: 431);
       }
 
-      public void Scan(MyGridProgram program) {
-        this.doors.Clear();
-        this.sases.Clear();
+      public void Scan(MyGridProgram program)
+      {
+        _doors.Clear();
+        _sases.Clear();
 
-        program.GridTerminalSystem.GetBlocksOfType(this.tmpDoorList, d => d.CubeGrid == program.Me.CubeGrid && d.IsFunctional);
-        foreach (IMyDoor door in this.tmpDoorList) {
-          var match = SAS_DOOR_RE.Match(door.DisplayNameText);
-          if (match != null) {
-            IMyDoor otherDoor = this.tmpSases.GetValueOrDefault(match.Groups[1].Value);
-            if (otherDoor != null) {
-              this.sases.Add(new Sas($"{match.Groups[1].Value})", door, otherDoor));
-              this.tmpSases.Remove(match.Groups[1].Value);
-            } else {
-              this.tmpSases.Add(match.Groups[1].Value, door);
+        program.GridTerminalSystem.GetBlocksOfType(_tmpDoorList, d => d.CubeGrid == program.Me.CubeGrid && d.IsFunctional);
+        foreach (IMyDoor door in _tmpDoorList)
+        {
+          var match = SAS_DOOR_RE.Match(door.CustomName);
+          if (match != null)
+          {
+            IMyDoor otherDoor = _tmpSases.GetValueOrDefault(match.Groups[1].Value);
+            if (otherDoor != null)
+            {
+              _sases.Add(new Sas($"{match.Groups[1].Value}", door, otherDoor));
+              _tmpSases.Remove(match.Groups[1].Value);
             }
-          } else {
-            this.doors.Add(door);
+            else
+            {
+              _tmpSases.Add(match.Groups[1].Value, door);
+            }
+          }
+          else
+          {
+            _doors.Add(door);
           }
         }
-        this.doors.AddRange(this.tmpSases.Values);
-        this.logger?.Invoke($"Found {this.doors.Count} doors and {this.sases.Count} sases");
+        _doors.AddRange(_tmpSases.Values);
+        _logger?.Invoke($"Found {_doors.Count} doors and {_sases.Count} sases");
 
-        this.tmpSases.Clear();
+        _tmpSases.Clear();
       }
 
-      void _handleDoors(Process p) {
-        foreach(IMyDoor door in this.doors) {
-          if (door.OpenRatio > 0) {
-            if (!this.handledDoors.Contains(door.EntityId)) {
-              this.logger?.Invoke($"Will close door {door.DisplayNameText}");
-              this.mainProcess.Spawn(pc => this.closeDoor(door), $"close-door {door.DisplayNameText}", period: TIME_TO_CLOSE, useOnce: true);
-              this.handledDoors.Add(door.EntityId);
+      void _handleDoors(Process p)
+      {
+        foreach (IMyDoor door in _doors)
+        {
+          if (door.OpenRatio > 0)
+          {
+            if (!_handledDoors.Contains(door.EntityId))
+            {
+              _logger?.Invoke($"Will close door {door.CustomName}");
+              _mainProcess.Spawn(pc => _closeDoor(door), $"close-door {door.CustomName}", period: TIME_TO_CLOSE, useOnce: true);
+              _handledDoors.Add(door.EntityId);
             }
           }
         }
-        foreach(Sas sas in this.sases) {
-          if (sas.IsOpen()) {
-            if (!this.handledSases.Contains(sas.Name)) {
-              this.logger?.Invoke($"Will close sas {sas.Name}");
+        foreach (Sas sas in _sases)
+        {
+          if (sas.IsOpen())
+          {
+            if (!_handledSases.Contains(sas.Name))
+            {
+              _logger?.Invoke($"Will close sas {sas.Name}");
               sas.Lock();
-              this.handledSases.Add(sas.Name);
-              this.mainProcess.Spawn(pc => this.closeSas(sas), $"close-sas {sas.Name}", period: TIME_TO_CLOSE, useOnce: true);
+              _handledSases.Add(sas.Name);
+              _mainProcess.Spawn(pc => _closeSas(sas), $"close-sas {sas.Name}", period: TIME_TO_CLOSE, useOnce: true);
             }
           }
         }
       }
 
-      void closeDoor(IMyDoor door) {
+      void _closeDoor(IMyDoor door)
+      {
         door.CloseDoor();
-        this.mainProcess.Spawn(pc => this.handledDoors.Remove(door.EntityId), $"cleanup-door {door.DisplayNameText}", period: GRACE_PERIOD, useOnce: true);
+        _mainProcess.Spawn(pc => _handledDoors.Remove(door.EntityId), $"cleanup-door {door.CustomName}", period: GRACE_PERIOD, useOnce: true);
       }
 
-      void closeSas(Sas sas) {
+      void _closeSas(Sas sas)
+      {
         sas.Close();
-        this.mainProcess.Spawn(pc => this.unlockSas(sas), $"unlock-sas {sas.Name}", period: GRACE_PERIOD, useOnce: true);
+        _mainProcess.Spawn(pc => _unlockSas(sas), $"unlock-sas {sas.Name}", period: GRACE_PERIOD, useOnce: true);
       }
 
-      void unlockSas(Sas sas) {
+      void _unlockSas(Sas sas)
+      {
         sas.Unlock();
-        this.handledSases.Remove(sas.Name);
+        _handledSases.Remove(sas.Name);
       }
     }
   }

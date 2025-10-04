@@ -16,10 +16,13 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
     /// <summary>Class that regroups the some of the behavior of the <see cref="Autopilot"/>, such as speed, precision, etc</summary>
-    public class APSettings {
+    public class APSettings
+    {
       public readonly double HandbrakeSpeed = 2;
       public readonly double SpeedPrecision = 2;
       public readonly float BrakePower = 1;
@@ -28,11 +31,14 @@ namespace IngameScript {
       /// <summary>Returns the speed to target when going toward a waypoint</summary>
       /// <param name="wp">Waypoint</param>
       /// <returns>Target speed</returns>
-      public double GetTargetSpeed(APWaypoint wp) {
-        if (wp == null) {
+      public double GetTargetSpeed(APWaypoint wp)
+      {
+        if (wp == null)
+        {
           return 0;
         }
-        switch (wp.Terrain) {
+        switch (wp.Terrain)
+        {
           case Terrain.Dangerous:
             return 1;
           case Terrain.Bad:
@@ -46,8 +52,10 @@ namespace IngameScript {
             return 30;
         }
       }
-      public double GetTargetPrecision(APWaypoint wp) {
-        switch (wp.Type) {
+      public double GetTargetPrecision(APWaypoint wp)
+      {
+        switch (wp.Type)
+        {
           case WPType.PrecisePath:
             return 0.5;
           case WPType.Maneuvering:
@@ -59,7 +67,8 @@ namespace IngameScript {
       }
 
       public bool IsWaypointReached(APWaypoint wp, double distance) => distance < this.GetTargetPrecision(wp);
-      public double GetTargetSpeed(double curTargetSpeed, double nextTargetSpeed, double distToWP) {
+      public double GetTargetSpeed(double curTargetSpeed, double nextTargetSpeed, double distToWP)
+      {
         double smoothingDistance = (Math.Pow(curTargetSpeed, 2) - Math.Pow(nextTargetSpeed, 2)) / this.SpeedSmothingFactor;
         return distToWP < smoothingDistance
           ? MathHelper.Lerp(curTargetSpeed, nextTargetSpeed, 1 - (distToWP / smoothingDistance))

@@ -21,11 +21,11 @@ namespace IngameScript {
   partial class Program {
     /// <summary>Class that parses the routines</summary>
     public class RoutineParser {
-      readonly CommandLine commandLine;
+      readonly CommandLine _commandLine;
       /// <summary>Creates a new parser</summary>
       /// <param name="commandLine">Command line that will be used to execute commands</param>
       public RoutineParser(CommandLine commandLine) {
-        this.commandLine = commandLine;
+        _commandLine = commandLine;
       }
       /// <summary>
       /// Parses the string and creates the auto routines. The syntax is as follows:
@@ -64,26 +64,26 @@ namespace IngameScript {
             throw new InvalidOperationException($"Unexpected instruction '{line}' at line {count} outside of a routine");
           } else if (line.StartsWith("while")) {
             var instructions = new List<Instruction>();
-            current.Peek().Add(new WhileInstruction(this.parse(line.Substring(5).Trim(), count), instructions));
+            current.Peek().Add(new WhileInstruction(_parse(line.Substring(5).Trim(), count), instructions));
             current.Push(instructions);
           } else if (line == "end") {
             current.Pop();
           } else {
-            current.Peek().Add(this.parse(line, count));
+            current.Peek().Add(_parse(line, count));
           }
         }
         return routines;
       }
 
-      SingleInstruction parse(string s, int count) {
+      SingleInstruction _parse(string s, int count) {
         try {
           if (s.StartsWith("wait")) {
             return new WaitInstruction(s.Substring(4));
           } else if (s == "forever") {
             return new ForeverInstruction();
           } else if (s.StartsWith("-")) {
-            MyTuple<string, List<string>> parsed = this.commandLine.ParseCommand(s);
-            return new CommandInstruction(parsed.Item1, parsed.Item2, this.commandLine);
+            MyTuple<string, List<string>> parsed = _commandLine.ParseCommand(s);
+            return new CommandInstruction(parsed.Item1, parsed.Item2, _commandLine);
           }
         } catch (Exception) { }
         throw new InvalidOperationException($"Could not parse instruction '{s}' at line {count}");

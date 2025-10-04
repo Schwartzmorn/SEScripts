@@ -5,23 +5,26 @@ using System.Linq;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
     /// <summary>Entry point for the Autopilot</summary>
-    public class Autopilot : IPADeactivator {
+    public class Autopilot : IPADeactivator
+    {
       static readonly Vector3D PLANE = new Vector3D(1, 0, 1);
       static readonly Vector3D FORWARD = new Vector3D(0, 0, -1);
       static readonly Vector3D RIGHT = new Vector3D(1, 0, 0);
 
       public readonly WPNetwork Network;
 
-      bool activated;
-      readonly Action<string> logger;
-      readonly IMyRemoteControl remote;
-      readonly APSettings settings = new APSettings();
-      readonly CoordinatesTransformer transformer;
-      readonly WheelsController wheels;
-      readonly List<APWaypoint> currentPath = new List<APWaypoint>();
+      bool _activated;
+      readonly Action<string> _logger;
+      readonly IMyRemoteControl _remote;
+      readonly APSettings _settings = new APSettings();
+      readonly CoordinatesTransformer _transformer;
+      readonly WheelsController _wheels;
+      readonly List<APWaypoint> _currentPath = new List<APWaypoint>();
       /// <summary>Creates a new Autopilot</summary>
       /// <param name="ini"></param>
       /// <param name="wheels"></param>
@@ -29,128 +32,152 @@ namespace IngameScript {
       /// <param name="remote"></param>
       /// <param name="logger"></param>
       /// <param name="manager"></param>
-      public Autopilot(MyIni ini, WheelsController wheels, CommandLine cmd, IMyRemoteControl remote, Action<string> logger, ISaveManager manager) {
-        this.activated = ini.Get("auto-pilot", "activated").ToBoolean();
-        this.logger = logger;
+      public Autopilot(MyIni ini, WheelsController wheels, CommandLine cmd, IMyRemoteControl remote, Action<string> logger, ISaveManager manager)
+      {
+        _activated = ini.Get("auto-pilot", "activated").ToBoolean();
+        _logger = logger;
 
-        Process p = manager.Spawn(this.handle, "ap-handle");
+        Process p = manager.Spawn(_handle, "ap-handle");
 
-        this.Network = new WPNetwork(remote, logger, p);
-        this.remote = remote;
-        this.transformer = new CoordinatesTransformer(remote, p);
-        this.wheels = wheels;
+        Network = new WPNetwork(remote, logger, p);
+        _remote = remote;
+        _transformer = new CoordinatesTransformer(remote, p);
+        _wheels = wheels;
 
-        cmd.RegisterCommand(new Command("ap-move", Command.Wrap(this.move), "Move forward", minArgs: 1, maxArgs: 2));
-        cmd.RegisterCommand(new Command("ap-goto", Command.Wrap(this.GoTo), "Go to the waypoint", nArgs: 1));
-        cmd.RegisterCommand(new Command("ap-switch", Command.Wrap(this.Switch), "Switches the autopilot on/off", nArgs: 1));
-        cmd.RegisterCommand(new Command("ap-save", Command.Wrap(this.Save), "Save the current position", nArgs: 1));
-        manager.AddOnSave(this.save);
+        cmd.RegisterCommand(new Command("ap-move", Command.Wrap(_move), "Move forward", minArgs: 1, maxArgs: 2));
+        cmd.RegisterCommand(new Command("ap-goto", Command.Wrap(GoTo), "Go to the waypoint", nArgs: 1));
+        cmd.RegisterCommand(new Command("ap-switch", Command.Wrap(Switch), "Switches the autopilot on/off", nArgs: 1));
+        cmd.RegisterCommand(new Command("ap-save", Command.Wrap(Save), "Save the current position", nArgs: 1));
+        manager.AddOnSave(_save);
       }
 
-      public bool ShouldDeactivate() => this.activated;
+      public bool ShouldDeactivate() => _activated;
 
-      public void Switch(string s) {
-        this.activated = s == "switch" ? !this.activated : s == "on";
-        this.logger?.Invoke($"Autopilot switch {(this.activated ? "on" : "off")}");
-        if (!this.activated) {
-          this.currentPath.Clear();
+      public void Switch(string s)
+      {
+        _activated = s == "switch" ? !_activated : s == "on";
+        _logger?.Invoke($"Autopilot switch {(_activated ? "on" : "off")}");
+        if (!_activated)
+        {
+          _currentPath.Clear();
         }
-        this.wheels.SetPower(0);
-        this.wheels.SetSteer(0);
+        _wheels.SetPower(0);
+        _wheels.SetSteer(0);
       }
       /// <summary>Requests the Autopilot to go to a waypoint</summary>
       /// <param name="wpName">Name of the waypoint to reach</param>
-      public void GoTo(string wpName) {
-        if (this.activated) {
-          APWaypoint end = this.Network.GetWaypoint(wpName);
-          if (end == null) {
-            this.log($"Could not find waypoint {wpName}");
-          }  else {
-            this.Network.GetPath(this.remote.GetPosition(), end, this.currentPath);
-            this.log($"Path: {this.currentPath.Count}");
+      public void GoTo(string wpName)
+      {
+        if (_activated)
+        {
+          APWaypoint end = Network.GetWaypoint(wpName);
+          if (end == null)
+          {
+            _log($"Could not find waypoint {wpName}");
+          }
+          else
+          {
+            Network.GetPath(_remote.GetPosition(), end, _currentPath);
+            _log($"Path: {_currentPath.Count}");
           }
         }
       }
       /// <summary>Requests the autopilot to move</summary>
       /// <param name="amtForward">Amount of forward movement</param>
       /// <param name="amtRight">Amount of movement to the right</param>
-      public void Move(double amtForward, double amtRight) {
-        if (this.activated) {
-          this.currentPath.Clear();
-          Vector3D tgt = this.remote.GetPosition() + (amtForward * this.remote.WorldMatrix.Forward) + (amtRight * this.remote.WorldMatrix.Right);
-          this.currentPath.Add(new APWaypoint(new MyWaypointInfo("$TMPMOVE", tgt), Terrain.Dangerous, WPType.Maneuvering));
+      public void Move(double amtForward, double amtRight)
+      {
+        if (_activated)
+        {
+          _currentPath.Clear();
+          Vector3D tgt = _remote.GetPosition() + (amtForward * _remote.WorldMatrix.Forward) + (amtRight * _remote.WorldMatrix.Right);
+          _currentPath.Add(new APWaypoint(new MyWaypointInfo("$TMPMOVE", tgt), Terrain.Dangerous, WPType.Maneuvering));
         }
       }
       /// <summary>Saves the current position of the remote as a new waypoint (or updates an existing one)</summary>
       /// <param name="name">Name of the waypoint</param>
-      public void Save(string name) => this.Network.Add(new MyWaypointInfo(name, this.remote.GetPosition()));
+      public void Save(string name) => Network.Add(new MyWaypointInfo(name, _remote.GetPosition()));
 
-      void move(List<string> args) {
+      void _move(List<string> args)
+      {
         double fw, rt = 0;
         double.TryParse(args[0], out fw);
-        if (args.Count > 1) {
+        if (args.Count > 1)
+        {
           double.TryParse(args[0], out rt);
         }
-        this.Move(fw, rt);
+        Move(fw, rt);
       }
 
-      void handle(Process p) {
-        if (!this.activated) {
+      void _handle(Process p)
+      {
+        if (!_activated)
+        {
           return;
         }
-        if (this.currentPath.Count > 0) {
-          APWaypoint nextWP = this.currentPath.Count > 1 ? this.currentPath[this.currentPath.Count - 2] : null;
-          if (this.goToWaypoint(this.currentPath.Last(), nextWP)) {
-            this.currentPath.Pop();
+        if (_currentPath.Count > 0)
+        {
+          APWaypoint nextWP = _currentPath.Count > 1 ? _currentPath[_currentPath.Count - 2] : null;
+          if (_goToWaypoint(_currentPath.Last(), nextWP))
+          {
+            _currentPath.Pop();
           }
         }
-        if (this.currentPath.Count == 0) {
-          this.stop();
+        if (_currentPath.Count == 0)
+        {
+          _stop();
         }
       }
 
-      bool goToWaypoint(APWaypoint wp, APWaypoint nextWP) {
-        Vector3D route = this.transformer.Pos(wp.WP.Coords) * PLANE;
+      bool _goToWaypoint(APWaypoint wp, APWaypoint nextWP)
+      {
+        Vector3D route = _transformer.Pos(wp.WP.Coords) * PLANE;
         double routeLength = route.Length();
-        if (this.settings.IsWaypointReached(wp, routeLength)) {
+        if (_settings.IsWaypointReached(wp, routeLength))
+        {
           return true;
         }
-        this.remote.HandBrake = false;
+        _remote.HandBrake = false;
         double angle = Math.Acos(Vector3D.Normalize(route).Dot(FORWARD));
         bool reverseDir = angle > Math.PI / 2;
-        if (reverseDir) {
+        if (reverseDir)
+        {
           angle = -(angle - Math.PI);
         }
         angle *= (route.Dot(RIGHT) > 0) ? 1 : -1;
 
-        double curSpeed = this.remote.GetShipSpeed() * (this.Reversing ? -1 : 1);
+        double curSpeed = _remote.GetShipSpeed() * (Reversing ? -1 : 1);
 
-        double targetSpeed = this.settings.GetTargetSpeed(this.settings.GetTargetSpeed(wp), this.settings.GetTargetSpeed(nextWP), routeLength) * (reverseDir ? -1 : 1);
+        double targetSpeed = _settings.GetTargetSpeed(_settings.GetTargetSpeed(wp), _settings.GetTargetSpeed(nextWP), routeLength) * (reverseDir ? -1 : 1);
 
-        this.wheels.SetPower(this.getPower(targetSpeed, curSpeed));
+        _wheels.SetPower(_getPower(targetSpeed, curSpeed));
 
-        this.wheels.SetSteer(this.settings.GetSteer(angle, curSpeed));
+        _wheels.SetSteer(_settings.GetSteer(angle, curSpeed));
 
         return false;
       }
 
-      float getPower(double targetSpeed, double currentSpeed) => MathHelper.Clamp((float)(targetSpeed - currentSpeed) * this.settings.PowerMult, -1, 1);
+      float _getPower(double targetSpeed, double currentSpeed) => MathHelper.Clamp((float)(targetSpeed - currentSpeed) * _settings.PowerMult, -1, 1);
 
-      void stop() {
-        this.wheels.SetSteer(0);
-        double curSpeed = this.remote.GetShipSpeed();
-        if (curSpeed > this.settings.HandbrakeSpeed) {
-          this.wheels.SetPower(this.Reversing ? this.settings.BrakePower : -this.settings.BrakePower);
-        } else {
-          this.remote.HandBrake = true;
+      void _stop()
+      {
+        _wheels.SetSteer(0);
+        double curSpeed = _remote.GetShipSpeed();
+        if (curSpeed > _settings.HandbrakeSpeed)
+        {
+          _wheels.SetPower(Reversing ? _settings.BrakePower : -_settings.BrakePower);
+        }
+        else
+        {
+          _remote.HandBrake = true;
         }
       }
 
-      bool Reversing => this.transformer.Dir(this.remote.GetShipVelocities().LinearVelocity).Dot(FORWARD) < 0;
+      bool Reversing => _transformer.Dir(_remote.GetShipVelocities().LinearVelocity).Dot(FORWARD) < 0;
 
-      void save(MyIni ini) => ini.Set("auto-pilot", "activated", this.activated);
+      void _save(MyIni ini) => ini.Set("auto-pilot", "activated", _activated);
 
-      void log(string s) => this.logger?.Invoke($"AP: {s}");
+      void _log(string s) => _logger?.Invoke($"AP: {s}");
     }
   }
 }

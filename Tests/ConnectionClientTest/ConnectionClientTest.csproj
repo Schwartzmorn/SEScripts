@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <EnableNUnitRunner>true</EnableNUnitRunner>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <SpaceEngineersBinCopyLocal>true</SpaceEngineersBinCopyLocal>
+    <Configurations>Debug</Configurations>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="FakeItEasy" Version="8.3.0" />
+    <PackageReference Include="FakeItEasy.Analyzer.CSharp" Version="6.1.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Mal.Mdk2.References" Version="2.2.4" />
+    <PackageReference Include="NUnit" Version="4.3.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Tests\Utilities\Utilities.csproj" />
+  </ItemGroup>
+  <Import Project="..\..\Mixins\ConnectionClient\ConnectionClient.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\Process\Process.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\IniWatcher\IniWatcher.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\PilotAssist\PilotAssist.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\CommandLine\CommandLine.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\WheelsController\WheelsController.projitems" Label="Shared" />
+  <Import Project="..\..\Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems" Label="Shared" />
+</Project>

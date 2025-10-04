@@ -17,30 +17,37 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public struct SolarOutput {
+namespace IngameScript
+{
+  partial class Program
+  {
+    public struct SolarOutput
+    {
       public readonly float Output;
       public readonly float MaxOutput;
       public readonly float Position;
       public readonly bool Direction;
-      public SolarOutput(float output, float maxOutput, float position, bool direction) {
-        this.Output = output;
-        this.MaxOutput = maxOutput;
-        this.Position = position;
-        this.Direction = direction;
+      public SolarOutput(float output, float maxOutput, float position, bool direction)
+      {
+        Output = output;
+        MaxOutput = maxOutput;
+        Position = position;
+        Direction = direction;
       }
-      public SolarOutput(string s) {
+      public SolarOutput(string s)
+      {
         string[] vals = s.Split(IniHelper.SEP);
-        float.TryParse(vals[0], out this.Output);
-        float.TryParse(vals[1], out this.MaxOutput);
-        float.TryParse(vals[2], out this.Position);
-        bool.TryParse(vals[3], out this.Direction);
+        float.TryParse(vals[0], out Output);
+        float.TryParse(vals[1], out MaxOutput);
+        float.TryParse(vals[2], out Position);
+        bool.TryParse(vals[3], out Direction);
       }
-      public override string ToString() => $"{this.Output},{this.MaxOutput},{this.Position},{this.Direction}";
+      public override string ToString() => $"{Output},{MaxOutput},{Position},{Direction}";
     }
-    public class SolarRotor {
-      struct SolarId {
+    public class SolarRotor
+    {
+      struct SolarId
+      {
         public string Prefix;
         public int Number;
         public int AuxNumber;
@@ -54,156 +61,180 @@ namespace IngameScript {
       const float RESET_SPEED = 0.05f;
       readonly static HashSet<RotorState> NIGHT_STATES = new HashSet<RotorState> { RotorState.GoIdle, RotorState.AdjustAux, RotorState.Adjust };
 
-      readonly IMyMotorStator mainRotor;
-      readonly Action<string> logger;
-      readonly SolarPanel panel;
-      readonly List<SolarRotor> rotors;
+      readonly IMyMotorStator _mainRotor;
+      readonly Action<string> _logger;
+      readonly SolarPanel _panel;
+      readonly List<SolarRotor> _rotors;
 
-      float adjustTarget;
-      int counter;
-      bool firstLockOfTheDay;
-      SolarId id;
-      float maxObservedOutput;
-      bool nightMode;
-      SolarOutput previousLock;
-      float previousOutput;
-      float resetAngle;
-      RotorState state;
+      float _adjustTarget;
+      int _counter;
+      bool _firstLockOfTheDay;
+      SolarId _id;
+      float _maxObservedOutput;
+      bool _nightMode;
+      SolarOutput _previousLock;
+      float _previousOutput;
+      float _resetAngle;
+      RotorState _state;
 
-      public float CurrentOutput => this.panel == null ? this.rotors.Sum(r => r.CurrentOutput) : this.panel.CurrentOutput;
-      public float MaxOutput => this.panel == null ? this.rotors.Sum(r => r.MaxOutput) : this.panel.MaxOutput;
-      public float MaxPossibleOutput => this.panel == null ? this.rotors.Sum(r => r.MaxPossibleOutput) : this.panel.MaxPossibleOutput;
-      public int PanelCount => this.panel == null ? this.rotors.Count : 1;
-      public bool IsTwoAxis => this.panel == null;
-      public string Name => this.mainRotor.CustomName;
-      public float Ratio => this.maxObservedOutput == 0 ? 0 : this.MaxOutput / this.maxObservedOutput;
-      public int IDNumber {
-        get {  return this.id.Number; }
-        set {
-          this.id.Number = value;
-          this.updateNames();
+      public float CurrentOutput => _panel == null ? _rotors.Sum(r => r.CurrentOutput) : _panel.CurrentOutput;
+      public float MaxOutput => _panel == null ? _rotors.Sum(r => r.MaxOutput) : _panel.MaxOutput;
+      public float MaxPossibleOutput => _panel == null ? _rotors.Sum(r => r.MaxPossibleOutput) : _panel.MaxPossibleOutput;
+      public int PanelCount => _panel == null ? _rotors.Count : 1;
+      public bool IsTwoAxis => _panel == null;
+      public string Name => _mainRotor.CustomName;
+      public float Ratio => _maxObservedOutput == 0 ? 0 : MaxOutput / _maxObservedOutput;
+      public int IDNumber
+      {
+        get { return _id.Number; }
+        set
+        {
+          _id.Number = value;
+          _updateNames();
         }
       }
-      public RotorState State {
-        get { return this.state; }
-        set { this.enterState(value); }
+      public RotorState State
+      {
+        get { return _state; }
+        set { _enterState(value); }
       }
 
-      public SolarRotor(string prefix, List<IMyMotorStator> rotors, SolarPanel panel, Action<string> logger) {
-        this.logger = logger;
-        this.id.Prefix = prefix;
-        this.panel = panel;
-        this.setupRotors(rotors, out this.mainRotor);
-        this.updateNames();
+      public SolarRotor(string prefix, List<IMyMotorStator> rotors, SolarPanel panel, Action<string> logger)
+      {
+        _logger = logger;
+        _id.Prefix = prefix;
+        _panel = panel;
+        _setupRotors(rotors, out _mainRotor);
+        _updateNames();
       }
 
-      public SolarRotor(string prefix, List<IMyMotorStator> rotors, List<SolarRotor> solarRotors, Action<string> logger) {
-        this.logger = logger;
-        this.id.Prefix = prefix;
-        this.rotors = solarRotors;
-        this.setupRotors(rotors, out this.mainRotor);
-        this.updateNames();
+      public SolarRotor(string prefix, List<IMyMotorStator> rotors, List<SolarRotor> solarRotors, Action<string> logger)
+      {
+        _logger = logger;
+        _id.Prefix = prefix;
+        _rotors = solarRotors;
+        _setupRotors(rotors, out _mainRotor);
+        _updateNames();
       }
 
       /// <summary>
       /// Main loop
       /// </summary>
       /// <param name="nightMode"></param>
-      public void Update(bool nightMode) => this.update(nightMode, false);
+      public void Update(bool nightMode) => _update(nightMode, false);
       /// <summary>
       /// Adjusts the position of the rotor (or one of the auxillary rotot)
       /// </summary>
       /// <param name="offset">offset in degree</param>
       /// <param name="auxId">if not 0, adjusts the position of an auxillary rotor instead</param>
-      public void Adjust(float offset, int auxId = 0) {
-        if (auxId == 0) {
-          this.adjustTarget = this.mainRotor.Angle + MathHelper.ToRadians(offset);
-          this.State = RotorState.Adjust;
-        } else if (this.rotors != null) {
-          foreach(SolarRotor rotor in this.rotors) {
-            if (this.State != RotorState.Adjust) {
-              this.State = RotorState.AdjustAux;
+      public void Adjust(float offset, int auxId = 0)
+      {
+        if (auxId == 0)
+        {
+          _adjustTarget = _mainRotor.Angle + MathHelper.ToRadians(offset);
+          State = RotorState.Adjust;
+        }
+        else if (_rotors != null)
+        {
+          foreach (SolarRotor rotor in _rotors)
+          {
+            if (State != RotorState.Adjust)
+            {
+              State = RotorState.AdjustAux;
             }
-            if (rotor.id.AuxNumber == auxId) {
+            if (rotor._id.AuxNumber == auxId)
+            {
               rotor.Adjust(offset);
-            } else {
-              rotor.State = this.ifNotNightMode();
+            }
+            else
+            {
+              rotor.State = _ifNotNightMode();
             }
           }
         }
       }
 
-      public void Track() {
-        if (this.State == RotorState.Idle) {
-          this.State = RotorState.TrackSunPrevDir;
+      public void Track()
+      {
+        if (State == RotorState.Idle)
+        {
+          State = RotorState.TrackSunPrevDir;
         }
       }
 
-      void update(bool nightMode, bool isAux) {
-        this.nightMode = nightMode;
-        this.State = this.getNextDayState(isAux);
-        this.previousOutput = this.MaxOutput;
-        if (this.previousOutput > this.maxObservedOutput) {
-          this.maxObservedOutput = this.previousOutput;
+      void _update(bool nightMode, bool isAux)
+      {
+        _nightMode = nightMode;
+        State = _getNextDayState(isAux);
+        _previousOutput = MaxOutput;
+        if (_previousOutput > _maxObservedOutput)
+        {
+          _maxObservedOutput = _previousOutput;
         }
       }
 
-      RotorState getNextDayState(bool isAux) {
-        float currentOutput = this.MaxOutput;
-        bool outputIncrease = this.previousOutput < currentOutput;
-        bool outputDecrease = this.previousOutput > currentOutput;
-        if (this.nightMode && !NIGHT_STATES.Contains(this.State)) {
+      RotorState _getNextDayState(bool isAux)
+      {
+        float currentOutput = MaxOutput;
+        bool outputIncrease = _previousOutput < currentOutput;
+        bool outputDecrease = _previousOutput > currentOutput;
+        if (_nightMode && !NIGHT_STATES.Contains(State))
+        {
           return RotorState.NightIdle;
         }
-        switch (this.State) {
+        switch (State)
+        {
           case RotorState.Idle:
-            return this.ifNotNightMode(isAux || outputDecrease ? RotorState.TrackSunPrevDir : this.State);
+            return _ifNotNightMode(isAux || outputDecrease ? RotorState.TrackSunPrevDir : State);
           case RotorState.TrackSunPrevDir:
             return outputDecrease
-                ? this.delayState(RotorState.TrackSunRevDir)
-                : (outputIncrease ? RotorState.TrackSunPrevDirConfirmed : this.State);
+                ? _delayState(RotorState.TrackSunRevDir)
+                : (outputIncrease ? RotorState.TrackSunPrevDirConfirmed : State);
           case RotorState.TrackSunRevDir:
             return outputDecrease
-                ? this.delayState(RotorState.ResetPrevious)
-                : (outputIncrease ? RotorState.TrackSunRevDirConfirmed : this.State);
+                ? _delayState(RotorState.ResetPrevious)
+                : (outputIncrease ? RotorState.TrackSunRevDirConfirmed : State);
           case RotorState.TrackSunPrevDirConfirmed:
           case RotorState.TrackSunRevDirConfirmed:
-            return outputDecrease || this.mainRotor.HasReachedEnd()
-                ? this.delayState((this.rotors != null) ? RotorState.TrackSunAux : RotorState.GoIdle)
-                : this.State;
+            return outputDecrease || _mainRotor.HasReachedEnd()
+                ? _delayState((_rotors != null) ? RotorState.TrackSunAux : RotorState.GoIdle)
+                : State;
           case RotorState.TrackSunAux:
-            return this.rotors?.All(r => r.State == RotorState.Idle) ?? true ? RotorState.GoIdle : this.State;
+            return _rotors?.All(r => r.State == RotorState.Idle) ?? true ? RotorState.GoIdle : State;
           case RotorState.ResetPrevious:
-            return this.mainRotor.HasReached(this.previousLock.Position)
-                ? (this.rotors != null)
+            return _mainRotor.HasReached(_previousLock.Position)
+                ? (_rotors != null)
                     ? RotorState.TrackSunAux
                     : RotorState.Idle
-                : this.State;
+                : State;
           case RotorState.GoIdle:
             return RotorState.Idle;
           case RotorState.Adjust:
-            return this.mainRotor.HasReached(this.adjustTarget)
-                ? this.rotors?.All(r => r.State == RotorState.Idle || r.State == RotorState.NightIdle) ?? true
-                    ? this.ifNotNightMode()
+            return _mainRotor.HasReached(_adjustTarget)
+                ? _rotors?.All(r => r.State == RotorState.Idle || r.State == RotorState.NightIdle) ?? true
+                    ? _ifNotNightMode()
                     : RotorState.AdjustAux
-                : this.State;
+                : State;
           case RotorState.AdjustAux:
-            return this.rotors?.All(r => r.State == RotorState.Idle) ?? true
-                ? this.ifNotNightMode()
-                : this.State;
+            return _rotors?.All(r => r.State == RotorState.Idle) ?? true
+                ? _ifNotNightMode()
+                : State;
           case RotorState.NightIdle:
-            return this.nightMode ? this.State : RotorState.TrackSunPrevDir;
+            return _nightMode ? State : RotorState.TrackSunPrevDir;
         }
-        return this.State;
+        return State;
       }
 
-      void enterState(RotorState state) {
-        this.log($"{this.state} {state}");
-        this.counter = this.State != state ? 0 : this.counter + 1;
-        switch (state) {
+      void _enterState(RotorState state)
+      {
+        _log($"{_state} {state}");
+        _counter = State != state ? 0 : _counter + 1;
+        switch (state)
+        {
           case RotorState.Idle:
-            this.stop();
-            foreach(SolarRotor r in this.rotors ?? Enumerable.Empty<SolarRotor>()) {
+            _stop();
+            foreach (SolarRotor r in _rotors ?? Enumerable.Empty<SolarRotor>())
+            {
               r.State = RotorState.Idle;
             }
             break;
@@ -211,151 +242,183 @@ namespace IngameScript {
           case RotorState.TrackSunPrevDirConfirmed:
           case RotorState.TrackSunRevDir:
           case RotorState.TrackSunRevDirConfirmed:
-            this.rotate(this.previousLock.Direction ^ (this.State == RotorState.TrackSunRevDir || this.State == RotorState.TrackSunRevDirConfirmed));
+            _rotate(_previousLock.Direction ^ (State == RotorState.TrackSunRevDir || State == RotorState.TrackSunRevDirConfirmed));
             break;
           case RotorState.TrackSunAux:
-            this.stop();
-            if (this.State != RotorState.TrackSunAux) {
-              this.updateAux();
-            } else {
-              this.updateAux(r => r.State != RotorState.Idle);
+            _stop();
+            if (State != RotorState.TrackSunAux)
+            {
+              _updateAux();
+            }
+            else
+            {
+              _updateAux(r => r.State != RotorState.Idle);
             }
             break;
           case RotorState.ResetPrevious:
-            this.goTo(this.previousLock.Position);
+            _goTo(_previousLock.Position);
             break;
           case RotorState.GoIdle:
-            this.stop();
-            this.previousLock = new SolarOutput(this.CurrentOutput, this.MaxOutput, this.mainRotor.Angle, this.mainRotor.AngleProxy(this.previousLock.Position) < 0);
-            if (this.firstLockOfTheDay) {
-              this.log("First lock of the day: saving position");
-              this.firstLockOfTheDay = false;
-              this.resetAngle = this.previousLock.Position;
+            _stop();
+            _previousLock = new SolarOutput(CurrentOutput, MaxOutput, _mainRotor.Angle, _mainRotor.AngleProxy(_previousLock.Position) < 0);
+            if (_firstLockOfTheDay)
+            {
+              _log("First lock of the day: saving position");
+              _firstLockOfTheDay = false;
+              _resetAngle = _previousLock.Position;
             }
             break;
           case RotorState.Adjust:
-            if (this.State == RotorState.NightIdle) {
-              this.resetAngle = this.adjustTarget;
-            } else if (this.State != RotorState.Adjust) {
-              this.previousLock = new SolarOutput(this.previousLock.Output, this.previousLock.MaxOutput, this.adjustTarget, this.previousLock.Direction);
+            if (State == RotorState.NightIdle)
+            {
+              _resetAngle = _adjustTarget;
             }
-            this.goTo(this.adjustTarget);
+            else if (State != RotorState.Adjust)
+            {
+              _previousLock = new SolarOutput(_previousLock.Output, _previousLock.MaxOutput, _adjustTarget, _previousLock.Direction);
+            }
+            _goTo(_adjustTarget);
             break;
           case RotorState.AdjustAux:
-            this.stop();
-            this.updateAux(r => r.State == RotorState.Adjust);
-            foreach (SolarRotor rotor in this.rotors.Where(r => r.State != RotorState.Adjust)) {
-              rotor.State = this.ifNotNightMode();
+            _stop();
+            _updateAux(r => r.State == RotorState.Adjust);
+            foreach (SolarRotor rotor in _rotors.Where(r => r.State != RotorState.Adjust))
+            {
+              rotor.State = _ifNotNightMode();
             }
             break;
           case RotorState.NightIdle:
-            this.firstLockOfTheDay = true;
-            this.goTo(this.resetAngle);
-            this.updateAux();
+            _firstLockOfTheDay = true;
+            _goTo(_resetAngle);
+            _updateAux();
             break;
         }
-        this.state = state;
+        _state = state;
       }
 
-      RotorState delayState(RotorState state, int delay = 1) => this.counter > delay ? state : this.State;
+      RotorState _delayState(RotorState state, int delay = 1) => _counter > delay ? state : State;
 
-      RotorState ifNotNightMode(RotorState state = RotorState.Idle) => this.nightMode ? RotorState.NightIdle : state;
+      RotorState _ifNotNightMode(RotorState state = RotorState.Idle) => _nightMode ? RotorState.NightIdle : state;
 
       /// <summary>Ensure the rotor is at the given position</summary>
       /// <param name="angle">angle at which we want the rotor</param>
-      void goTo(float angle) {
-        if (this.mainRotor.HasReached(angle)) {
-          this.stop();
-        } else {
-          this.mainRotor.Enabled = true;
-          this.mainRotor.TargetVelocityRad = Math.Max(-RESET_SPEED, Math.Min(this.mainRotor.AngleProxy(angle) * 0.3f, RESET_SPEED));
+      void _goTo(float angle)
+      {
+        if (_mainRotor.HasReached(angle))
+        {
+          _stop();
+        }
+        else
+        {
+          _mainRotor.Enabled = true;
+          _mainRotor.TargetVelocityRad = Math.Max(-RESET_SPEED, Math.Min(_mainRotor.AngleProxy(angle) * 0.3f, RESET_SPEED));
         }
       }
 
-      public void Save() {
+      public void Save()
+      {
         var ini = new MyIni();
-        ini.Set(SECTION, "id-number", this.id.Number);
-        ini.Set(SECTION, "id-aux-number", this.id.AuxNumber);
-        ini.Set(SECTION, "reset-angle", this.resetAngle);
-        ini.Set(SECTION, "state", this.State.ToString());
-        ini.Set(SECTION, "previous-output", this.previousLock.ToString());
-        if (this.State == RotorState.Adjust) {
-          ini.Set(SECTION, "adjust-target", this.adjustTarget);
+        ini.Set(SECTION, "id-number", _id.Number);
+        ini.Set(SECTION, "id-aux-number", _id.AuxNumber);
+        ini.Set(SECTION, "reset-angle", _resetAngle);
+        ini.Set(SECTION, "state", State.ToString());
+        ini.Set(SECTION, "previous-output", _previousLock.ToString());
+        if (State == RotorState.Adjust)
+        {
+          ini.Set(SECTION, "adjust-target", _adjustTarget);
         }
-        ini.Set(SECTION, "first-lock", this.firstLockOfTheDay);
-        this.mainRotor.CustomData = ini.ToString();
-        if (this.rotors != null) {
-          foreach(SolarRotor rotor in this.rotors) {
+        ini.Set(SECTION, "first-lock", _firstLockOfTheDay);
+        _mainRotor.CustomData = ini.ToString();
+        if (_rotors != null)
+        {
+          foreach (SolarRotor rotor in _rotors)
+          {
             rotor.Save();
           }
         }
       }
 
-      void stop() {
-        this.mainRotor.Enabled = false;
-        this.mainRotor.TargetVelocityRad = 0;
+      void _stop()
+      {
+        _mainRotor.Enabled = false;
+        _mainRotor.TargetVelocityRad = 0;
       }
 
-      void rotate(bool dir) {
-        this.mainRotor.Enabled = true;
-        this.mainRotor.TargetVelocityRad = dir ? TRACKING_SPEED : -TRACKING_SPEED;
+      void _rotate(bool dir)
+      {
+        _mainRotor.Enabled = true;
+        _mainRotor.TargetVelocityRad = dir ? TRACKING_SPEED : -TRACKING_SPEED;
       }
 
-      void load(string s) {
+      void _load(string s)
+      {
         var ini = new MyIni();
-        if (ini.TryParse(s)) {
-          this.id.Number = ini.Get(SECTION, "id-number").ToInt32();
-          this.id.AuxNumber = ini.Get(SECTION, "id-aux-number").ToInt32();
-          this.resetAngle = ini.Get(SECTION, "reset-angle").ToSingle(this.mainRotor.Angle);
-          Enum.TryParse(ini.Get(SECTION, "state").ToString("Idle"), out this.state);
-          this.previousLock = new SolarOutput(ini.Get(SECTION, "previous-output").ToString($"0,1,{this.mainRotor.Angle},true"));
-          this.maxObservedOutput = ini.Get(SECTION, "max-observed-output").ToSingle(this.MaxOutput);
-          if (this.State == RotorState.Adjust) {
-            this.adjustTarget = ini.Get(SECTION, "adjust-target").ToSingle();
+        if (ini.TryParse(s))
+        {
+          _id.Number = ini.Get(SECTION, "id-number").ToInt32();
+          _id.AuxNumber = ini.Get(SECTION, "id-aux-number").ToInt32();
+          _resetAngle = ini.Get(SECTION, "reset-angle").ToSingle(_mainRotor.Angle);
+          Enum.TryParse(ini.Get(SECTION, "state").ToString("Idle"), out _state);
+          _previousLock = new SolarOutput(ini.Get(SECTION, "previous-output").ToString($"0,1,{_mainRotor.Angle},true"));
+          _maxObservedOutput = ini.Get(SECTION, "max-observed-output").ToSingle(MaxOutput);
+          if (State == RotorState.Adjust)
+          {
+            _adjustTarget = ini.Get(SECTION, "adjust-target").ToSingle();
           }
-          this.firstLockOfTheDay = ini.Get(SECTION, "first-lock").ToBoolean();
-          this.updateNames();
+          _firstLockOfTheDay = ini.Get(SECTION, "first-lock").ToBoolean();
+          _updateNames();
         }
       }
 
-      void updateNames() {
-        if (this.IDNumber != 0) {
-          if (this.rotors != null) {
-            this.id.AuxNumber = 0;
-            this.mainRotor.CustomName = $"{this.id.Prefix} {this.IDNumber}-Base";
-            foreach (SolarRotor rotor in this.rotors) {
-              rotor.id.Prefix = this.id.Prefix;
-              rotor.id.Number = this.id.Number;
+      void _updateNames()
+      {
+        if (IDNumber != 0)
+        {
+          if (_rotors != null)
+          {
+            _id.AuxNumber = 0;
+            _mainRotor.CustomName = $"{_id.Prefix} {IDNumber}-Base";
+            foreach (SolarRotor rotor in _rotors)
+            {
+              rotor._id.Prefix = _id.Prefix;
+              rotor._id.Number = _id.Number;
             }
-            var usedIds = new HashSet<int>(this.rotors.Select(r => r.id.AuxNumber).Where(i => i != 0));
+            var usedIds = new HashSet<int>(_rotors.Select(r => r._id.AuxNumber).Where(i => i != 0));
             int id = 1;
-            foreach (SolarRotor rotor in this.rotors) {
-              if (rotor.id.AuxNumber == 0) {
-                while (usedIds.Contains(id)) {
+            foreach (SolarRotor rotor in _rotors)
+            {
+              if (rotor._id.AuxNumber == 0)
+              {
+                while (usedIds.Contains(id))
+                {
                   ++id;
                 }
-                rotor.id.AuxNumber = id;
+                rotor._id.AuxNumber = id;
                 usedIds.Add(id);
               }
-              rotor.updateNames();
+              rotor._updateNames();
             }
-          } else {
-            this.mainRotor.CustomName = this.id.AuxNumber == 0
-                ? $"{this.id.Prefix} {this.IDNumber}"
-                : $"{this.id.Prefix} {this.IDNumber}-{this.id.AuxNumber}";
+          }
+          else
+          {
+            _mainRotor.CustomName = _id.AuxNumber == 0
+                ? $"{_id.Prefix} {IDNumber}"
+                : $"{_id.Prefix} {IDNumber}-{_id.AuxNumber}";
           }
         }
       }
 
-      void setupRotors(List<IMyMotorStator> rotors, out IMyMotorStator rotor) {
+      void _setupRotors(List<IMyMotorStator> rotors, out IMyMotorStator rotor)
+      {
         rotor = rotors.First();
         rotor = rotors.FirstOrDefault(r => r.CustomData.StartsWith($"[{SECTION}]")) ?? rotors.First();
-        this.load(rotor.CustomData);
+        _load(rotor.CustomData);
         rotor.BrakingTorque = TORQUE;
         rotor.Torque = TORQUE;
         rotor.Enabled = true;
         rotor.TargetVelocityRad = 0;
-        foreach (IMyMotorStator r in rotors.Where(r => r != this.mainRotor)) {
+        foreach (IMyMotorStator r in rotors.Where(r => r != _mainRotor))
+        {
           r.BrakingTorque = 0;
           r.Enabled = false;
           r.RotorLock = false;
@@ -365,15 +428,18 @@ namespace IngameScript {
         }
       }
 
-      void updateAux(Func<SolarRotor, bool> filter = null) {
-        if (this.rotors != null) {
-          foreach(SolarRotor rotor in filter == null ? this.rotors : this.rotors.Where(filter)) {
-            rotor.update(this.nightMode, true);
+      void _updateAux(Func<SolarRotor, bool> filter = null)
+      {
+        if (_rotors != null)
+        {
+          foreach (SolarRotor rotor in filter == null ? _rotors : _rotors.Where(filter))
+          {
+            rotor._update(_nightMode, true);
           }
         }
       }
 
-      void log(string s) => this.logger?.Invoke($"{this.Name}: {s}");
+      void _log(string s) => _logger?.Invoke($"{Name}: {s}");
     }
   }
 }

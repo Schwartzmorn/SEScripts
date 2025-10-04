@@ -8,10 +8,10 @@ using VRageMath;
 namespace IngameScript {
   partial class Program {
     class Logger {
-      readonly Action<string> echo;
-      readonly CircularBuffer<string> messages;
-      bool changed;
-      readonly IMyTextSurface surface;
+      readonly Action<string> _echo;
+      readonly CircularBuffer<string> _messages;
+      bool _changed;
+      readonly IMyTextSurface _surface;
       public Logger(IProcessSpawner spawner, IMyTextSurface s, Color? bgdCol = null, Color? col = null, Action<string> echo = null, float size = 0.5f) {
         int nMsgs = 1;
         if (s != null) {
@@ -24,24 +24,24 @@ namespace IngameScript {
           s.BackgroundColor = bgdCol ?? Color.Black;
           var sb = new StringBuilder("G");
           nMsgs = (int)((GetMultiplier(s) * s.SurfaceSize.Y / s.MeasureStringInPixels(sb, s.Font, s.FontSize).Y) + 0.1f);
-          this.surface = s;
+          _surface = s;
         }
-        this.messages = new CircularBuffer<string>(nMsgs);
-        spawner.Spawn(p => this.flush(), "logger");
-        this.echo = echo;
+        _messages = new CircularBuffer<string>(nMsgs);
+        spawner.Spawn(p => _flush(), "logger");
+        _echo = echo;
       }
       public void Log(string log) {
-        this.changed = true;
+        _changed = true;
         foreach (string l in log.Split('\n')) {
-          this.messages.Enqueue(l);
+          _messages.Enqueue(l);
         }
 
-        this.echo?.Invoke(log);
+        _echo?.Invoke(log);
       }
-      void flush() {
-        if (this.changed) {
-          this.changed = false;
-          this.surface?.WriteText(string.Join("\n", this.messages));
+      void _flush() {
+        if (_changed) {
+          _changed = false;
+          _surface?.WriteText(string.Join("\n", _messages));
         }
       }
       static float GetMultiplier(IMyTextSurface s) {

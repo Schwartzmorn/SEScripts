@@ -17,33 +17,37 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public class GeneralStatus {
-      readonly List<IMyReflectorLight> armLights = new List<IMyReflectorLight>();
-      readonly List<IMyReflectorLight> frontLights = new List<IMyReflectorLight>();
-      readonly ArmController arm;
-      readonly ConnectionClient conClient;
+namespace IngameScript
+{
+  partial class Program
+  {
+    public class GeneralStatus
+    {
+      readonly List<IMyReflectorLight> _armLights = new List<IMyReflectorLight>();
+      readonly List<IMyReflectorLight> _frontLights = new List<IMyReflectorLight>();
+      readonly ArmController _arm;
+      readonly ConnectionClient _conClient;
 
-      public float ArmAngle => this.arm.Angle;
-      public float ArmTarget => this.arm.TargetAngle;
+      public float ArmAngle => _arm.Angle;
+      public float ArmTarget => _arm.TargetAngle;
 
-      public ConnectionState ConnectionState => this.conClient.State;
-      public FailReason FailReason => this.conClient.FailReason;
-      public float Progress => this.conClient.Progress;
+      public ConnectionState ConnectionState => _conClient.State;
+      public FailReason FailReason => _conClient.FailReason;
+      public float Progress => _conClient.Progress;
 
-      public GeneralStatus(MyGridProgram program, ArmController arm, ConnectionClient conClient) {
+      public GeneralStatus(MyGridProgram program, ArmController arm, ConnectionClient conClient)
+      {
         IMyGridTerminalSystem gts = program.GridTerminalSystem;
         IMyCubeGrid grid = program.Me.CubeGrid;
-        gts.GetBlocksOfType(this.armLights, l => grid != l.CubeGrid && l.CubeGrid.IsSameConstructAs(grid));
-        gts.GetBlocksOfType(this.frontLights, l => l.CubeGrid == grid && l.DisplayNameText.Contains("Front"));
-        this.arm = arm;
-        this.conClient = conClient;
+        gts.GetBlocksOfType(_armLights, l => grid != l.CubeGrid && l.CubeGrid.IsSameConstructAs(grid));
+        gts.GetBlocksOfType(_frontLights, l => l.CubeGrid == grid && l.CustomName.Contains("Front"));
+        _arm = arm;
+        _conClient = conClient;
       }
 
-      public bool AreArmLightsOn => this.armLights.Any(l => l.Enabled);
+      public bool AreArmLightsOn => _armLights.Any(l => l.Enabled);
 
-      public bool AreFrontLightsOn => this.frontLights.Any(l => l.Enabled);
+      public bool AreFrontLightsOn => _frontLights.Any(l => l.Enabled);
     }
   }
 }

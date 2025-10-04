@@ -17,48 +17,66 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
     /// <summary>The auto routine is just a <see cref="MultipleInstruction"/> with a name</summary>
-    public class AutoRoutine: MultipleInstruction {
+    public class AutoRoutine : MultipleInstruction
+    {
       public readonly string Name;
-      public AutoRoutine(string name, List<Instruction> instructions): base(instructions) {
-        this.Name = name;
+      public AutoRoutine(string name, List<Instruction> instructions) : base(instructions)
+      {
+        Name = name;
       }
     }
     /// <summary>Entry point for <see cref="AutoRoutine"/></summary>
-    public class AutoRoutineHandler {
-      readonly Dictionary<string, AutoRoutine> routines = new Dictionary<string, AutoRoutine>();
-      public AutoRoutineHandler(CommandLine commandLine) {
-        commandLine.RegisterCommand(new Command("ar-execute", this.execute, "Execute a routine", minArgs: 1));
-        commandLine.RegisterCommand(new Command("ar-list", Command.Wrap(this.list), "Lists all the routines", nArgs: 0));
+    public class AutoRoutineHandler
+    {
+      readonly Dictionary<string, AutoRoutine> _routines = new Dictionary<string, AutoRoutine>();
+      public AutoRoutineHandler(CommandLine commandLine)
+      {
+        commandLine.RegisterCommand(new Command("ar-execute", _execute, "Execute a routine", minArgs: 1));
+        commandLine.RegisterCommand(new Command("ar-list", Command.Wrap(_list), "Lists all the routines", nArgs: 0));
       }
 
-      public void AddRoutines(List<AutoRoutine> routines) {
-        foreach (AutoRoutine routine in routines) {
-          this.routines.Add(routine.Name, routine);
+      public void AddRoutines(List<AutoRoutine> routines)
+      {
+        foreach (AutoRoutine routine in routines)
+        {
+          _routines.Add(routine.Name, routine);
         }
       }
 
-      void list(List<string> args, Action<string> logger) {
+      void _list(List<string> args, Action<string> logger)
+      {
         logger("Available routines:");
-        foreach (KeyValuePair<string, AutoRoutine> kv in this.routines) {
+        foreach (KeyValuePair<string, AutoRoutine> kv in _routines)
+        {
           int argc = kv.Value.ArgsCount();
           logger($"  '{kv.Key}': takes {(argc == 0 ? "no" : argc.ToString())} argument{(argc > 1 ? "s" : "")}");
         }
       }
 
-      MyTuple<int, bool, Action<Process>> execute(List<string> args, Action<string> logger) {
-        return MyTuple.Create<int, bool, Action<Process>>(1, true, p => {
+      MyTuple<int, bool, Action<Process>> _execute(List<string> args, Action<string> logger)
+      {
+        return MyTuple.Create<int, bool, Action<Process>>(1, true, p =>
+        {
           AutoRoutine routine;
-          if (this.routines.TryGetValue(args[0], out routine)) {
+          if (_routines.TryGetValue(args[0], out routine))
+          {
             int argc = routine.ArgsCount();
-            if (args.Count > argc) {
+            if (args.Count > argc)
+            {
               routine.Execute(p, null, args.GetRange(1, argc));
-            } else {
+            }
+            else
+            {
               logger($"Routine '{args[0]}' needs {argc} argument{(argc > 1 ? "s" : "")}");
             }
-          } else {
+          }
+          else
+          {
             logger($"Could not find routine {args[0]}");
           }
         });

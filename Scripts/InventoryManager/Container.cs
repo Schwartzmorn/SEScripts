@@ -20,7 +20,7 @@ using VRageMath;
 namespace IngameScript {
   partial class Program {
     public class Container {
-      public string DisplayName => this._cargo.DisplayNameText;
+      public string DisplayName => this._cargo.CustomName;
 
       private readonly IMyCargoContainer _cargo;
       private readonly bool _isOutput;

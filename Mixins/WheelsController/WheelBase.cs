@@ -17,68 +17,78 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
     /// <summary>Class that contains the characteristics of a wheel base, mostly to enable Ackermann steering</summary>
-    public class WheelBase {
+    public class WheelBase
+    {
       static Vector3D LEFT = new Vector3D(-1, 0, 0);
       static Vector3D RIGHT = new Vector3D(1, 0, 0);
       /// <summary>Minimum Z coordinate of the base (ie most forward)</summary>
-      public double MinZ => this.min.Z;
+      public double MinZ => _min.Z;
       /// <summary>Maximum Z coordinate of the base (ie rearmost)</summary>
-      public double MaxZ => this.max.Z;
+      public double MaxZ => _max.Z;
       /// <summary>Z coordinate of the center of turn</summary>
       public double CenterOfTurnZ { get; private set; }
-      public double CenterOfTurnZOffset { 
-        get { return this.centerOfTurnZOffset; } 
-        set {
-          this.centerOfTurnZOffset = value;
-          this.update();
-        } 
+      public double CenterOfTurnZOffset
+      {
+        get { return _centerOfTurnZOffset; }
+        set
+        {
+          _centerOfTurnZOffset = value;
+          _update();
+        }
       }
       public double TurnRadius { get; private set; }
-      public double TurnRadiusOverride {
-        get { return this.turnRadiusOverride; }
-        set {
-          this.turnRadiusOverride = Math.Abs(value);
-          this.update();
+      public double TurnRadiusOverride
+      {
+        get { return _turnRadiusOverride; }
+        set
+        {
+          _turnRadiusOverride = Math.Abs(value);
+          _update();
         }
       }
       public Vector3D LeftCenterOfTurn { get; private set; }
       public Vector3D RightCenterOfTurn { get; private set; }
 
-      double centerOfTurnZOffset = 0;
-      double turnRadiusOverride = 0;
+      double _centerOfTurnZOffset = 0;
+      double _turnRadiusOverride = 0;
 
-      Vector3D min = new Vector3D(double.MaxValue, 0, double.MaxValue);
-      Vector3D max = new Vector3D(double.MinValue, 0, double.MinValue);
+      Vector3D _min = new Vector3D(double.MaxValue, 0, double.MaxValue);
+      Vector3D _max = new Vector3D(double.MinValue, 0, double.MinValue);
 
       /// <summary>Updates the characteristics of the wheel base</summary>
       /// <param name="wheel">Wheel to add</param>
-      public void AddWheel(PowerWheel wheel) {
+      public void AddWheel(PowerWheel wheel)
+      {
         Vector3D p = wheel.Position;
-        this.min.X = Math.Min(p.X, this.min.X);
-        this.min.Z = Math.Min(p.Z, this.min.Z);
-        this.max.X = Math.Max(p.X, this.max.X);
-        this.max.Z = Math.Max(p.Z, this.max.Z);
-        this.update();
+        _min.X = Math.Min(p.X, _min.X);
+        _min.Z = Math.Min(p.Z, _min.Z);
+        _max.X = Math.Max(p.X, _max.X);
+        _max.Z = Math.Max(p.Z, _max.Z);
+        _update();
       }
       /// <summary>Based on the characteristics of the wheel base, returns the amount the wheel should turn</summary>
       /// <param name="wheel">Wheel whose angle we want</param>
       /// <param name="turnLeft">Whether the wheel is turning left or right</param>
       /// <returns>The angle, in degrees</returns>
-      public float GetAngle(PowerWheel wheel, bool turnLeft) {
-        Vector3D delta = (turnLeft ? this.LeftCenterOfTurn : this.RightCenterOfTurn) - wheel.Position;
+      public float GetAngle(PowerWheel wheel, bool turnLeft)
+      {
+        Vector3D delta = (turnLeft ? LeftCenterOfTurn : RightCenterOfTurn) - wheel.Position;
         delta.Y = 0;
         delta = Vector3D.Normalize(delta);
         return MathHelper.ToDegrees((float)Math.Acos(delta.Dot(turnLeft ? LEFT : RIGHT)));
       }
 
-      void update() {
-        this.CenterOfTurnZ = (this.min.Z + this.max.Z) / 2;
-        this.TurnRadius = this.TurnRadiusOverride == 0 ? this.max.Z - this.min.Z + ((this.max.X - this.min.X) / 2) : this.TurnRadiusOverride;
-        this.LeftCenterOfTurn = ((this.min + this.max) / 2) + new Vector3D(-this.TurnRadius, 0, 0) + (this.CenterOfTurnZOffset * Vector3D.Forward);
-        this.RightCenterOfTurn = ((this.min + this.max) / 2) + new Vector3D(this.TurnRadius, 0, 0) + (this.CenterOfTurnZOffset * Vector3D.Forward);
+      void _update()
+      {
+        CenterOfTurnZ = (_min.Z + _max.Z) / 2;
+        TurnRadius = TurnRadiusOverride == 0 ? _max.Z - _min.Z + ((_max.X - _min.X) / 2) : TurnRadiusOverride;
+        LeftCenterOfTurn = ((_min + _max) / 2) + new Vector3D(-TurnRadius, 0, 0) + (CenterOfTurnZOffset * Vector3D.Forward);
+        RightCenterOfTurn = ((_min + _max) / 2) + new Vector3D(TurnRadius, 0, 0) + (CenterOfTurnZOffset * Vector3D.Forward);
       }
     }
   }

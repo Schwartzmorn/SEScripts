@@ -15,42 +15,50 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-  /// <summary>
-  /// cool idea, bro
-  /// </summary>
-    public class ControlBinder {
-      static readonly HashSet<string> ACTIONS = new HashSet<string>{"rollleft", "rollright", "forward", "backward", "left", "right", "up", "down"};
-      readonly List<IMyShipController> shipControllers;
-      readonly Dictionary<string, Action> actions;
-      Dictionary<string, float> previous;
+namespace IngameScript
+{
+  partial class Program
+  {
+    /// <summary>
+    /// cool idea, bro
+    /// </summary>
+    public class ControlBinder
+    {
+      static readonly HashSet<string> ACTIONS = new HashSet<string> { "rollleft", "rollright", "forward", "backward", "left", "right", "up", "down" };
+      readonly List<IMyShipController> _shipControllers;
+      readonly Dictionary<string, Action> _actions;
+      Dictionary<string, float> _previous;
 
-      public ControlBinder(List<IMyShipController> shipControllers, ISaveManager spawner) {
-        this.shipControllers = shipControllers;
-        spawner.Spawn(p => this.handle(), "control-binder");
-        this.previous = ACTIONS.ToDictionary(s => s, s => 0f);
+      public ControlBinder(List<IMyShipController> shipControllers, ISaveManager spawner)
+      {
+        _shipControllers = shipControllers;
+        spawner.Spawn(p => _handle(), "control-binder");
+        _previous = ACTIONS.ToDictionary(s => s, s => 0f);
       }
 
-      public void AddAction(string s, Action action) {
-        this.actions[s] = action;
+      public void AddAction(string s, Action action)
+      {
+        _actions[s] = action;
       }
 
-      void handle(){
+      void _handle()
+      {
         var newState = new Dictionary<string, float>();
-        newState["rollleft"] = this.shipControllers.Sum(c => c.RollIndicator);
+        newState["rollleft"] = _shipControllers.Sum(c => c.RollIndicator);
         newState["rollright"] = -newState["rollleft"];
-        newState["forward"] = this.shipControllers.Sum(c => c.MoveIndicator.X);
+        newState["forward"] = _shipControllers.Sum(c => c.MoveIndicator.X);
         newState["backward"] = -newState["forward"];
-        newState["left"] = this.shipControllers.Sum(c => c.MoveIndicator.Z);
+        newState["left"] = _shipControllers.Sum(c => c.MoveIndicator.Z);
         newState["right"] = -newState["left"];
-        newState["up"] = this.shipControllers.Sum(c => c.MoveIndicator.Y);
+        newState["up"] = _shipControllers.Sum(c => c.MoveIndicator.Y);
         newState["down"] = -newState["up"];
-        foreach(var kv in newState) {
+        foreach (var kv in newState)
+        {
           newState[kv.Key] = Math.Max(0, kv.Value);
         }
-        foreach (string action in ACTIONS) {
-          
+        foreach (string action in ACTIONS)
+        {
+
         }
       }
     }
