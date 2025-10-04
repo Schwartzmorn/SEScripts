@@ -20,22 +20,22 @@ namespace IngameScript {
   partial class Program {
     /// <summary>Small class that helps with the serialization of commands</summary>
     public class CommandSerializer {
-      readonly StringBuilder builder;
+      readonly StringBuilder _builder;
       /// <summary>Creates a new serializer</summary>
       /// <param name="cmd">Name of the command to execute</param>
       public CommandSerializer(string cmd) {
-        this.builder = new StringBuilder($"-{cmd}");
+        _builder = new StringBuilder($"-{cmd}");
       }
       /// <summary>Add the <see cref="ToString"/> result of the object as argument. Takes care of wrapping it in quotes.</summary>
       /// <param name="o">Object to add as argument</param>
       /// <returns>itself</returns>
       public CommandSerializer AddArg(object o) {
-        this.builder.Append($" \"{o.ToString()}\"");
+        _builder.Append($" \"{o}\"");
         return this;
       }
       /// <summary>Returns the serialized command</summary>
       /// <returns>The serailized command</returns>
-      public override string ToString() => this.builder.ToString();
+      public override string ToString() => _builder.ToString();
     }
   }
 }

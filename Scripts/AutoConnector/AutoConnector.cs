@@ -107,7 +107,7 @@ namespace IngameScript {
         this.transformer = transformer;
         string pistonPrefix = $"{stationName} Piston {this.Name}";
         var pistons = new List<IMyPistonBase>();
-        gts.GetBlocksOfType(pistons, p => p.DisplayNameText.StartsWith(pistonPrefix));
+        gts.GetBlocksOfType(pistons, p => p.CustomName.StartsWith(pistonPrefix));
         this.x = new Actuator(4);
         this.y = new Actuator(1);
         this.z = new Actuator(2);
@@ -134,7 +134,7 @@ namespace IngameScript {
             this.y.AddPiston(piston, isNegative);
             continue;
           }
-          this.log($"Could not place piston '{piston.DisplayNameText}'");
+          this.log($"Could not place piston '{piston.CustomName}'");
         }
         if(!this.x.IsValid) {
           throw new InvalidOperationException($"Connector '{this.Name}': no piston on axis X");

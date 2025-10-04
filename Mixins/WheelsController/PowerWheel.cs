@@ -17,125 +17,139 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
     /// <summary>Wraps a <see cref="IMyMotorSuspension"/> to give it some additional features and info</summary>
-    public class PowerWheel {
+    public class PowerWheel
+    {
       // Determined for small 5*5 wheels:
       // F[wheel] = Strength squared * compressionRatio * STRENGTH_MULT
       const float STRENGTH_MULT = 4326;
       static readonly Vector3D UP = new Vector3D(0, 1, 0);
       static readonly Vector3D RIGHT = new Vector3D(1, 0, 0);
-      const string PO = "Propulsion override";
-      const string SO = "Steer override";
 
-      public float Angle => this.wheel.SteerAngle;
-      public float MaxAngle => this.wheel.MaxSteerAngle;
+      public float Angle => _wheel.SteerAngle;
+      public float MaxAngle => _wheel.MaxSteerAngle;
       public readonly MyCubeSize CubeSize;
       public readonly float Mass;
       public readonly Vector3D Position;
-      public float Power {
-        get { return this.IsRight ? -this.wheel.GetValueFloat(PO) : this.wheel.GetValueFloat(PO); }
-        set { this.wheel.SetValue(PO, this.IsRight ? -value : value); }
+      public float Power
+      {
+        get { return IsRight ? -_wheel.PropulsionOverride : _wheel.PropulsionOverride; }
+        set { _wheel.PropulsionOverride = IsRight ? -value : value; }
       }
-      public float Steer {
-        get { return (this.wheelBase.CenterOfTurnZ < this.Position.Z) ? -this.wheel.GetValueFloat(SO) : this.wheel.GetValueFloat(SO); }
-        set { this.wheel.SetValue(SO, (this.wheelBase.CenterOfTurnZ < this.Position.Z) ? -value : value); }
+      public float Steer
+      {
+        get { return (_wheelBase.CenterOfTurnZ < Position.Z) ? -_wheel.SteeringOverride : _wheel.SteeringOverride; }
+        set { _wheel.SteeringOverride = (_wheelBase.CenterOfTurnZ < Position.Z) ? -value : value; }
       }
-      public float Strength => this.wheel.Strength;
+      public float Strength => _wheel.Strength;
       public readonly int WheelSize;
       public bool IsRight { get; private set; }
 
-      readonly float minY, maxY;
-      float previousRoll;
-      readonly bool reverseY;
-      readonly CoordinatesTransformer transformer;
-      readonly IMyMotorSuspension wheel;
-      readonly WheelBase wheelBase;
+      readonly float _minY, _maxY;
+      float _previousRoll;
+      readonly bool _reverseY;
+      readonly CoordinatesTransformer _transformer;
+      readonly IMyMotorSuspension _wheel;
+      readonly WheelBase _wheelBase;
       /// <summary>Creates a new power wheel</summary>
       /// <param name="wheel">The actual wheel it wraps</param>
       /// <param name="wb">The wheel base, to which the power wheel will be added</param>
       /// <param name="tform">Coordinates transformer, should be one that makes the Z axis parallel the wheel direction and Y axis the up axis</param>
-      public PowerWheel(IMyMotorSuspension wheel, WheelBase wb, CoordinatesTransformer tform) {
-        this.wheelBase = wb;
-        this.CubeSize = wheel.CubeGrid.GridSizeEnum;
-        this.Position = tform.Pos(wheel.GetPosition());
-        this.IsRight = RIGHT.Dot(tform.Dir(wheel.WorldMatrix.Up)) > 0;
-        this.reverseY = UP.Dot(tform.Dir(wheel.WorldMatrix.Backward)) > 0;
-        this.transformer = tform;
-        this.wheel = wheel;
+      public PowerWheel(IMyMotorSuspension wheel, WheelBase wb, CoordinatesTransformer tform)
+      {
+        _wheelBase = wb;
+        CubeSize = wheel.CubeGrid.GridSizeEnum;
+        Position = tform.Pos(wheel.GetPosition());
+        IsRight = RIGHT.Dot(tform.Dir(wheel.WorldMatrix.Up)) > 0;
+        _reverseY = UP.Dot(tform.Dir(wheel.WorldMatrix.Backward)) > 0;
+        _transformer = tform;
+        _wheel = wheel;
 
         wheel.Height = 10;
-        this.maxY = wheel.Height;
+        _maxY = wheel.Height;
         wheel.Height = -10;
-        this.minY = wheel.Height;
-        if (this.reverseY) {
-          float tmp = this.minY;
-          this.minY = -this.maxY;
-          this.maxY = -tmp;
+        _minY = wheel.Height;
+        if (_reverseY)
+        {
+          float tmp = _minY;
+          _minY = -_maxY;
+          _maxY = -tmp;
         }
-        this.WheelSize = (wheel.Top.Max - wheel.Top.Min).X + 1;
-        this.Mass = this.CubeSize == MyCubeSize.Small
-          ? this.WheelSize == 1 ? 105 : (this.WheelSize == 3 ? 205 : 310)
-          : this.WheelSize == 1 ? 420 : (this.WheelSize == 3 ? 590 : 760);
+        WheelSize = (wheel.Top.Max - wheel.Top.Min).X + 1;
+        Mass = CubeSize == MyCubeSize.Small
+          ? WheelSize == 1 ? 105 : (WheelSize == 3 ? 205 : 310)
+          : WheelSize == 1 ? 420 : (WheelSize == 3 ? 590 : 760);
         // real center of rotation of the wheel
-        this.Position += tform.Dir(wheel.WorldMatrix.Up) * wheel.CubeGrid.GridSize;
-        this.wheelBase.AddWheel(this);
+        Position += tform.Dir(wheel.WorldMatrix.Up) * wheel.CubeGrid.GridSize;
+        _wheelBase.AddWheel(this);
       }
       /// <summary>Makes it so that the wheel strafes (ie all the wheels remain parallel)</summary>
       /// <param name="comZPos">Z coordinates of the center of mass of the grid of the wheel base, in the same referential than the wheels</param>
-      public void Strafe(double comZPos) {
-        this.wheel.SetValue("MaxSteerAngle", 30f);
-        this.wheel.InvertSteer = comZPos < this.Position.Z;
+      public void Strafe(double comZPos)
+      {
+        _wheel.SetValue("MaxSteerAngle", 30f);
+        _wheel.InvertSteer = comZPos < Position.Z;
       }
       /// <summary>Makes it so that the wheel turns. Automatically adjusts the direction with respect to the center of mass and center of turn</summary>
       /// <param name="comZPos">Z coordinates of the center of mass of the grid of the wheel base, in the same referential than the wheels</param>
-      public void Turn(double comZPos) {
-        bool turnLeft = (this.wheelBase.CenterOfTurnZ < this.Position.Z) ^ (this.wheel.SteerAngle > 0);
-        float angle = Math.Abs(this.wheelBase.GetAngle(this, turnLeft));
-        if (Math.Abs(this.wheel.SteerAngle) > 0.03 && Math.Abs(this.wheel.MaxSteerAngle - MathHelper.ToRadians(angle)) > 0.01) {
+      public void Turn(double comZPos)
+      {
+        bool turnLeft = (_wheelBase.CenterOfTurnZ < Position.Z) ^ (_wheel.SteerAngle > 0);
+        float angle = Math.Abs(_wheelBase.GetAngle(this, turnLeft));
+        if (Math.Abs(_wheel.SteerAngle) > 0.03 && Math.Abs(_wheel.MaxSteerAngle - MathHelper.ToRadians(angle)) > 0.01)
+        {
           // We set the angle and invert steer lazily as setting it can cause problems with the steering
-          this.wheel.SetValue("MaxSteerAngle", angle);
-          bool invertSteer = (comZPos < this.Position.Z) ^ (this.wheelBase.CenterOfTurnZ < this.Position.Z);
-          if (this.wheel.InvertSteer != invertSteer) {
-            this.wheel.InvertSteer = invertSteer;
+          _wheel.SetValue("MaxSteerAngle", angle);
+          bool invertSteer = (comZPos < Position.Z) ^ (_wheelBase.CenterOfTurnZ < Position.Z);
+          if (_wheel.InvertSteer != invertSteer)
+          {
+            _wheel.InvertSteer = invertSteer;
           }
         }
       }
       /// <summary>Adjusts the suspension so that the wheel base "rolls" (has one side higher than the other)</summary>
       /// <param name="roll">Amount of roll needed, between -0.25 (roll left) and 0.25 (roll right)</param>
-      public void Roll(float roll) {
-        if (roll != this.previousRoll) {
-          this.previousRoll = roll;
-          this.wheel.Height = (roll > 0 && this.IsRight) || (roll < 0 && !this.IsRight)
-            ? (this.reverseY ? -this.maxY : this.minY) + Math.Abs(roll)
-            : this.reverseY ? -this.maxY : this.minY;
+      public void Roll(float roll)
+      {
+        if (roll != _previousRoll)
+        {
+          _previousRoll = roll;
+          _wheel.Height = (roll > 0 && IsRight) || (roll < 0 && !IsRight)
+            ? (_reverseY ? -_maxY : _minY) + Math.Abs(roll)
+            : _reverseY ? -_maxY : _minY;
         }
       }
       /// <summary>Gets how much the suspension is compressed</summary>
       /// <returns>The compression ratio, normal values are between 0 (not compressed) and 1 (fully compressed)</returns>
-      public float GetCompressionRatio() {
-        double pos = this.transformer.Pos(this.wheel.Top.GetPosition()).Y - this.transformer.Pos(this.wheel.GetPosition()).Y;
-        return ((float)(this.reverseY ? -pos : pos) - this.minY) / (this.maxY - this.minY);
+      public float GetCompressionRatio()
+      {
+        double pos = _transformer.Pos(_wheel.Top.GetPosition()).Y - _transformer.Pos(_wheel.GetPosition()).Y;
+        return ((float)(_reverseY ? -pos : pos) - _minY) / (_maxY - _minY);
       }
       /// <summary>Estimates the coordinates of the point of contact of the wheel with the ground</summary>
       /// <returns>The world coordinates</returns>
-      public Vector3D GetPointOfContactW() => this.wheel.Top.GetPosition() +
-          (this.radius() * (this.reverseY ? this.wheel.WorldMatrix.Forward : this.wheel.WorldMatrix.Backward));
+      public Vector3D GetPointOfContactW() => _wheel.Top.GetPosition() +
+          (_radius() * (_reverseY ? _wheel.WorldMatrix.Forward : _wheel.WorldMatrix.Backward));
       /// <summary>Update the strength of the suspension to reach a given compression ratio</summary>
       /// <param name="force">Force applied on the suspesion</param>
       /// <param name="targetRatio">Compression ratio to target between 0 and 1</param>
-      public void SetStrength(float force, float targetRatio) {
+      public void SetStrength(float force, float targetRatio)
+      {
         float newStrength = (float)Math.Sqrt(force / (STRENGTH_MULT * Math.Max(targetRatio, 0.001f)));
-        if (Math.Abs(newStrength - this.wheel.Strength) > 0.1) {
-          this.wheel.Strength = newStrength;
+        if (Math.Abs(newStrength - _wheel.Strength) > 0.1)
+        {
+          _wheel.Strength = newStrength;
         }
       }
       /// <summary>Returns the current force applied by the suspension</summary>
       /// <returns>the force</returns>
-      public float GetForce() => this.GetCompressionRatio() * STRENGTH_MULT * this.wheel.Strength * this.wheel.Strength;
+      public float GetForce() => GetCompressionRatio() * STRENGTH_MULT * _wheel.Strength * _wheel.Strength;
 
-      double radius() => this.WheelSize * (this.CubeSize == MyCubeSize.Large ? 1.25 : 0.25);
+      double _radius() => WheelSize * (CubeSize == MyCubeSize.Large ? 1.25 : 0.25);
     }
   }
 }

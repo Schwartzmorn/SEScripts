@@ -34,7 +34,7 @@ namespace IngameScript {
         IMyGridTerminalSystem gts = program.GridTerminalSystem;
         IMyCubeGrid grid = program.Me.CubeGrid;
         gts.GetBlocksOfType(this._armLights, l => grid != l.CubeGrid && l.CubeGrid.IsSameConstructAs(grid));
-        gts.GetBlocksOfType(this._frontLights, l => l.CubeGrid == grid && l.DisplayNameText.Contains("Front"));
+        gts.GetBlocksOfType(this._frontLights, l => l.CubeGrid == grid && l.CustomName.Contains("Front"));
         cmd.RegisterCommand(new Command("gs-arm", Command.Wrap(this.handleArm), "",  nArgs: 2));
         cmd.RegisterCommand(new Command("gs-con", Command.Wrap(this.handleConnnection), "", nArgs: 3));
       }

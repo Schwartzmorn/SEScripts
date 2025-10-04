@@ -17,18 +17,22 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public class SolarPanel {
-      readonly List<IMySolarPanel> panels;
+namespace IngameScript
+{
+  partial class Program
+  {
+    public class SolarPanel
+    {
+      readonly List<IMySolarPanel> _panels;
 
-      public float CurrentOutput => this.panels.Sum(p => p.CurrentOutput);
-      public float MaxOutput => this.panels.Sum(p => p.MaxOutput);
+      public float CurrentOutput => _panels.Sum(p => p.CurrentOutput);
+      public float MaxOutput => _panels.Sum(p => p.MaxOutput);
 
-      public float MaxPossibleOutput => this.panels.Sum(p => p.CubeGrid.GridSize == 2.5f ? 160000 : 40000);
+      public float MaxPossibleOutput => _panels.Sum(p => p.CubeGrid.GridSize == 2.5f ? 160000 : 40000);
 
-      public SolarPanel(List<IMyCubeGrid> grids, List<IMySolarPanel> panels) {
-        this.panels = panels.Where(p => grids.Contains(p.CubeGrid)).ToList();
+      public SolarPanel(List<IMyCubeGrid> grids, List<IMySolarPanel> panels)
+      {
+        _panels = panels.Where(p => grids.Contains(p.CubeGrid)).ToList();
       }
     }
   }

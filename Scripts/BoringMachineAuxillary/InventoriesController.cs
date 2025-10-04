@@ -37,8 +37,8 @@ namespace IngameScript {
           .Select(c => new Inventory(c, tformer.Pos(c.GetPosition()).Z))
           .OrderBy(inv => inv.Z)
           .ToList();
-        gts.GetBlocksOfType(this._lights, light => light.DisplayNameText.StartsWith("BM Spotlight")
-            && !light.DisplayNameText.Contains("Rear"));
+        gts.GetBlocksOfType(this._lights, light => light.CustomName.StartsWith("BM Spotlight")
+            && !light.CustomName.Contains("Rear"));
         spawner.Spawn(p => this.updateDrills(), "drill-updater");
 
         this._invAction = spawner.Spawn(p => this.updateInventories(tformer.Pos(cockpit.CenterOfMass).Z), "inv-handle", period: 100);

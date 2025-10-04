@@ -29,27 +29,27 @@ partial class Program {
     public readonly float Angle;
     public readonly double Elevation;
     public ArmPos(float angle) {
-        this.Type = ArmPosType.Angle;
-        this.Angle = angle;
-        this.Elevation = 0;
+        Type = ArmPosType.Angle;
+        Angle = angle;
+        Elevation = 0;
     }
     public ArmPos(double elevation, float angle) {
-        this.Type = ArmPosType.Elevation;
-        this.Angle = angle;
-        this.Elevation = elevation;
+        Type = ArmPosType.Elevation;
+        Angle = angle;
+        Elevation = elevation;
     }
     public ArmPos(string s) {
       string[] ss = s.Split(IniHelper.SEP);
-      this.Angle = float.Parse(ss[0]);
+      Angle = float.Parse(ss[0]);
       if (ss.Count() == 2) {
-          this.Type = ArmPosType.Elevation;
-          this.Elevation = double.Parse(ss[1]);
+          Type = ArmPosType.Elevation;
+          Elevation = double.Parse(ss[1]);
       } else {
-          this.Type = ArmPosType.Angle;
-          this.Elevation = 0;
+          Type = ArmPosType.Angle;
+          Elevation = 0;
       }
     }
-    public override string ToString() => this.Type == ArmPosType.Angle ? $"{this.Angle}" : $"{this.Angle},{this.Elevation}";
+    public override string ToString() => Type == ArmPosType.Angle ? $"{Angle}" : $"{Angle},{Elevation}";
   }
 
   public class ArmAutoControl {
@@ -57,52 +57,52 @@ partial class Program {
 
     public ArmPos Target { get; private set; }
 
-    readonly List<IMyFunctionalBlock> tools;
-    readonly WheelsController wc;
+    readonly List<IMyFunctionalBlock> _tools;
+    readonly WheelsController _wc;
 
     public ArmAutoControl(MyIni ini, float angle, WheelsController wc, List<IMyFunctionalBlock> tools) {
-      this.tools = tools;
-      this.wc = wc;
+      _tools = tools;
+      _wc = wc;
       if (ini.ContainsSection(SECTION))
-          this.Target = new ArmPos(ini.Get(SECTION, "pos").ToString());
+          Target = new ArmPos(ini.Get(SECTION, "pos").ToString());
       else
-          this.SetTarget(new ArmPos(angle));
+          SetTarget(new ArmPos(angle));
     }
 
-    bool IsDrilling => this.tools.Any(d => d.Enabled);
+    bool IsDrilling => _tools.Any(d => d.Enabled);
 
     public void SetTarget(ArmPos pos) {
-        this.SwitchTools(false);
-        this.Target = pos;
+        SwitchTools(false);
+        Target = pos;
     }
 
     public bool Control(List<ArmRotor> rotors, IMyShipController cont) {
-      float maxSpeed = this.IsDrilling ? 0.5f : 4;
+      float maxSpeed = IsDrilling ? 0.5f : 4;
       bool moving = false;
-      if(this.Target.Type == ArmPosType.Angle) {
+      if(Target.Type == ArmPosType.Angle) {
         foreach (ArmRotor r in rotors) {
-          float delta = r.AngleProxy(this.Target.Angle);
+          float delta = r.AngleProxy(Target.Angle);
           r.Move(MathHelper.Clamp(delta * 30, -maxSpeed, maxSpeed));
           moving |= Math.Abs(delta) > 0.01;
         }
       } else {
         var g = Vector3D.Normalize(cont.GetNaturalGravity()); // gravity direction
-        Vector3D o = this.orthoNorm(cont.WorldMatrix.Forward, g); // orthogonal to gravity, in the same plane than g and forward direction
+        Vector3D o = _orthoNorm(cont.WorldMatrix.Forward, g); // orthogonal to gravity, in the same plane than g and forward direction
         Vector3D p = g.Cross(o); // orthogonal to g and o, dimension to be ignored
 
-        Vector3D d = Math.Cos(this.Target.Angle) * g + Math.Sin(this.Target.Angle) * o; // normal to desired slope plane
-        Vector3D wPlane = this.wc.GetContactPlaneW(); // normal of the contact plane
+        Vector3D d = Math.Cos(Target.Angle) * g + Math.Sin(Target.Angle) * o; // normal to desired slope plane
+        Vector3D wPlane = _wc.GetContactPlaneW(); // normal of the contact plane
 
-        Vector3D wPitch = this.orthoNorm(wPlane, p); // yaw axis
-        Vector3D fp = this.orthoNorm(cont.WorldMatrix.Forward, wPitch); // forward direction somewhat in the plane of contact
-        Vector3D wRoll = this.orthoNorm(wPlane, fp); // pitch axis
+        Vector3D wPitch = _orthoNorm(wPlane, p); // yaw axis
+        Vector3D fp = _orthoNorm(cont.WorldMatrix.Forward, wPitch); // forward direction somewhat in the plane of contact
+        Vector3D wRoll = _orthoNorm(wPlane, fp); // pitch axis
 
         double curPitch = Math.Asin(wPitch.Dot(o));
-        Vector3D poc = this.wc.GetPointOfContactW(fp);
-        Vector3D drillPos = this.getToolsPosW();
+        Vector3D poc = _wc.GetPointOfContactW(fp);
+        Vector3D drillPos = _getToolsPosW();
         double curElevation = (poc - drillPos).Dot(d); // elevation of drills above the plane being drilled
-        double delta = this.Target.Elevation - curElevation;
-        double deltaAngle = this.Target.Angle - curPitch;
+        double delta = Target.Elevation - curElevation;
+        double deltaAngle = Target.Angle - curPitch;
 
         // Can always go up as fast as possible
         float speed = MathHelper.Clamp((float)(delta + deltaAngle) * 20, -maxSpeed, 4);
@@ -113,17 +113,17 @@ partial class Program {
       return !moving;
     }
 
-    public void Save(MyIni ini) => ini.Set(SECTION, "pos", this.Target.ToString());
+    public void Save(MyIni ini) => ini.Set(SECTION, "pos", Target.ToString());
 
-    public void SwitchTools(bool s) => this.tools.ForEach(d => d.Enabled = s);
+    public void SwitchTools(bool s) => _tools.ForEach(d => d.Enabled = s);
 
-    Vector3D getToolsPosW() {
+    Vector3D _getToolsPosW() {
       var pos = new Vector3D(0, 0, 0);
-      this.tools.ForEach(t => pos += t.GetPosition() + (0.75 * t.WorldMatrix.Forward));
-      return pos / this.tools.Count();
+      _tools.ForEach(t => pos += t.GetPosition() + (0.75 * t.WorldMatrix.Forward));
+      return pos / _tools.Count();
     }
 
-    Vector3D orthoNorm(Vector3D v, Vector3D refV) => Vector3D.Normalize(v - (v.Dot(refV) * refV));
+    Vector3D _orthoNorm(Vector3D v, Vector3D refV) => Vector3D.Normalize(v - (v.Dot(refV) * refV));
   }
 }
 }

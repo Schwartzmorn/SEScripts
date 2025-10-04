@@ -18,7 +18,7 @@ using VRage;
 using VRageMath;
 
 namespace IngameScript {
-  static class RotorHelper {
+  public static class RotorHelper {
     const float PRECISION = 0.005f;
     /// <summary>
     /// Returns the smallest angle to travel to reach the given position, taking into account limits.

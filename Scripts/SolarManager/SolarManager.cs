@@ -17,96 +17,115 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public class SolarManager {
+namespace IngameScript
+{
+  partial class Program
+  {
+    public class SolarManager
+    {
       const string SECTION = "solar-manager";
       const float DAY_RATIO = 0.8f;
       const float NIGHT_RATIO = 0.7f;
 
-      public float CurrentOutput => this.solarRotors.Sum(r => r.CurrentOutput);
-      public float MaxOutput => this.solarRotors.Sum(r => r.MaxOutput);
-      public int PanelCount => this.solarRotors.Sum(r => r.PanelCount);
-      public int RotorCount => this.solarRotors.Count;
+      public float CurrentOutput => _solarRotors.Sum(r => r.CurrentOutput);
+      public float MaxOutput => _solarRotors.Sum(r => r.MaxOutput);
+      public int PanelCount => _solarRotors.Sum(r => r.PanelCount);
+      public int RotorCount => _solarRotors.Count;
 
-      readonly string keyword;
-      readonly Action<string> logger;
-      readonly List<SolarRotor> solarRotors = new List<SolarRotor>();
-      readonly SolarUpdator updator;
-      bool nightMode;
-      int tickCount = 0;
+      readonly string _keyword;
+      readonly Action<string> _logger;
+      readonly List<SolarRotor> _solarRotors = new List<SolarRotor>();
+      readonly SolarUpdator _updator;
+      bool _nightMode;
+      int _tickCount = 0;
 
-      public SolarManager(Program p, CommandLine command, ISaveManager manager, Action<string> logger) {
-        this.logger = logger;
+      public SolarManager(Program p, CommandLine command, ISaveManager manager, Action<string> logger)
+      {
+        _logger = logger;
         var ini = new MyIni();
         ini.TryParse(p.Me.CustomData);
-        this.keyword = ini.GetThrow(SECTION, "keyword").ToString("Solar Rotor");
-        this.nightMode = ini.Get(SECTION, "night-mode").ToBoolean();
-        Process main = manager.Spawn(process => this.main(), "solar-manager", period: 50);
-        this.updator = new SolarUpdator(p, logger);
-        this.update();
-        main.Spawn(process => this.update(), "solar-manager-update", period: 10000);
-        manager.AddOnSave(this.save);
-        command.RegisterCommand(new Command("solar-adjust", Command.Wrap(this.adjust), "adjusts the position of a rotor", minArgs: 2, maxArgs: 3,
+        _keyword = ini.GetThrow(SECTION, "keyword").ToString("Solar Rotor");
+        _nightMode = ini.Get(SECTION, "night-mode").ToBoolean();
+        Process main = manager.Spawn(process => _main(), "solar-manager", period: 50);
+        _updator = new SolarUpdator(p, logger);
+        _update();
+        main.Spawn(process => _update(), "solar-manager-update", period: 10000);
+        manager.AddOnSave(_save);
+        command.RegisterCommand(new Command("solar-adjust", Command.Wrap(_adjust), "adjusts the position of a rotor", minArgs: 2, maxArgs: 3,
             detailedHelp: @"first argument is the offset in degree
 second argument is the id of the rotor
 third (optional) is the id of the auxilliary rotor"));
-        command.RegisterCommand(new Command("solar-track", Command.Wrap(this.track), "forces an idle rotor to start tracking", nArgs: 1));
+        command.RegisterCommand(new Command("solar-track", Command.Wrap(_track), "forces an idle rotor to start tracking", nArgs: 1));
       }
 
-      void adjust(List<string> args) {
+      void _adjust(List<string> args)
+      {
         float offset = float.Parse(args[0]);
         int rotorId = int.Parse(args[1]);
         int rotorAuxId = (args.Count == 3) ? int.Parse(args[2]) : 0;
-        this.solarRotors.FirstOrDefault(r => r.IDNumber == rotorId)?.Adjust(offset, rotorAuxId);
+        _solarRotors.FirstOrDefault(r => r.IDNumber == rotorId)?.Adjust(offset, rotorAuxId);
       }
 
-      void track(string arg) {
+      void _track(string arg)
+      {
         int rotorId = int.Parse(arg);
-        this.solarRotors.FirstOrDefault(r => r.IDNumber == rotorId)?.Track();
+        _solarRotors.FirstOrDefault(r => r.IDNumber == rotorId)?.Track();
       }
 
-      void save(MyIni ini) {
-        ini.Set(SECTION, "night-mode", this.nightMode);
-        this.saveRotors();
+      void _save(MyIni ini)
+      {
+        ini.Set(SECTION, "night-mode", _nightMode);
+        _saveRotors();
       }
 
-      void main() {
-        ++this.tickCount;
-        if (this.tickCount > 10) {
+      void _main()
+      {
+        ++_tickCount;
+        if (_tickCount > 10)
+        {
           // we ignore the first few ticks
-          float maxRatio = this.solarRotors.Max(r => r.Ratio);
-          if (maxRatio > DAY_RATIO) {
-            if (this.nightMode) {
-              this.log("Entering Day Mode");
-              this.nightMode = false;
+          float maxRatio = _solarRotors.Max(r => r.Ratio);
+          if (maxRatio > DAY_RATIO)
+          {
+            if (_nightMode)
+            {
+              _log("Entering Day Mode");
+              _nightMode = false;
             }
-          } else if (maxRatio < NIGHT_RATIO) {
-            if (!this.nightMode) {
-              this.log("Entering Night Mode");
-              this.nightMode = true;
+          }
+          else if (maxRatio < NIGHT_RATIO)
+          {
+            if (!_nightMode)
+            {
+              _log("Entering Night Mode");
+              _nightMode = true;
             }
           }
         }
-        if (this.tickCount > 10) {
-          foreach (SolarRotor rotor in this.solarRotors) {
-            rotor.Update(this.nightMode);
+        if (_tickCount > 10)
+        {
+          foreach (SolarRotor rotor in _solarRotors)
+          {
+            rotor.Update(_nightMode);
           }
         }
       }
 
-      void saveRotors() {
-        foreach (SolarRotor rotor in this.solarRotors) {
+      void _saveRotors()
+      {
+        foreach (SolarRotor rotor in _solarRotors)
+        {
           rotor.Save();
         }
       }
 
-      void update() {
-        this.saveRotors();
-        this.updator.Update(this.solarRotors, this.keyword);
+      void _update()
+      {
+        _saveRotors();
+        _updator.Update(_solarRotors, _keyword);
       }
 
-      void log(string s) => this.logger?.Invoke($"Solar manager: {s}");
+      void _log(string s) => _logger?.Invoke($"Solar manager: {s}");
     }
   }
 }

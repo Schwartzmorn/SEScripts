@@ -5,225 +5,277 @@ using VRage;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
     public enum ConnectionState { Connected, Ready, Standby, WaitingCon, WaitingDisc };
 
     public enum FailReason { Cancellation, Failure, User, Timeout, None }
 
-    public class ConnectionClient : IIniConsumer, IPABraker {
+    public class ConnectionClient : IIniConsumer, IPABraker
+    {
       static readonly ConnectionState[] BRAKE_STATES = { ConnectionState.Connected, ConnectionState.WaitingCon, ConnectionState.WaitingDisc };
       const double DECO_DISTANCE_SQUARED = 0.04;
       const string SECTION = "connection-client";
 
       public float Progress { get; private set; } = 0;
-      public ConnectionState State { get { return this.state; } private set { this.setState(value); } }
+      public ConnectionState State { get { return _state; } private set { _setState(value); } }
       public FailReason FailReason { get; private set; } = FailReason.None;
 
-      IMyShipConnector connector;
-      readonly IMyGridTerminalSystem gts;
-      readonly IMyIntergridCommunicationSystem igc;
-      readonly IMyUnicastListener listener;
-      readonly CommandLine listenerCmd;
-      readonly Action<string> logger;
-      readonly Process mainProcess;
-      Vector3D? position = null;
-      string serverChannel;
-      ConnectionState state = ConnectionState.Ready;
-      Process timeOutProcess = null;
+      IMyShipConnector _connector;
+      readonly IMyGridTerminalSystem _gts;
+      readonly IMyIntergridCommunicationSystem _igc;
+      readonly IMyUnicastListener _listener;
+      readonly CommandLine _listenerCmd;
+      readonly Action<string> _logger;
+      readonly Process _mainProcess;
+      Vector3D? _position = null;
+      string _serverChannel;
+      ConnectionState _state = ConnectionState.Ready;
+      Process _timeOutProcess = null;
 
-      public ConnectionClient(IniWatcher ini, IMyGridTerminalSystem gts, IMyIntergridCommunicationSystem igc, CommandLine commandLine, IProcessManager manager, Action<string> logger) {
-        this.gts = gts;
-        this.igc = igc;
-        this.logger = logger;
+      public ConnectionClient(IniWatcher ini, IMyGridTerminalSystem gts, IMyIntergridCommunicationSystem igc, CommandLine commandLine, IProcessManager manager, Action<string> logger)
+      {
+        _gts = gts;
+        _igc = igc;
+        _logger = logger;
 
-        this.mainProcess = manager.Spawn(this.listen, "cc-listen", period: 5);
-        this.listenerCmd = new CommandLine("Connection client listener", null, this.mainProcess);
-        this.listenerCmd.RegisterCommand(new Command("ac-progress", Command.Wrap(this.progress), "", nArgs: 1));
-        this.listenerCmd.RegisterCommand(new Command("ac-done", Command.Wrap(this.done), ""));
-        this.listenerCmd.RegisterCommand(new Command("ac-cancel", Command.Wrap(this.serverCancel), ""));
-        this.listenerCmd.RegisterCommand(new Command("ac-ko", Command.Wrap(this.ko), ""));
-        this.listener = this.igc.UnicastListener;
+        _mainProcess = manager.Spawn(_listen, "cc-listen", period: 5);
+        _listenerCmd = new CommandLine("Connection client listener", null, _mainProcess);
+        _listenerCmd.RegisterCommand(new Command("ac-progress", Command.Wrap(_progress), "", nArgs: 1));
+        _listenerCmd.RegisterCommand(new Command("ac-done", Command.Wrap(_done), ""));
+        _listenerCmd.RegisterCommand(new Command("ac-cancel", Command.Wrap(_serverCancel), ""));
+        _listenerCmd.RegisterCommand(new Command("ac-ko", Command.Wrap(_ko), ""));
+        _listener = _igc.UnicastListener;
 
         ini.Add(this);
-        this.Read(ini);
-        this.addCmds(commandLine);
+        Read(ini);
+        _addCmds(commandLine);
 
-        manager.AddOnSave(this.save);
-        if (ini.ContainsKey(SECTION, "state")) {
+        manager.AddOnSave(_save);
+        if (ini.ContainsKey(SECTION, "state"))
+        {
           ConnectionState state;
           Enum.TryParse(ini.Get(SECTION, "state").ToString(), out state);
-          this.State = state;
+          State = state;
         }
       }
 
-      public void Read(MyIni ini) {
-        this.connector = this.gts.GetBlockWithName(ini.GetThrow(SECTION, "connector-name").ToString()) as IMyShipConnector;
-        this.serverChannel = ini.GetThrow(SECTION, "server-channel").ToString();
+      public void Read(MyIni ini)
+      {
+        _connector = _gts.GetBlockWithName(ini.GetThrow(SECTION, "connector-name").ToString()) as IMyShipConnector;
+        _serverChannel = ini.GetThrow(SECTION, "server-channel").ToString();
       }
 
-      public bool ShouldHandbrake() => BRAKE_STATES.Contains(this.state);
+      public bool ShouldHandbrake() => BRAKE_STATES.Contains(_state);
 
       // Client events
-      void connect() {
-        this.log("sending connection request");
-        if (this.State != ConnectionState.Connected) {
-          this.State = ConnectionState.WaitingCon;
-          this.sendCon();
+      void _connect()
+      {
+        _log("sending connection request");
+        if (State != ConnectionState.Connected)
+        {
+          State = ConnectionState.WaitingCon;
+          _sendCon();
         }
       }
-      void deco() {
-        this.log("sending disconnection request");
-        if (this.State == ConnectionState.WaitingCon || this.State == ConnectionState.Standby) {
-          this.State = ConnectionState.Ready;
-          this.setFailReason(FailReason.Cancellation);
-          this.sendDisc();
-        } else if (this.State == ConnectionState.Connected) {
-          this.State = ConnectionState.WaitingDisc;
-          this.sendDisc();
+      void _deco()
+      {
+        _log("sending disconnection request");
+        if (State == ConnectionState.WaitingCon || State == ConnectionState.Standby)
+        {
+          State = ConnectionState.Ready;
+          _setFailReason(FailReason.Cancellation);
+          _sendDisc();
+        }
+        else if (State == ConnectionState.Connected)
+        {
+          State = ConnectionState.WaitingDisc;
+          _sendDisc();
         }
       }
-      void switchConnection() {
-        if (this.State == ConnectionState.Connected) {
-          this.deco();
-        } else {
-          this.connect();
+      void _switchConnection()
+      {
+        if (State == ConnectionState.Connected)
+        {
+          _deco();
+        }
+        else
+        {
+          _connect();
         }
       }
 
       // Self events
-      void clientCancel() {
-        this.log("cancelled by client");
-        this.State = ConnectionState.Ready;
-        this.setFailReason(FailReason.Cancellation);
-        this.sendDisc();
+      void _clientCancel()
+      {
+        _log("cancelled by client");
+        State = ConnectionState.Ready;
+        _setFailReason(FailReason.Cancellation);
+        _sendDisc();
       }
-      void timeout(Process p) {
-        this.log("query timeouted");
-        if (this.State == ConnectionState.WaitingCon || this.State == ConnectionState.WaitingDisc) {
-          this.State = ConnectionState.Ready;
-          this.setFailReason(FailReason.Timeout);
+      void _timeout(Process p)
+      {
+        _log("query timeouted");
+        if (State == ConnectionState.WaitingCon || State == ConnectionState.WaitingDisc)
+        {
+          State = ConnectionState.Ready;
+          _setFailReason(FailReason.Timeout);
         }
       }
 
       // Server events
-      void serverCancel() {
-        if (this.State == ConnectionState.Connected || this.State == ConnectionState.WaitingCon) {
-          this.log("received standby signal");
-          this.State = ConnectionState.Standby;
-        } else if (this.State != ConnectionState.Ready) {
-          this.log("received cancel signal");
-          this.State = ConnectionState.Ready;
-          this.setFailReason(FailReason.Failure);
+      void _serverCancel()
+      {
+        if (State == ConnectionState.Connected || State == ConnectionState.WaitingCon)
+        {
+          _log("received standby signal");
+          State = ConnectionState.Standby;
+        }
+        else if (State != ConnectionState.Ready)
+        {
+          _log("received cancel signal");
+          State = ConnectionState.Ready;
+          _setFailReason(FailReason.Failure);
         }
       }
-      void progress(string progress) {
-        if (this.State == ConnectionState.WaitingCon
-            || this.State == ConnectionState.WaitingDisc
-            || this.State == ConnectionState.Standby) {
-          if (this.State == ConnectionState.Standby) {
-            this.State = ConnectionState.WaitingCon;
+      void _progress(string progress)
+      {
+        if (State == ConnectionState.WaitingCon
+            || State == ConnectionState.WaitingDisc
+            || State == ConnectionState.Standby)
+        {
+          if (State == ConnectionState.Standby)
+          {
+            State = ConnectionState.WaitingCon;
           }
           float pf;
-          if (float.TryParse(progress, out pf)) {
-            this.Progress = pf;
-            this.timeOutProcess?.ResetCounter();
+          if (float.TryParse(progress, out pf))
+          {
+            Progress = pf;
+            _timeOutProcess?.ResetCounter();
           }
         }
       }
-      void done() {
-        this.log("received done signal");
-        if (this.State == ConnectionState.WaitingCon) {
-          this.State = ConnectionState.Connected;
-        } else if (this.State == ConnectionState.WaitingDisc) {
-          this.State = ConnectionState.Ready;
+      void _done()
+      {
+        _log("received done signal");
+        if (State == ConnectionState.WaitingCon)
+        {
+          State = ConnectionState.Connected;
+        }
+        else if (State == ConnectionState.WaitingDisc)
+        {
+          State = ConnectionState.Ready;
         }
       }
-      void ko() {
-        this.log("received ko signal");
-        this.State = ConnectionState.Ready;
-        this.setFailReason(FailReason.Failure);
+      void _ko()
+      {
+        _log("received ko signal");
+        State = ConnectionState.Ready;
+        _setFailReason(FailReason.Failure);
       }
       // helpers
-      void save(MyIni ini) {
-        ini.Set(SECTION, "connector-name", this.connector.DisplayNameText);
-        ini.Set(SECTION, "server-channel", this.serverChannel);
-        ini.Set(SECTION, "state", this.State.ToString());
+      void _save(MyIni ini)
+      {
+        ini.Set(SECTION, "connector-name", _connector.CustomName);
+        ini.Set(SECTION, "server-channel", _serverChannel);
+        ini.Set(SECTION, "state", State.ToString());
       }
-      void setState(ConnectionState state) {
-        this.state = state;
-        this.clearCallbacks();
-        if (this.state == ConnectionState.Connected) {
-          this.mainProcess.Spawn(this.checkCon, "cc-checkcon", period: 10, useOnce: false);
-        } else if (this.state == ConnectionState.Standby) {
-          this.startMoveListener();
-        } else if (this.state == ConnectionState.WaitingCon) {
-          this.startTimeOut();
-          this.startMoveListener();
-        } else if (this.state == ConnectionState.WaitingDisc) {
-          this.startTimeOut();
+      void _setState(ConnectionState state)
+      {
+        _state = state;
+        _clearCallbacks();
+        if (_state == ConnectionState.Connected)
+        {
+          _mainProcess.Spawn(_checkCon, "cc-checkcon", period: 10, useOnce: false);
+        }
+        else if (_state == ConnectionState.Standby)
+        {
+          _startMoveListener();
+        }
+        else if (_state == ConnectionState.WaitingCon)
+        {
+          _startTimeOut();
+          _startMoveListener();
+        }
+        else if (_state == ConnectionState.WaitingDisc)
+        {
+          _startTimeOut();
         }
       }
 
-      void sendCon() {
-        CommandSerializer com = new CommandSerializer("ac-con").AddArg(this.connector.CubeGrid.GridSizeEnum);
-        AddVector(this.connector.GetPosition(), com);
-        AddVector(this.connector.WorldMatrix.Forward, com);
-        this.igc.SendBroadcastMessage(this.serverChannel, com.ToString());
+      void _sendCon()
+      {
+        CommandSerializer com = new CommandSerializer("ac-con").AddArg(_connector.CubeGrid.GridSizeEnum);
+        _addVector(_connector.GetPosition(), com);
+        _addVector(_connector.WorldMatrix.Forward, com);
+        _igc.SendBroadcastMessage(_serverChannel, com.ToString());
       }
 
-      void sendDisc() => this.igc.SendBroadcastMessage(this.serverChannel, new CommandSerializer("ac-disc").ToString());
+      void _sendDisc() => _igc.SendBroadcastMessage(_serverChannel, new CommandSerializer("ac-disc").ToString());
 
-      void listen(Process p) {
-        if (this.listener.HasPendingMessage) {
-          this.listenerCmd.StartCmd(this.listener.AcceptMessage().As<string>(), CommandTrigger.Cmd);
+      void _listen(Process p)
+      {
+        if (_listener.HasPendingMessage)
+        {
+          _listenerCmd.StartCmd(_listener.AcceptMessage().As<string>(), CommandTrigger.Cmd);
         }
       }
 
-      void clearCallbacks() {
-        this.Progress = 0;
-        this.position = null;
+      void _clearCallbacks()
+      {
+        Progress = 0;
+        _position = null;
 
-        this.mainProcess.KillChildren();
+        _mainProcess.KillChildren();
 
-        this.timeOutProcess = null;
+        _timeOutProcess = null;
       }
 
-      void startTimeOut() => this.timeOutProcess = this.mainProcess.Spawn(this.timeout, "cc-timeout", period: 50, useOnce: true);
+      void _startTimeOut() => _timeOutProcess = _mainProcess.Spawn(_timeout, "cc-timeout", period: 50, useOnce: true);
 
-      void startMoveListener() {
-        this.position = this.connector.GetPosition();
-        this.mainProcess.Spawn(this.checkPos, "cc-movelistener", period: 10, useOnce: false);
+      void _startMoveListener()
+      {
+        _position = _connector.GetPosition();
+        _mainProcess.Spawn(_checkPos, "cc-movelistener", period: 10, useOnce: false);
       }
 
-      void setFailReason(FailReason state) {
-        this.FailReason = state;
-        this.mainProcess.Spawn(p => this.FailReason = FailReason.None, "cc-failreset", p => this.FailReason = FailReason.None, 500, true);
+      void _setFailReason(FailReason state)
+      {
+        FailReason = state;
+        _mainProcess.Spawn(p => FailReason = FailReason.None, "cc-failreset", p => FailReason = FailReason.None, 500, true);
       }
 
-      void checkPos(Process p) {
-        if ((this.connector.GetPosition() - this.position.Value).LengthSquared() > DECO_DISTANCE_SQUARED) {
-          this.clientCancel();
+      void _checkPos(Process p)
+      {
+        if ((_connector.GetPosition() - _position.Value).LengthSquared() > DECO_DISTANCE_SQUARED)
+        {
+          _clientCancel();
         }
       }
 
-      void checkCon(Process p) {
-        if (this.connector.Status != MyShipConnectorStatus.Connected) {
-          this.State = ConnectionState.Ready;
-          this.setFailReason(FailReason.User);
+      void _checkCon(Process p)
+      {
+        if (_connector.Status != MyShipConnectorStatus.Connected)
+        {
+          State = ConnectionState.Ready;
+          _setFailReason(FailReason.User);
         }
       }
 
-      void addCmds(CommandLine cmd) {
-        cmd.RegisterCommand(new Command("ac-connect", Command.Wrap(this.connect), "Requests for an auto connection", nArgs: 0));
-        cmd.RegisterCommand(new Command("ac-disconnect", Command.Wrap(this.deco), "Requests for disconnection", nArgs: 0));
-        cmd.RegisterCommand(new Command("ac-switch", Command.Wrap(this.switchConnection), "Requests for connection/disconnection", nArgs: 0));
+      void _addCmds(CommandLine cmd)
+      {
+        cmd.RegisterCommand(new Command("ac-connect", Command.Wrap(_connect), "Requests for an auto connection", nArgs: 0));
+        cmd.RegisterCommand(new Command("ac-disconnect", Command.Wrap(_deco), "Requests for disconnection", nArgs: 0));
+        cmd.RegisterCommand(new Command("ac-switch", Command.Wrap(_switchConnection), "Requests for connection/disconnection", nArgs: 0));
       }
 
-      void log(string s) => this.logger?.Invoke("cc: " + s);
+      void _log(string s) => _logger?.Invoke("cc: " + s);
 
 
-      static void AddVector(Vector3D v, CommandSerializer com) => com.AddArg(v.X).AddArg(v.Y).AddArg(v.Z);
+      static void _addVector(Vector3D v, CommandSerializer com) => com.AddArg(v.X).AddArg(v.Y).AddArg(v.Z);
     }
   }
 }

@@ -1,10 +1,33 @@
-# To learn more about .editorconfig see https://aka.ms/editorconfigdocs
+# The style is a balance between personal preferences and having the most minifyable code
 
-# All files
 [*]
-indent_style = space
-end_of_line = lf
-
-# Xml files
-[*.xml]
 indent_size = 2
+indent_style = space
+tab_width = 2
+end_of_line = lf
+insert_final_newline = true
+
+# C# files
+[*.cs]
+## Non public fields and methods must begin with an underscore and be in camel case.
+# Define "private_fields", which includes fields and methods with private or protected accessibility.
+dotnet_naming_symbols.private_fields.applicable_kinds = field, method
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, protected, protected_internal, private_protected
+# Style
+dotnet_naming_style.require_underscore_prefix_and_camel_case.required_prefix = _
+dotnet_naming_style.require_underscore_prefix_and_camel_case.capitalization = camel_case
+# Apply rule
+dotnet_naming_rule.private_fields_must_begin_with_underscore_and_be_in_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_must_begin_with_underscore_and_be_in_camel_case.style = require_underscore_prefix_and_camel_case
+dotnet_naming_rule.private_fields_must_begin_with_underscore_and_be_in_camel_case.severity = error
+
+## Static fields must be in UPPER_CASE.
+# Define "static_fields" symbols
+dotnet_naming_symbols.static_fields.applicable_kinds = field
+dotnet_naming_symbols.static_fields.required_modifiers = static
+# Style
+dotnet_naming_style.require_upper_case.capitalization = all_upper
+# Apply rule
+dotnet_naming_rule.static_fields_must_be_upper_case.symbols = static_fields
+dotnet_naming_rule.static_fields_must_be_upper_case.style = require_upper_case
+dotnet_naming_rule.static_fields_must_be_upper_case.severity = error
