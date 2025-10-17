@@ -34,10 +34,19 @@ public class ProgramWrapper
 
   public Action Initialize;
 
+  public void Run(string arg) => RunMain(arg, UpdateType.Terminal);
+  public Action<string, UpdateType> RunMain;
+  public Action RunOnSave;
+
   public ProgramWrapper(MyCubeGridMock cubeGrid, Type P)
   {
     var constructor = P.GetConstructor(Type.EmptyTypes) ?? throw new InvalidOperationException("No parameterless constructor found.");
     Program = RuntimeHelpers.GetUninitializedObject(P) as MyGridProgram;
+    var main = P.GetMethod("Main");
+    RunMain = (arg, ut) => main.Invoke(Program, [arg, ut]);
+    var save = P.GetMethod("Save");
+    RunOnSave = () => save.Invoke(Program, null);
+
     if (Program is not IMyGridProgram backend)
       throw new InvalidOperationException("No IMyGridProgram interface found.");
 

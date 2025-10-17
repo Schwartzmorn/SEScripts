@@ -17,16 +17,21 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
     /// <summary>Class that ensures a filter is only run once per tick.</summary>
-    public abstract class LazyFilter {
-      private int lastFilter = -1;
+    public abstract class LazyFilter
+    {
+      private int _lastFilter = -1;
 
-      protected void FilterLazily() {
-        if (GLOBAL_COUNTER != this.lastFilter) {
-          this.lastFilter = GLOBAL_COUNTER;
-          this.Filter();
+      protected void FilterLazily()
+      {
+        if (GLOBAL_COUNTER != _lastFilter)
+        {
+          _lastFilter = GLOBAL_COUNTER;
+          Filter();
         }
       }
 

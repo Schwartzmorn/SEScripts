@@ -18,8 +18,10 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
-namespace IngameScript {
-  public partial class Program: MyGridProgram {
+namespace IngameScript
+{
+  public partial class Program : MyGridProgram
+  {
     readonly DoorManager _doorManager;
     readonly IProcessManager _manager;
 
@@ -32,7 +34,8 @@ namespace IngameScript {
       _doorManager = new DoorManager(this, _manager, logger.Log);
     }
 
-    public void Save() {
+    public void Save()
+    {
     }
 
     public void Main(string argument, UpdateType updateSource) => _manager.Tick();

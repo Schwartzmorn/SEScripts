@@ -16,26 +16,36 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRageMath;
 
-namespace IngameScript {
+namespace IngameScript
+{
   /// <summary>Enum more convenient to handle for the object main type</summary>
-  public enum ItemType { Unknown = 0, Ammo, Component, Hydrogen, Ingot, Ore, Oxygen, Tool };
+  public enum ItemType { Unknown = 0, Ammo, Chip, Component, Consumable, Hydrogen, Ingot, Ore, Oxygen, Seed, Tool };
 
-  static class Item {
+  static class Item
+  {
     static readonly Dictionary<string, ItemType> TYPES = new Dictionary<string, ItemType> {
     { "MyObjectBuilder_AmmoMagazine", ItemType.Ammo },
+    { "MyObjectBuilder_PhysicalObject", ItemType.Chip },
     { "MyObjectBuilder_Component", ItemType.Component },
+    { "MyObjectBuilder_ConsumableItem", ItemType.Consumable },
     { "MyObjectBuilder_GasContainerObject", ItemType.Hydrogen },
     { "MyObjectBuilder_Ingot", ItemType.Ingot },
     { "MyObjectBuilder_Ore", ItemType.Ore },
     { "MyObjectBuilder_OxygenContainerObject", ItemType.Oxygen },
-    { "MyObjectBuilder_PhysicalGunObject", ItemType.Tool }
+    { "MyObjectBuilder_PhysicalGunObject", ItemType.Tool },
+    { "MyObjectBuilder_SeedItem", ItemType.Seed }
   };
     /// <summary>Returns the main type of the item, as an <see cref="ItemType"/></summary>
     /// <param name="item">This</param>
     /// <returns>The item type</returns>
-    public static ItemType GetItemType(this MyInventoryItem item) {
+    public static ItemType GetItemType(this MyInventoryItem item) => item.Type.GetItemType();
+    /// <summary>Returns the main type of the item, as an <see cref="ItemType"/></summary>
+    /// <param name="item">This</param>
+    /// <returns>The item type</returns>
+    public static ItemType GetItemType(this MyItemType item)
+    {
       ItemType res;
-      TYPES.TryGetValue(item.Type.TypeId, out res);
+      TYPES.TryGetValue(item.TypeId, out res);
       return res;
     }
     /// <summary>Returns the actual type of the object</summary>

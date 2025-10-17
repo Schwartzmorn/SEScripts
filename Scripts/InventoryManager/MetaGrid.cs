@@ -17,39 +17,46 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
     /// <summary>Class that encapsulate the grids that are mechanically connected with pistons or rotors (not connectors). Keeps track of the largest grid, but otherwise only keeps the ids.</summary>
-    public class MetaGrid {
+    public class MetaGrid
+    {
       /// <summary>Name of the MetaGrid. Returns the name of the largest grid.</summary>
-      public string Name => this.grid?.CustomName;
+      public string Name => _grid?.CustomName;
 
-      private IMyCubeGrid grid;
-      private readonly HashSet<long> grids = new HashSet<long>();
-      private int volume = 0;
+      private IMyCubeGrid _grid;
+      private readonly HashSet<long> _grids = new HashSet<long>();
+      private int _volume = -1;
       /// <summary>Creates a new Metagrid</summary>
       /// <param name="grid">First grid of the meta grid</param>
-      public MetaGrid(IMyCubeGrid grid) {
-        this.AddGrid(grid);
+      public MetaGrid(IMyCubeGrid grid)
+      {
+        AddGrid(grid);
       }
       /// <summary>Adds a grid to the metagrid</summary>
       /// <param name="grid">grid to add</param>
-      public void AddGrid(IMyCubeGrid grid) {
-        this.grids.Add(grid.EntityId);
-        this.tryUseAsRef(grid);
+      public void AddGrid(IMyCubeGrid grid)
+      {
+        _grids.Add(grid.EntityId);
+        _tryUseAsRef(grid);
       }
       /// <summary>Returns whether the grid belongs to the meta grid</summary>
       /// <param name="grid">grid to test</param>
       /// <returns>Whether <paramref name="grid"/> belongs to the MetaGrid</returns>
-      public bool IsSameMetaGrid(IMyCubeGrid grid) => this.grids.Contains(grid.EntityId) || grid.IsSameConstructAs(this.grid);
+      public bool IsSameMetaGrid(IMyCubeGrid grid) => _grids.Contains(grid.EntityId) || grid.IsSameConstructAs(_grid);
 
-      public override string ToString() => $"{this.Name}: {this.grids.Count} grid{(this.grids.Count > 1 ? "s" : "")}";
+      public override string ToString() => $"{Name}: {_grids.Count} grid{(_grids.Count > 1 ? "s" : "")}";
 
-      private void tryUseAsRef(IMyCubeGrid grid) {
+      private void _tryUseAsRef(IMyCubeGrid grid)
+      {
         int volume = (grid.Max - grid.Min).Volume();
-        if (volume > this.volume) {
-          this.grid = grid;
-          this.volume = volume;
+        if (volume > _volume)
+        {
+          _grid = grid;
+          _volume = volume;
         }
       }
     }

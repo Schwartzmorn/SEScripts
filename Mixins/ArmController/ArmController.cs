@@ -17,9 +17,12 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public class ArmController {
+namespace IngameScript
+{
+  partial class Program
+  {
+    public class ArmController
+    {
       const string SECTION = "arm-positions";
       readonly List<ArmRotor> _rotors;
       readonly Dictionary<string, ArmPos> _pos;
@@ -30,8 +33,10 @@ namespace IngameScript {
 
       // TODO correct this
       public float TargetAngle => _autoCont.Target.Angle;
+      public ArmPos TargetPosition => _autoCont.Target;
 
-      public ArmController(MyIni ini, MyGridProgram p, CommandLine cmd, IMyShipController cont, WheelsController wCont, ISaveManager manager) {
+      public ArmController(MyIni ini, MyGridProgram p, CommandLine cmd, IMyShipController cont, WheelsController wCont, ISaveManager manager)
+      {
         var rotors = new List<IMyMotorStator>();
         p.GridTerminalSystem.GetBlocksOfType(rotors, r => r.CubeGrid == p.Me.CubeGrid && r.CustomName.Contains("Arm Rotor"));
         _rotors = rotors.Select(r => new ArmRotor(r, r.WorldMatrix.Up.Dot(cont.WorldMatrix.Right) > 0)).ToList();
@@ -57,8 +62,10 @@ Second argument is angle", maxArgs: 2));
         manager.AddOnSave(_save);
       }
 
-      void _save(MyIni ini) {
-        foreach (KeyValuePair<string, ArmPos> kv in _pos.Where(k => !k.Key.StartsWith("$"))) {
+      void _save(MyIni ini)
+      {
+        foreach (KeyValuePair<string, ArmPos> kv in _pos.Where(k => !k.Key.StartsWith("$")))
+        {
           ini.Set(SECTION, kv.Key, kv.Value.ToString());
         }
         _autoCont.Save(ini);
@@ -66,49 +73,61 @@ Second argument is angle", maxArgs: 2));
 
       void _savePosition(string name) => _pos[name] = _autoCont.Target;
 
-      void _recallPosition(Process p, string name) {
+      void _recallPosition(Process p, string name)
+      {
         _checkProcess(p);
-        if (_pos.ContainsKey(name)) {
+        if (_pos.ContainsKey(name))
+        {
           _autoCont.SetTarget(_pos[name]);
         }
       }
 
-      void _drill(Process p, string name) {
+      void _drill(Process p, string name)
+      {
         _checkProcess(p);
-        if (_pos.ContainsKey(name)) {
+        if (_pos.ContainsKey(name))
+        {
           _autoCont.SetTarget(_pos[name]);
           _autoCont.SwitchTools(true);
         }
       }
 
-      void _autoElevate(Process p, List<string> s) {
+      void _autoElevate(Process p, List<string> s)
+      {
         _checkProcess(p);
         _autoCont.SetTarget(new ArmPos(
-          s.Count == 0 ? ArmPos.L_ELEVATION : s[0] == "high" ? ArmPos.R_ELEVATION : s[0] == "low" ? ArmPos.R_ELEVATION : double.Parse(s[0]),
+          s.Count == 0 ? ArmPos.L_ELEVATION : s[0] == "high" ? ArmPos.R_ELEVATION : s[0] == "low" ? ArmPos.L_ELEVATION : double.Parse(s[0]),
           s.Count > 1 ? MathHelper.ToRadians(float.Parse(s[1])) : 0));
       }
 
-      void _checkProcess(Process currentProcess) {
-        if (!ReferenceEquals(_currentProcess, currentProcess)) {
+      void _checkProcess(Process currentProcess)
+      {
+        if (!ReferenceEquals(_currentProcess, currentProcess))
+        {
           _currentProcess?.Kill();
           _currentProcess = currentProcess;
         }
       }
 
-      void _endProcess() {
+      void _endProcess()
+      {
         _currentProcess?.Done();
         _currentProcess = null;
       }
 
       void _deletePosition(string name) => _pos.Remove(name);
 
-      void _updateRotors(IMyShipController cont) {
+      void _updateRotors(IMyShipController cont)
+      {
         float speed = -Math.Sign(cont.RollIndicator);
-        if (speed != 0f) {
+        if (speed != 0f)
+        {
           _rotors.ForEach(r => r.Move(speed));
           _autoCont.SetTarget(new ArmPos(Angle));
           _endProcess();
-        } else if (_autoCont.Control(_rotors, cont)) {
+        }
+        else if (_autoCont.Control(_rotors, cont))
+        {
           _endProcess();
         }
       }

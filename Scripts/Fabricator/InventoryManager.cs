@@ -17,43 +17,58 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
 
     public enum ComponentStatusLevel { OK, WARNING, ERROR };
 
     public enum InventoryStatus { Nominal, MandatoryLow, OptionalLow, NotReady };
-    
-    public struct ComponentType {
+
+    public struct ComponentType
+    {
       public readonly string Subtype;
       public readonly string DisplayName;
       public readonly int RecommendedAmount;
-      public ComponentType(string subtype, string displayName, int recommendedAmount) {
-        this.Subtype = subtype;
-        this.DisplayName = displayName;
-        this.RecommendedAmount = recommendedAmount;
+      public ComponentType(string subtype, string displayName, int recommendedAmount)
+      {
+        Subtype = subtype;
+        DisplayName = displayName;
+        RecommendedAmount = recommendedAmount;
       }
     }
 
-    public class ComponentStatus {
+    public class ComponentStatus
+    {
       public readonly ComponentType Type;
       public int Amount = 0;
-      public ComponentStatus(ComponentType type) {
-        this.Type = type;
+      public ComponentStatus(ComponentType type)
+      {
+        Type = type;
       }
-      public ComponentStatusLevel Status { get {
-          if (this.Amount == 0) {
+      public ComponentStatusLevel Status
+      {
+        get
+        {
+          if (Amount == 0)
+          {
             return ComponentStatusLevel.ERROR;
-          } else if (this.Amount < this.Type.RecommendedAmount) {
+          }
+          else if (Amount < Type.RecommendedAmount)
+          {
             return ComponentStatusLevel.WARNING;
-          } else {
+          }
+          else
+          {
             return ComponentStatusLevel.OK;
           }
         }
       }
     }
 
-    public class InventoryManager {
+    public class InventoryManager
+    {
       public readonly List<ComponentStatus> MandatoryItems = new List<ComponentStatus>{
         new ComponentStatus(new ComponentType("BulletproofGlass", "Bulletproof glass", 100)),
         new ComponentStatus(new ComponentType("Computer", "Computers", 100)),
@@ -85,42 +100,51 @@ namespace IngameScript {
         new ComponentStatus(new ComponentType("Thrust", "Thruster components", 100)),
       };
 
-      readonly List<IMyCargoContainer> containers = new List<IMyCargoContainer>();
+      readonly List<IMyCargoContainer> _containers = new List<IMyCargoContainer>();
 
-      readonly List<MyInventoryItem> items = new List<MyInventoryItem>(); // temporary list
+      readonly List<MyInventoryItem> _items = new List<MyInventoryItem>(); // temporary list
 
-      public InventoryStatus GetStatus() {
+      public InventoryStatus GetStatus()
+      {
         bool hasLow = false;
-        foreach (ComponentStatus status in this.MandatoryItems) {
-          if (status.Status == ComponentStatusLevel.ERROR) {
+        foreach (ComponentStatus status in MandatoryItems)
+        {
+          if (status.Status == ComponentStatusLevel.ERROR)
+          {
             return InventoryStatus.NotReady;
-          } else if (status.Status == ComponentStatusLevel.WARNING) {
+          }
+          else if (status.Status == ComponentStatusLevel.WARNING)
+          {
             hasLow = true;
           }
         }
         return hasLow
           ? InventoryStatus.MandatoryLow
-          : this.OtherItems.All(c => c.Status == ComponentStatusLevel.OK)
+          : OtherItems.All(c => c.Status == ComponentStatusLevel.OK)
             ? InventoryStatus.Nominal
             : InventoryStatus.OptionalLow;
       }
 
-      public InventoryManager(IProcessSpawner spawner, Action<List<IMyCargoContainer>> containersGetter) {
-        containersGetter(this.containers);
-        spawner.Spawn(p => this.updateStatus(containersGetter), "inventory-process", period: 100);
+      public InventoryManager(IProcessSpawner spawner, Action<List<IMyCargoContainer>> containersGetter)
+      {
+        containersGetter(_containers);
+        spawner.Spawn(p => _updateStatus(containersGetter), "inventory-process", period: 100);
       }
 
-      void updateStatus(Action<List<IMyCargoContainer>> getter) {
-        this.containers.Clear();
-        getter(this.containers);
+      void _updateStatus(Action<List<IMyCargoContainer>> getter)
+      {
+        _containers.Clear();
+        getter(_containers);
 
         var amountPerType = new Dictionary<string, int>();
 
-        foreach (IMyCargoContainer container in this.containers) {
-          this.items.Clear();
-          container.GetInventory().GetItems(this.items, i => i.GetItemType() == ItemType.Component || i.GetItemType() == ItemType.Ammo);
+        foreach (IMyCargoContainer container in _containers)
+        {
+          _items.Clear();
+          container.GetInventory().GetItems(_items, i => i.GetItemType() == ItemType.Component || i.GetItemType() == ItemType.Ammo);
 
-          foreach (MyInventoryItem item in this.items) {
+          foreach (MyInventoryItem item in _items)
+          {
             int amount;
             amountPerType.TryGetValue(item.GetItemSubtype(), out amount);
             amount += item.Amount.ToIntSafe();
@@ -128,7 +152,8 @@ namespace IngameScript {
           }
         }
 
-        foreach (ComponentStatus status in this.MandatoryItems.Concat(this.OtherItems)) {
+        foreach (ComponentStatus status in MandatoryItems.Concat(OtherItems))
+        {
           int amount;
           amountPerType.TryGetValue(status.Type.Subtype, out amount);
           status.Amount = amount;

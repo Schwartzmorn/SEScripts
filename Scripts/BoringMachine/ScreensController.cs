@@ -31,7 +31,7 @@ namespace IngameScript
       readonly List<Display> _drillDisplays;
       readonly ColorScheme _scheme;
       readonly GeneralStatus _status;
-      //readonly List<Display> wheelDisplays;
+      readonly List<Display> _wheelDisplays;
 
       public ScreensController(GeneralStatus status, InventoryWatcher invWatcher, IEnumerable<IMyTextSurface> drillStatusSurfaces,
           IEnumerable<IMyTextSurface> wheelStatusSurfaces, ColorScheme scheme, string sprites, IProcessSpawner spawner)
@@ -40,7 +40,7 @@ namespace IngameScript
         var sprts = new ShapeCollections(_scheme);
         sprts.Parse(sprites);
         _drillDisplays = drillStatusSurfaces.Select(s => new Display(s, new Vector2(2, 25), scheme: _scheme, sprites: sprts)).ToList();
-        //this.wheelDisplays = wheelStatusSurfaces.Select(s => new Display(s, new Vector2(2, 25), scheme: this.scheme)).ToList();
+        _wheelDisplays = wheelStatusSurfaces.Select(s => new Display(s, new Vector2(2, 25), scheme: _scheme)).ToList();
         _status = status;
         spawner.Spawn(p => _updateScreens(status, invWatcher), "screens-update", period: 20);
       }

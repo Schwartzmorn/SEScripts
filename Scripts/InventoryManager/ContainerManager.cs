@@ -17,43 +17,53 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public class ContainerManager : LazyFilter {
+namespace IngameScript
+{
+  partial class Program
+  {
+    public class ContainerManager : LazyFilter
+    {
       readonly List<Container> _containers = new List<Container>();
 
       readonly List<IMyCargoContainer> _tmpList = new List<IMyCargoContainer>();
 
-      readonly Action<string> logger;
+      readonly Action<string> _logger;
 
-      public ContainerManager(IMyGridTerminalSystem gts, GridManager gridManager, IProcessSpawner spawner, Action<string> logger) {
-        this.logger = logger;
-        spawner.Spawn(p => this.Scan(gts, gridManager), "container-scanner", period: 100);
-        this.Scan(gts, gridManager);
+      public ContainerManager(IMyGridTerminalSystem gts, GridManager gridManager, IProcessSpawner spawner, Action<string> logger)
+      {
+        _logger = logger;
+        spawner.Spawn(p => Scan(gts, gridManager), "container-scanner", period: 100);
+        Scan(gts, gridManager);
       }
 
-      public void Scan(IMyGridTerminalSystem GTS, GridManager gridManager) {
-        this.log($"Scanning... {gridManager ==  null}");
-        this._containers.Clear();
-        GTS.GetBlocksOfType(this._tmpList, cont => cont.GetInventory() != null && gridManager.Manages(cont.CubeGrid));
-        this._containers.AddRange(this._tmpList.Select(c => new Container(c)));
-        this.log($"Found {this._containers.Count} containers");
+      public void Scan(IMyGridTerminalSystem GTS, GridManager gridManager)
+      {
+        var previousCount = _containers.Count;
+        _containers.Clear();
+        GTS.GetBlocksOfType(_tmpList, cont => cont.GetInventory() != null && gridManager.Manages(cont.CubeGrid));
+        _containers.AddRange(_tmpList.Select(c => new Container(c)));
+        if (previousCount != _containers.Count)
+        {
+          _log($"Found {_containers.Count} containers");
+        }
       }
 
-      public List<Container> GetSortedContainers(MyInventoryItem item) {
-        this.FilterLazily();
-        this._containers.Sort((a, b) => Container.CompareTo(a, b, item));
-        return this._containers;
+      public List<Container> GetSortedContainers(MyInventoryItem item)
+      {
+        FilterLazily();
+        _containers.Sort((a, b) => Container.CompareTo(a, b, item.Type));
+        return _containers;
       }
 
-      public List<Container> GetContainers() {
-        this.FilterLazily();
-        return this._containers.ToList();
+      public List<Container> GetContainers()
+      {
+        FilterLazily();
+        return _containers.ToList();
       }
 
-      protected override void Filter() => this._containers.RemoveAll(c => c.GetInventory() == null);
+      protected override void Filter() => _containers.RemoveAll(c => c.GetInventory() == null);
 
-      void log(string s) => this.logger?.Invoke("CM: " + s);
+      void _log(string s) => _logger?.Invoke("CM: " + s);
     }
 
   }

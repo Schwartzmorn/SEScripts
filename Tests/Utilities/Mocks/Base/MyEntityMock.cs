@@ -12,13 +12,13 @@ public class MyEntityMock(long entityId) : IMyEntity
 
   public readonly List<MyInventoryMock> InventoryMocks = [];
 
-  IMyEntityComponentContainer IMyEntity.Components => throw new System.NotImplementedException();
+  IMyEntityComponentContainer IMyEntity.Components => throw new NotImplementedException();
 
   public long EntityId { get; } = entityId;
 
   public string Name { get => EntityId.ToString(); }
 
-  public string DisplayName => throw new System.NotImplementedException();
+  public string DisplayName => throw new NotImplementedException();
 
   public bool Closed => false;
 

@@ -63,6 +63,5 @@ public class MyMotorSuspensionMock : MyMechanicalConnectionBlockMock, IMyMotorSu
 
   public override void Tick()
   {
-    throw new System.NotImplementedException();
   }
 }

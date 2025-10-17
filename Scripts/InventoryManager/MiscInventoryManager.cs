@@ -17,36 +17,46 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public class MiscInventoryManager: LazyFilter, IOutputInventoryCollection {
+namespace IngameScript
+{
+  partial class Program
+  {
+    public class MiscInventoryManager : LazyFilter, IOutputInventoryCollection
+    {
       readonly List<IMyTerminalBlock> _inventoryOwners = new List<IMyTerminalBlock>();
-      readonly Action<string> logger;
+      readonly Action<string> _logger;
 
       public string Name => "Misc. inventories manager";
 
-      public MiscInventoryManager(IMyGridTerminalSystem gts, GridManager gridManager, IProcessSpawner spawner, Action<string> logger) {
-        this.Scan(gts, gridManager);
-        spawner.Spawn(p => this.Scan(gts, gridManager), "misc-inventory-groomer", period: 300);
-        this.logger = logger;
+      public MiscInventoryManager(IMyGridTerminalSystem gts, GridManager gridManager, IProcessSpawner spawner, Action<string> logger)
+      {
+        Scan(gts, gridManager);
+        spawner.Spawn(p => Scan(gts, gridManager), "misc-inventory-groomer", period: 300);
+        _logger = logger;
       }
 
-      public void Scan(IMyGridTerminalSystem gts, GridManager gridManager) {
-        this.log("Scanning...");
-        gts.GetBlocksOfType(this._inventoryOwners, i => _filter(i, gridManager));
-        this.log($"Found {this._inventoryOwners.Count} inventories");
+      public void Scan(IMyGridTerminalSystem gts, GridManager gridManager)
+      {
+        var previousCount = _inventoryOwners.Count;
+        gts.GetBlocksOfType(_inventoryOwners, i => _filter(i, gridManager));
+        if (_inventoryOwners.Count != previousCount)
+        {
+          _log($"Found {_inventoryOwners.Count} inventories");
+        }
       }
 
-      public IEnumerable<IMyInventory> GetOutputInventories() {
-        this.FilterLazily();
-        return this._inventoryOwners.Select(i => i.GetInventory());
+      public IEnumerable<IMyInventory> GetOutputInventories()
+      {
+        FilterLazily();
+        return _inventoryOwners.Select(i => i.GetInventory());
       }
 
-      protected override void Filter() {
-        this._inventoryOwners.RemoveAll(i => i.GetInventory() == null);
+      protected override void Filter()
+      {
+        _inventoryOwners.RemoveAll(i => i.GetInventory() == null);
       }
 
-      void log(string s) => this.logger?.Invoke("MIM: " + s);
+      void _log(string s) => _logger?.Invoke("MIM: " + s);
 
       static bool _filter(IMyTerminalBlock block, GridManager gridManager) => block.GetInventory() != null &&
           gridManager.Manages(block.CubeGrid) &&

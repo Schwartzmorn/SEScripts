@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using VRage;
 using VRage.Collections;
@@ -17,80 +18,153 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public class InventoriesGroomer {
+namespace IngameScript
+{
+  partial class Program
+  {
+    public class InventoriesGroomer
+    {
       int _outputCounter = 0;
       readonly List<IOutputInventoryCollection> _outputInventories;
-      readonly Action<string> logger;
+      readonly Action<string> _logger;
 
-      public InventoriesGroomer(GridManager gridManager, ContainerManager contManager, AssemblerManager assemblerManager,
-          MiscInventoryManager miscInventoryManager, RefineryManager refineryManager, IProcessSpawner spawner, Action<string> logger) {
-        this.logger = logger;
-        this._outputInventories = new List<IOutputInventoryCollection> { assemblerManager, miscInventoryManager, refineryManager };
-        spawner.Spawn(p => this._groomContainers(contManager), "container-groomer", period: 100);
-        spawner.Spawn(p => this.groomOutputInventories(gridManager, contManager), "producer-groomer", period: 47);
+      public InventoriesGroomer(ContainerManager contManager, AssemblerManager assemblerManager,
+          MiscInventoryManager miscInventoryManager, RefineryManager refineryManager, IProcessSpawner spawner, Action<string> logger)
+      {
+        _logger = logger;
+        _outputInventories = new List<IOutputInventoryCollection> { assemblerManager, miscInventoryManager, refineryManager };
+        spawner.Spawn(p => _groomContainers(contManager), "container-groomer", period: 100);
+        spawner.Spawn(p => _groomOutputInventories(contManager), "producer-groomer", period: 47);
+        spawner.Spawn(p => _groomContainerInventories(contManager), "inventories-groomer", period: 67);
       }
 
-      void groomOutputInventories(GridManager gridManager, ContainerManager contManager) {
-        var collection = this._outputInventories[this._outputCounter];
-        this.log($"Grooming containers {this._outputCounter + 1}/{this._outputInventories.Count}: {collection.Name}");
+      void _groomOutputInventories(ContainerManager contManager)
+      {
+        var collection = _outputInventories[_outputCounter];
+        int numberOfFailedGrooms = 0;
+        int numberOfSuccessfulGrooms = 0;
 
-        foreach(var fromInv in collection.GetOutputInventories()) {
+        foreach (var fromInv in collection.GetOutputInventories())
+        {
           int iFrom = fromInv.ItemCount - 1;
-          while (iFrom >= 0) {
+          while (iFrom >= 0)
+          {
             MyInventoryItem item = fromInv.GetItemAt(iFrom).Value;
             int prevCount = fromInv.ItemCount;
             int prevFrom = iFrom;
-            foreach(var toCont in contManager.GetSortedContainers(item)) {
+            foreach (var toCont in contManager.GetSortedContainers(item))
+            {
               toCont.GetInventory().TransferItemFrom(fromInv, iFrom);
-              if(prevCount != fromInv.ItemCount) {
+              if (prevCount != fromInv.ItemCount)
+              {
+                ++numberOfSuccessfulGrooms;
                 --iFrom;
                 break;
               }
             }
-            if (prevFrom == iFrom) {
+            if (prevFrom == iFrom)
+            {
+              ++numberOfFailedGrooms;
               --iFrom;
             }
           }
         }
 
-        ++this._outputCounter;
-        if(this._outputCounter >= this._outputInventories.Count) {
-          this._outputCounter = 0;
+        ++_outputCounter;
+        if (_outputCounter >= _outputInventories.Count)
+        {
+          _outputCounter = 0;
         }
-        this.log("Done");
+        if (numberOfFailedGrooms > 0)
+        {
+          _log($"Failed to move {numberOfFailedGrooms} item(s) from {collection.Name}");
+        }
+        if (numberOfSuccessfulGrooms > 0)
+        {
+          _log($"Moved {numberOfSuccessfulGrooms} item(s) from {collection.Name}");
+        }
       }
 
-      void _groomContainers(ContainerManager contManager) {
-        this.log("Grooming containers...");
-        foreach(var fromCont in contManager.GetContainers()) {
+      void _groomContainers(ContainerManager contManager)
+      {
+        int numberOfFailedGrooms = 0;
+        int numberOfSuccessfulGrooms = 0;
+        foreach (var fromCont in contManager.GetContainers())
+        {
           int iFrom = fromCont.GetInventory().ItemCount - 1;
-          while (iFrom >= 0) {
+          while (iFrom >= 0)
+          {
             MyInventoryItem item = fromCont.GetInventory().GetItemAt(iFrom).Value;
-            int fromAff = fromCont.GetAffinity(item);
+            int fromAff = fromCont.GetAffinity(item.Type);
             int prevCount = fromCont.GetInventory().ItemCount;
             int prevFrom = iFrom;
-            foreach(var toCont in contManager.GetSortedContainers(item)) {
-              if (toCont.GetAffinity(item) > fromAff) {
+            bool shouldMove = false;
+            foreach (var toCont in contManager.GetSortedContainers(item))
+            {
+              if (toCont.GetAffinity(item.Type) > fromAff)
+              {
+                shouldMove = true;
                 fromCont.GetInventory().TransferItemTo(toCont.GetInventory(), item);
-                if (prevCount != fromCont.GetInventory().ItemCount) {
+                if (prevCount != fromCont.GetInventory().ItemCount)
+                {
                   --iFrom;
+                  ++numberOfSuccessfulGrooms;
                   break;
                 }
-              } else {
+              }
+              else
+              {
+                if (shouldMove)
+                {
+                  ++numberOfFailedGrooms;
+                }
                 --iFrom;
                 break;
               }
             }
-            if(prevFrom == iFrom) {
+            if (prevFrom == iFrom)
+            {
               --iFrom;
             }
           }
         }
-        this.log("Done");
+        if (numberOfFailedGrooms > 0)
+        {
+          _log($"Failed to move {numberOfFailedGrooms} item(s)");
+        }
+        if (numberOfSuccessfulGrooms > 0)
+        {
+          _log($"Moved {numberOfSuccessfulGrooms} item(s)");
+        }
       }
-       void log(string s) => this.logger?.Invoke("IG: " + s);
+
+      void _groomContainerInventories(ContainerManager contManager)
+      {
+        var items = new Dictionary<MyItemType, int>();
+        foreach (var cont in contManager.GetContainers())
+        {
+          items.Clear();
+          var inventory = cont.GetInventory();
+
+          int index = 0;
+          while (index < inventory.ItemCount)
+          {
+            var itemType = inventory.GetItemAt(index).Value.Type;
+            int previousIndex;
+            if (items.TryGetValue(itemType, out previousIndex))
+            {
+              inventory.TransferItemTo(inventory, index, previousIndex);
+            }
+            else
+            {
+              items.Add(itemType, index);
+              index++;
+            }
+          }
+        }
+      }
+
+      void _log(string s) => _logger?.Invoke("IG: " + s);
     }
   }
 }

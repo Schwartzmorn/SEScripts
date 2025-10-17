@@ -17,13 +17,17 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public interface IOutputInventoryCollection {
+namespace IngameScript
+{
+  partial class Program
+  {
+    public interface IOutputInventoryCollection
+    {
       IEnumerable<IMyInventory> GetOutputInventories();
       string Name { get; }
     }
-    public interface IInputInventoryCollection {
+    public interface IInputInventoryCollection
+    {
       IEnumerable<IMyInventory> GetInputInventories();
     }
   }
