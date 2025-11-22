@@ -13,7 +13,7 @@ class CommandTest
   [SetUp]
   public void SetUp()
   {
-    _manager = Program.Process.CreateManager(null);
+    _manager = Program.Process.CreateManager();
   }
 
   private void _log(string s) { }

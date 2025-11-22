@@ -63,14 +63,14 @@ namespace IngameScript {
 
       // connector initialization
       var cockpit = GridTerminalSystem.GetBlockWithName("W1 Cockpit") as IMyCockpit;
-      this.manager = Process.CreateManager(this.Echo);
+      this.manager = Process.CreateManager(Echo);
       var logger = new Logger(this.manager, cockpit.GetSurface(0), echo: this.Echo, size: 1);
       this.commandline = new CommandLine("MarmOS", logger.Log, this.manager);
       var ini = new IniWatcher(Me, this.manager);
       var connector = GridTerminalSystem.GetBlockWithName("W1 Connector (Front)") as IMyShipConnector;
-      var connectionClient = new ConnectionClient(ini, this.GridTerminalSystem, this.IGC, this.commandline, this.manager, logger.Log);
+      var connectionClient = new ConnectionClient(Me, ini, this.GridTerminalSystem, this.IGC, this.commandline, this.manager, logger.Log);
       var wheelsController = new WheelsController(this.commandline, cockpit, this.GridTerminalSystem, ini, this.manager, new CoordinatesTransformer(cockpit, this.manager));
-      var autoHandbrake = new PilotAssist(this.GridTerminalSystem, ini, logger.Log, this.manager, wheelsController);
+      var autoHandbrake = new PilotAssist(Me, this.GridTerminalSystem, ini, logger.Log, this.manager, wheelsController);
       autoHandbrake.AddBraker(connectionClient);
 
       this.marmosMain = this.manager.Spawn(p => {

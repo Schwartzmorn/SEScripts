@@ -224,7 +224,7 @@ class PowerWheelTest
     var ini = new VRage.Game.ModAPI.Ingame.Utilities.MyIni();
     ini.TryParse(@"");
 
-    var saveManager = Program.Process.CreateManager(null);
+    var saveManager = Program.Process.CreateManager();
 
     var command = new Program.CommandLine("mock", null, saveManager);
     GetSuspension(new Vector3D(-1, 0, -1), true);

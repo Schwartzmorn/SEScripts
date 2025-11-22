@@ -27,6 +27,7 @@ namespace IngameScript
       readonly List<IMyReflectorLight> _frontLights = new List<IMyReflectorLight>();
       readonly ArmController _arm;
       readonly ConnectionClient _conClient;
+      readonly WheelsController _wc;
 
       public float ArmAngle => _arm.Angle;
       public float ArmTarget => _arm.TargetAngle;
@@ -35,7 +36,7 @@ namespace IngameScript
       public FailReason FailReason => _conClient.FailReason;
       public float Progress => _conClient.Progress;
 
-      public GeneralStatus(MyGridProgram program, ArmController arm, ConnectionClient conClient)
+      public GeneralStatus(MyGridProgram program, ArmController arm, ConnectionClient conClient, WheelsController wc)
       {
         IMyGridTerminalSystem gts = program.GridTerminalSystem;
         IMyCubeGrid grid = program.Me.CubeGrid;
@@ -43,11 +44,14 @@ namespace IngameScript
         gts.GetBlocksOfType(_frontLights, l => l.CubeGrid == grid && l.CustomName.Contains("Front"));
         _arm = arm;
         _conClient = conClient;
+        _wc = wc;
       }
 
       public bool AreArmLightsOn => _armLights.Any(l => l.Enabled);
 
       public bool AreFrontLightsOn => _frontLights.Any(l => l.Enabled);
+
+      public bool IsStrafing => _wc.IsStrafing;
     }
   }
 }

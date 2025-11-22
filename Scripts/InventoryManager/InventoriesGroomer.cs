@@ -33,9 +33,9 @@ namespace IngameScript
       {
         _logger = logger;
         _outputInventories = new List<IOutputInventoryCollection> { assemblerManager, miscInventoryManager, refineryManager };
-        spawner.Spawn(p => _groomContainers(contManager), "container-groomer", period: 100);
-        spawner.Spawn(p => _groomOutputInventories(contManager), "producer-groomer", period: 47);
-        spawner.Spawn(p => _groomContainerInventories(contManager), "inventories-groomer", period: 67);
+        spawner.Spawn(p => _groomContainers(contManager), "container-groomer", period: 50);
+        spawner.Spawn(p => _groomOutputInventories(contManager), "producer-groomer", period: 50);
+        spawner.Spawn(p => _groomContainerInventories(contManager), "inventories-groomer", period: 50);
       }
 
       void _groomOutputInventories(ContainerManager contManager)
@@ -52,7 +52,7 @@ namespace IngameScript
             MyInventoryItem item = fromInv.GetItemAt(iFrom).Value;
             int prevCount = fromInv.ItemCount;
             int prevFrom = iFrom;
-            foreach (var toCont in contManager.GetSortedContainers(item))
+            foreach (var toCont in contManager.GetSortedCandidateContainers(item, 0))
             {
               toCont.GetInventory().TransferItemFrom(fromInv, iFrom);
               if (prevCount != fromInv.ItemCount)
@@ -99,7 +99,7 @@ namespace IngameScript
             int prevCount = fromCont.GetInventory().ItemCount;
             int prevFrom = iFrom;
             bool shouldMove = false;
-            foreach (var toCont in contManager.GetSortedContainers(item))
+            foreach (var toCont in contManager.GetSortedCandidateContainers(item, fromAff))
             {
               if (toCont.GetAffinity(item.Type) > fromAff)
               {
@@ -131,10 +131,6 @@ namespace IngameScript
         if (numberOfFailedGrooms > 0)
         {
           _log($"Failed to move {numberOfFailedGrooms} item(s)");
-        }
-        if (numberOfSuccessfulGrooms > 0)
-        {
-          _log($"Moved {numberOfSuccessfulGrooms} item(s)");
         }
       }
 

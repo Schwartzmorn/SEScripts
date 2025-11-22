@@ -53,8 +53,7 @@ class ProcessTest
   [SetUp]
   public void SetUp()
   {
-    _manager = Program.Process.CreateManager(null);
-    _manager.SetSmart(false);
+    _manager = Program.Process.CreateManager();
   }
 
   [Test]

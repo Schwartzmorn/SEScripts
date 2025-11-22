@@ -31,7 +31,7 @@ namespace IngameScript
       /// <summary>Creates a new Process Manager (you should only need one). For it to have any effect, the<see cref="IProcessManager.Tick"/> method must be called once every cycle.</summary>
       /// <param name="logger">Used to log generic errors that happens when handling processes</param>
       /// <returns>A new process manager</returns>
-      public static IProcessManager CreateManager(Action<string> logger) => new ProcessManager(logger);
+      public static IProcessManager CreateManager(Action<string> logger = null, MyGridProgram program = null) => new ProcessManager(logger, program);
       /// <summary>
       /// Whether the process is still active. An inactive process is no longer ticked by the scheduler and therefore no longer executes its <see cref="_action"/> callback.
       /// <para>An inactive process may still have some active children, in which case it is <see cref="Alive"/>.</para>

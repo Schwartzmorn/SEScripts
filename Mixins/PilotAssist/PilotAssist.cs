@@ -40,27 +40,31 @@ namespace IngameScript
       readonly List<IPABraker> _handBrakers = new List<IPABraker>();
       readonly IMyGridTerminalSystem _gts;
       readonly Action<string> _logger;
+      readonly IMyTerminalBlock _refBlock;
       readonly WheelsController _wheelControllers;
       bool _assist;
       float _sensitivity;
       bool _wasPreviouslyAutoBraked;
+      float? _cruiseSpeed = null;
       /// <summary>Creates a PilotAssist</summary>
       /// <param name="gts">To get the different blocks</param>
       /// <param name="ini">Parsed ini that contains the configuration. See <see cref="Read(Ini)"/> for more information</param>
       /// <param name="logger">Optional logger</param>
       /// <param name="manager">Used to schedule itself</param>
       /// <param name="wc">Wheel controller used to actually controll the wheels</param>
-      public PilotAssist(IMyGridTerminalSystem gts, IniWatcher ini, Action<string> logger, ISaveManager manager, WheelsController wc)
+      public PilotAssist(IMyTerminalBlock refBlock, IMyGridTerminalSystem gts, IniWatcher ini, Action<string> logger, ISaveManager manager, WheelsController wc, CommandLine commandLine = null)
       {
         _logger = logger;
         _wheelControllers = wc;
         _gts = gts;
+        _refBlock = refBlock;
         Read(ini);
         ManuallyBraked = !_shouldBrake() && Braked;
         _wasPreviouslyAutoBraked = _shouldBrake();
         manager.Spawn(_handle, "pilot-assist");
         manager.AddOnSave(_save);
         ini.Add(this);
+        commandLine?.RegisterCommand(new Command("pa-cruise", Command.Wrap(_setCruiseControl), "Sets a cruise control", nArgs: 1));
       }
       /// <summary>Adds an object that is polled to see if the automatic handbrake should be engaged, on top of the default behaviour.</summary>
       /// <param name="d">Deactivator. If any registered braker returns true, the automatic brakes are engaged, unless deactivated.</param>
@@ -83,29 +87,38 @@ namespace IngameScript
         _assist = ini.Get(SECTION, "assist").ToBoolean();
         _controllers.Clear();
         _sensitivity = ini.Get(SECTION, "sensitivity").ToSingle(2f);
-        string[] names = ini.GetThrow(SECTION, "controllers").ToString().Split(new char[] { ',' });
-        foreach (string s in names)
-        {
-          var cont = _gts.GetBlockWithName(s) as IMyShipController;
-          if (cont != null)
-          {
-            cont.ControlWheels = !_assist;
-            _controllers.Add(cont);
-          }
-          else
-          {
-            _logger?.Invoke($"Could not find ship controller {s}");
-          }
-        }
+        var controllerNames = ini.Get(SECTION, "controllers");
+        string[] names = controllerNames.ToString().Split(IniHelper.SEP, StringSplitOptions.RemoveEmptyEntries);
+        _gts.GetBlocksOfType(_controllers, c => c.IsSameConstructAs(_refBlock) && (names.Length == 0 || names.Contains(c.CustomName)));
+        
         if (_controllers.Count == 0)
         {
           throw new InvalidOperationException("No controller found");
         }
       }
+      void _setCruiseControl(string arg)
+      {
+        if (arg == "off")
+        {
+          _cruiseSpeed = null;
+        }
+        else
+        {
+          _cruiseSpeed = float.Parse(arg);
+        }
+      }
+
       void _handle(Process p)
       {
-        if (!Deactivated)
+        if (Deactivated)
         {
+          _cruiseSpeed = null;
+          // Deactivate cruise control if auto pilot is engaged
+          _controllers.Select(c => c.MoveIndicator.Z).Sum();
+        }
+        else
+        {
+          // Keep track of whether the hand brake was manually engage not to de engage it automatically when a pilot re enters a cockpit
           if (!_wasPreviouslyAutoBraked && Braked)
           {
             ManuallyBraked = true;
@@ -116,9 +129,24 @@ namespace IngameScript
           }
           _wasPreviouslyAutoBraked = _shouldBrake();
           _controllers.First().HandBrake = _wasPreviouslyAutoBraked || ManuallyBraked;
+
+          // Deactivate cruise control if pilot inputs forward or backward direction or the brake
+          var pilotForwardInput = _controllers.Select(c => c.MoveIndicator.Z).Sum();
+          if (_cruiseSpeed != null && (ManuallyBraked || pilotForwardInput != 0))
+          {
+            _cruiseSpeed = null;
+            _wheelControllers.SetPower(0);
+          }
+
+          if (_cruiseSpeed != null)
+          {
+            // TODO PID ?
+            var currentSpeed = (float)_controllers.First().GetShipSpeed();
+            _wheelControllers.SetPower((_cruiseSpeed.Value - currentSpeed) / _sensitivity);
+          }
           if (_assist)
           {
-            _wheelControllers.SetPower(-_controllers.Sum(c => c.MoveIndicator.Z) / _sensitivity);
+            _wheelControllers.SetPower(-pilotForwardInput / _sensitivity);
             float right = _controllers.Sum(c => c.MoveIndicator.X);
             _wheelControllers.SetSteer(right == 1 ? 1 : right / _sensitivity);
           }

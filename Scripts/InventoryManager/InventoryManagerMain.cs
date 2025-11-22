@@ -35,7 +35,7 @@ namespace IngameScript
     public Program()
     {
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
-      _manager = Process.CreateManager(Echo);
+      _manager = Process.CreateManager(Echo, this);
       var logger = new Logger(_manager, Me.GetSurface(0), echo: Echo);
       _command = new CommandLine("Inventory Manager", logger.Log, _manager);
 

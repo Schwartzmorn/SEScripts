@@ -1,5 +1,6 @@
 namespace IniWatcherTest;
 
+using System;
 using IngameScript;
 using NUnit.Framework;
 
@@ -24,5 +25,15 @@ class IniHelperTest
     ini.TryParse("[test-section]\ntest-vector-x=0\ntest-vector-y=2.5\ntest-vector-z=3\n");
 
     Assert.That(new VRageMath.Vector3D(0, 2.5, 3), Is.EqualTo(ini.GetVector("test-section", "test-vector")));
+  }
+
+  [Test]
+  public void It_Works()
+  {
+    var ini = new VRage.Game.ModAPI.Ingame.Utilities.MyIni();
+
+    ini.TryParse("");
+
+    Assert.That(ini.Get("TEST", "Test").ToString().Split(',', StringSplitOptions.RemoveEmptyEntries).Length, Is.EqualTo(0));
   }
 }

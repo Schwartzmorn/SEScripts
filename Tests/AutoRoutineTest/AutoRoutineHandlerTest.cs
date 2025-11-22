@@ -3,6 +3,7 @@ namespace AutoRoutineTest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FakeItEasy;
 using IngameScript;
 using NUnit.Framework;
 
@@ -18,7 +19,7 @@ public class AutoRoutineHandlerTest
   public void SetUp()
   {
     _logs = [];
-    _manager = Program.Process.CreateManager(null);
+    _manager = Program.Process.CreateManager();
     _commandLine = new Program.CommandLine("test", _logs.Add, _manager);
     _arHandler = new Program.AutoRoutineHandler(_commandLine);
   }

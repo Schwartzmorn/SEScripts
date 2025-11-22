@@ -20,32 +20,32 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program : MyGridProgram {
-    readonly CommandLine cmd;
-    readonly IProcessManager manager;
+    readonly CommandLine _cmd;
+    readonly IProcessManager _manager;
     public Program() {
-      this.Runtime.UpdateFrequency = UpdateFrequency.Update1;
-      this.manager = Process.CreateManager(this.Echo);
-      var screen = this.GridTerminalSystem.GetBlockWithName("SMB LCD (Rear Seat)") as IMyTextPanel;
-      var logger = new Logger(this.manager, screen);
-      this.cmd = new CommandLine("Small Mobile Base", logger.Log, this.manager);
+      Runtime.UpdateFrequency = UpdateFrequency.Update1;
+      _manager = Process.CreateManager(Echo);
+      var screen = GridTerminalSystem.GetBlockWithName("SMB LCD (Rear Seat)") as IMyTextPanel;
+      var logger = new Logger(_manager, screen);
+      _cmd = new CommandLine("Small Mobile Base", logger.Log, _manager);
 
-      var ini = new IniWatcher(this.Me, this.manager);
-      var controller = this.GridTerminalSystem.GetBlockWithName("SMB Remote Control (Forward)") as IMyShipController;
-      var transformer = new CoordinatesTransformer(controller, this.manager);
-      var wheelsController = new WheelsController(this.cmd, controller, this.GridTerminalSystem, ini, this.manager, transformer);
-      new ConnectionClient(ini, this.GridTerminalSystem, this.IGC, this.cmd, this.manager, logger.Log);
+      var ini = new IniWatcher(Me, _manager);
+      var controller = GridTerminalSystem.GetBlockWithName("SMB Remote Control (Forward)") as IMyShipController;
+      var transformer = new CoordinatesTransformer(controller, _manager);
+      var wheelsController = new WheelsController(_cmd, controller, GridTerminalSystem, ini, _manager, transformer);
+      new ConnectionClient(Me, ini, GridTerminalSystem, IGC, _cmd, _manager, logger.Log);
 
-      new CameraTurret(this.GridTerminalSystem, this.manager);
+      new CameraTurret(GridTerminalSystem, _manager);
 
-      new PilotAssist(this.GridTerminalSystem, ini, logger.Log, this.manager, wheelsController);
+      new PilotAssist(Me, GridTerminalSystem, ini, logger.Log, _manager, wheelsController);
     }
 
-    public void Save() => this.manager.Save(s => this.Me.CustomData = s);
+    public void Save() => _manager.Save(s => Me.CustomData = s);
 
     public void Main(string argument, UpdateType updateSource) {
-      this.cmd.StartCmd(argument, CommandTrigger.User);
+      _cmd.StartCmd(argument, CommandTrigger.User);
       if ((updateSource & UpdateType.Update1) > 0) {
-        this.manager.Tick();
+        _manager.Tick();
       }
     }
   }

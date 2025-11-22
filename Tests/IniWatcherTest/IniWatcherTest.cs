@@ -18,7 +18,7 @@ class IniWatcherTest
   [SetUp]
   public void SetUp()
   {
-    _mockSpawner = Program.Process.CreateManager(null);
+    _mockSpawner = Program.Process.CreateManager();
     _mockBlock = A.Fake<IMyDoor>();
   }
 

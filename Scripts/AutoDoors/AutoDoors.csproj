@@ -23,6 +23,6 @@
     <AdditionalFiles Include="Instructions.readme" />
     <AdditionalFiles Include="thumb.png" />
   </ItemGroup>
-  <Import Project="..\..\Mixins\Logger\Logger.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\Process\Process.projitems" Label="Shared" />
+  <Import Project="../../Mixins/Logger/Logger.projitems" Label="Shared" />
+  <Import Project="../../Mixins/Process/Process.projitems" Label="Shared" />
 </Project>

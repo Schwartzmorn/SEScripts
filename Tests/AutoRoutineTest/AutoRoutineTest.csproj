@@ -20,9 +20,9 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Tests\Utilities\Utilities.csproj" />
+    <ProjectReference Include="../../Tests/Utilities/Utilities.csproj" />
   </ItemGroup>
-  <Import Project="..\..\Mixins\AutoRoutine\AutoRoutine.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\CommandLine\CommandLine.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\Process\Process.projitems" Label="Shared" />
+  <Import Project="../../Mixins/AutoRoutine/AutoRoutine.projitems" Label="Shared" />
+  <Import Project="../../Mixins/CommandLine/CommandLine.projitems" Label="Shared" />
+  <Import Project="../../Mixins/Process/Process.projitems" Label="Shared" />
 </Project>

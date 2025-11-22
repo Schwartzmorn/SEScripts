@@ -27,20 +27,19 @@ namespace IngameScript
       static readonly Vector2 DRILL_ARM_CENTER = new Vector2(161, 105);
       static readonly Vector2 INV_TEXT_POS = new Vector2(10, 20);
       static readonly Vector2 LIGHTS_OFFSET = new Vector2(130, 125);
+      static readonly Vector2 STRAFE_TEXT_POS = new Vector2(10, 170);
 
       readonly List<Display> _drillDisplays;
       readonly ColorScheme _scheme;
       readonly GeneralStatus _status;
-      readonly List<Display> _wheelDisplays;
 
       public ScreensController(GeneralStatus status, InventoryWatcher invWatcher, IEnumerable<IMyTextSurface> drillStatusSurfaces,
-          IEnumerable<IMyTextSurface> wheelStatusSurfaces, ColorScheme scheme, string sprites, IProcessSpawner spawner)
+          ColorScheme scheme, string sprites, IProcessSpawner spawner)
       {
         _scheme = scheme;
         var sprts = new ShapeCollections(_scheme);
         sprts.Parse(sprites);
         _drillDisplays = drillStatusSurfaces.Select(s => new Display(s, new Vector2(2, 25), scheme: _scheme, sprites: sprts)).ToList();
-        _wheelDisplays = wheelStatusSurfaces.Select(s => new Display(s, new Vector2(2, 25), scheme: _scheme)).ToList();
         _status = status;
         spawner.Spawn(p => _updateScreens(status, invWatcher), "screens-update", period: 20);
       }
@@ -81,6 +80,7 @@ namespace IngameScript
           }
           f.DrawText($"Full at {loadFactor * 100:000}%", INV_TEXT_POS, scale: 0.5f, alignment: TextAlignment.LEFT);
           f.DrawText(_conStatus(), CON_TEXT_POS, scale: 0.5f, alignment: TextAlignment.LEFT);
+          f.DrawText($"Strafing: {(status.IsStrafing ? "on" : "off")}", STRAFE_TEXT_POS, scale: 0.5f, alignment: TextAlignment.LEFT);
         }
       }
 

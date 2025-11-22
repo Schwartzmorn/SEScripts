@@ -20,7 +20,7 @@ public class WPNetworkTest
   {
     _remote = new MyRemoteControlMock(new MyCubeGridMock(new MyGridTerminalSystemMock(new Utilities.TestBed())));
 
-    _spawner = Program.Process.CreateManager(null);
+    _spawner = Program.Process.CreateManager();
   }
 
   [Test]

@@ -33,8 +33,8 @@ namespace IngameScript {
       var ini = new IniWatcher(Me, _manager);
       var wc = new WheelsController(_cmd, cockpit, GridTerminalSystem, ini, _manager, ct);
       var ac = new ArmController(ini, this, _cmd, cockpit, wc, _manager);
-      var client = new ConnectionClient(ini, GridTerminalSystem, IGC, _cmd, _manager, logger.Log);
-      var ah = new PilotAssist(GridTerminalSystem, ini, logger.Log, _manager, wc);
+      var client = new ConnectionClient(Me, ini, GridTerminalSystem, IGC, _cmd, _manager, logger.Log);
+      var ah = new PilotAssist(Me, GridTerminalSystem, ini, logger.Log, _manager, wc);
       ah.AddBraker(client);
     }
 

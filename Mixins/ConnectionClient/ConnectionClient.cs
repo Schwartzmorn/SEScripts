@@ -2,6 +2,7 @@ using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using VRage;
+using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRageMath;
 
@@ -31,15 +32,17 @@ namespace IngameScript
       readonly Action<string> _logger;
       readonly Process _mainProcess;
       Vector3D? _position = null;
+      readonly IMyTerminalBlock _refBlock;
       string _serverChannel;
       ConnectionState _state = ConnectionState.Ready;
       Process _timeOutProcess = null;
 
-      public ConnectionClient(IniWatcher ini, IMyGridTerminalSystem gts, IMyIntergridCommunicationSystem igc, CommandLine commandLine, IProcessManager manager, Action<string> logger)
+      public ConnectionClient(IMyTerminalBlock refBlock, IniWatcher ini, IMyGridTerminalSystem gts, IMyIntergridCommunicationSystem igc, CommandLine commandLine, IProcessManager manager, Action<string> logger)
       {
         _gts = gts;
         _igc = igc;
         _logger = logger;
+        _refBlock = refBlock;
 
         _mainProcess = manager.Spawn(_listen, "cc-listen", period: 5);
         _listenerCmd = new CommandLine("Connection client listener", null, _mainProcess);
@@ -64,7 +67,25 @@ namespace IngameScript
 
       public void Read(MyIni ini)
       {
-        _connector = _gts.GetBlockWithName(ini.GetThrow(SECTION, "connector-name").ToString()) as IMyShipConnector;
+        var name = ini.Get(SECTION, "connector-name");
+        var connectors = new List<IMyShipConnector>();
+        _gts.GetBlocksOfType(connectors, c => c.IsSameConstructAs(_refBlock) && (name.IsEmpty || c.CustomName == name.ToString()));
+        if (connectors.Count == 0)
+        {
+          if (name.IsEmpty)
+          {
+            throw new InvalidOperationException("Connection client: could not find a connector on the vehicle");
+          }
+          else
+          {
+            throw new InvalidOperationException($"Connection client: could not find a connector on the vehicle with the name \"{name}\"");
+          }
+        }
+        else if (connectors.Count > 1)
+        {
+          _log("Found more than one connector");
+        }
+        _connector = connectors[0];
         _serverChannel = ini.GetThrow(SECTION, "server-channel").ToString();
       }
 

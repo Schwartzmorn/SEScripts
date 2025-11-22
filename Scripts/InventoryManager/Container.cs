@@ -51,48 +51,64 @@ namespace IngameScript
           }).Where(i => i != ItemType.Unknown));
         }
       }
-      public static int CompareTo(Container A, Container B, MyItemType item) => A == B ? 0 : B.GetAffinity(item) - A.GetAffinity(item);
+      public static int CompareTo(Container A, Container B, MyItemType item)
+      {
+        if (A == B)
+        {
+          return 0;
+        }
+        var affA = A.GetIntrinsicAffinity(item);
+        var affB = B.GetIntrinsicAffinity(item);
+        if (affA != affB)
+        {
+          return affB - affA;
+        }
+        return B._hasItem(item) - A._hasItem(item);
+      }
       public int GetAffinity(MyItemType item)
       {
-        int hasItem = _hasItem(item) ? 1 : 0;
+        return GetIntrinsicAffinity(item) + _hasItem(item);
+      }
+      public IMyInventory GetInventory() => _cargo?.GetInventory();
+      private int _hasItem(MyItemType item) => GetInventory().FindItem(item) == null ? 0 : 1;
+      public int GetIntrinsicAffinity(MyItemType item)
+      {
         if (_isOutput)
         {
-          return hasItem - 6;
+          return -6;
         }
-        else if (_isGeneric())
+        else if (_types.Count == 0 && _subtypes.Count == 0)
         {
-          return hasItem + 2;
+          return 2;
         }
         else if (_whitelist)
         {
           if (_subtypes.Contains(item.SubtypeId.ToLower()))
           {
-            return hasItem + 8;
+            return 8;
           }
           if (_types.Contains(item.GetItemType()))
           {
-            return hasItem + 6;
+            return 6;
           }
           // is KO with whitelist
-          return hasItem;
+          return 0;
         }
         else
         { // blacklist
           if (_subtypes.Contains(item.SubtypeId.ToLower()))
           {
-            return hasItem - 4;
+            return -4;
           }
           if (_types.Contains(item.GetItemType()))
           {
-            return hasItem - 2;
+            return -2;
           }
           // is OK with blacklist
-          return hasItem + 4;
+          return 4;
         }
+
       }
-      public IMyInventory GetInventory() => _cargo?.GetInventory();
-      private bool _isGeneric() => _types.Count == 0 && _subtypes.Count == 0;
-      private bool _hasItem(MyItemType item) => GetInventory().FindItem(item) != null;
     }
   }
 }

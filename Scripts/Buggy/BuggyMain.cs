@@ -38,10 +38,10 @@ namespace IngameScript
       _cmd = new CommandLine("Buggy", Echo, _manager);
       var ini = new IniWatcher(Me, _manager);
       var wc = new WheelsController(_cmd, cockpit, GridTerminalSystem, ini, _manager, ct);
-      var cc = new ConnectionClient(ini, GridTerminalSystem, IGC, _cmd, _manager, Echo);
+      var cc = new ConnectionClient(Me, ini, GridTerminalSystem, IGC, _cmd, _manager, Echo);
       var rcs = new List<IMyRemoteControl>();
       GridTerminalSystem.GetBlocksOfType(rcs, r => r.CubeGrid == Me.CubeGrid);
-      var ah = new PilotAssist(GridTerminalSystem, ini, Echo, _manager, wc);
+      var ah = new PilotAssist(Me, GridTerminalSystem, ini, Echo, _manager, wc, _cmd);
       ah.AddBraker(cc);
     }
 

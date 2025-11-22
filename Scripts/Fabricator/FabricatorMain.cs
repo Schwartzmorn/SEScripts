@@ -19,8 +19,8 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program : MyGridProgram {
-    readonly CommandLine commandLine;
-    readonly IProcessManager manager;
+    readonly CommandLine _commandLine;
+    readonly IProcessManager _manager;
 
     public static T AssertNonNull<T>(T obj, string msg) {
       if (obj == null) {
@@ -36,20 +36,20 @@ namespace IngameScript {
     }
 
     public Program() {
-      this.Runtime.UpdateFrequency = UpdateFrequency.Update1;
-      this.manager = Process.CreateManager(this.Echo);
-      var logger = new Logger(this.manager, this.Me.GetSurface(0), echo: this.Echo);
-      this.manager.SetLogger(logger.Log);
-      this.commandLine = new CommandLine("Fabricator", logger.Log, this.manager);
+      Runtime.UpdateFrequency = UpdateFrequency.Update1;
+      _manager = Process.CreateManager(Echo);
+      var logger = new Logger(_manager, Me.GetSurface(0), echo: Echo);
+      _manager.SetLogger(logger.Log);
+      _commandLine = new CommandLine("Fabricator", logger.Log, _manager);
       var ini = new MyIni();
-      ini.Parse(this.Me.CustomData);
-      new Fabricator(ini, this.GridTerminalSystem, this.manager, this.commandLine, logger.Log);
+      ini.Parse(Me.CustomData);
+      new Fabricator(ini, GridTerminalSystem, _manager, _commandLine, logger.Log);
     }
     //public void Save() => this.manager.Save(s => this.Me.CustomData = s);
 
     public void Main(string argument, UpdateType updateSource) {
-      this.commandLine.StartCmd(argument, CommandTrigger.User);
-      this.manager.Tick();
+      _commandLine.StartCmd(argument, CommandTrigger.User);
+      _manager.Tick();
     }
   }
 }

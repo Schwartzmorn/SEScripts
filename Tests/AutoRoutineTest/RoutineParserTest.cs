@@ -39,7 +39,7 @@ public class RoutineParserTest
   [SetUp]
   public void SetUp()
   {
-    _manager = Program.Process.CreateManager(null);
+    _manager = Program.Process.CreateManager();
     _commandLine = new Program.CommandLine("test", null, _manager);
     _parser = new Program.RoutineParser(_commandLine);
   }
@@ -112,5 +112,22 @@ end
 
     Assert.That(routine.ArgsCount(), Is.EqualTo(4));
 
+  }
+
+  [Test]
+  public void It_Can_Parse_The_Mining_Routine()
+  {
+    List<Program.AutoRoutine> routines = _parser.Parse(@"
+= Mine
+while -inv-while under 1
+  -arm-drill $auto-low
+  -arm-drill $top
+end
+-arm-recall $auto-low
+");
+    Assert.That(routines.Count, Is.EqualTo(2));
+    Program.AutoRoutine routine = routines[0];
+
+    Assert.That(routine.ArgsCount(), Is.EqualTo(0));
   }
 }

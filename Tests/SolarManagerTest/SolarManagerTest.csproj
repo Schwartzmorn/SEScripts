@@ -20,7 +20,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Scripts\SolarManager\SolarManager.csproj" />
-    <ProjectReference Include="..\..\Tests\Utilities\Utilities.csproj" />
+    <ProjectReference Include="../../Scripts/SolarManager/SolarManager.csproj" />
+    <ProjectReference Include="../../Tests/Utilities/Utilities.csproj" />
   </ItemGroup>
 </Project>

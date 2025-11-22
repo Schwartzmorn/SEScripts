@@ -27,6 +27,8 @@ namespace IngameScript
 
       readonly List<IMyCargoContainer> _tmpList = new List<IMyCargoContainer>();
 
+      readonly List<Container> _tmpSortedList = new List<Container>();
+
       readonly Action<string> _logger;
 
       public ContainerManager(IMyGridTerminalSystem gts, GridManager gridManager, IProcessSpawner spawner, Action<string> logger)
@@ -48,11 +50,13 @@ namespace IngameScript
         }
       }
 
-      public List<Container> GetSortedContainers(MyInventoryItem item)
+      public List<Container> GetSortedCandidateContainers(MyInventoryItem item, int minAff)
       {
         FilterLazily();
-        _containers.Sort((a, b) => Container.CompareTo(a, b, item.Type));
-        return _containers;
+        _tmpSortedList.Clear();
+        _tmpSortedList.AddRange(_containers.FindAll(c => c.GetIntrinsicAffinity(item.Type) > minAff));
+        _tmpSortedList.Sort((a, b) => Container.CompareTo(a, b, item.Type));
+        return _tmpSortedList;
       }
 
       public List<Container> GetContainers()

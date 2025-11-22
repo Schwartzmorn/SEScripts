@@ -198,6 +198,8 @@ namespace IngameScript
         _updateWheels(null);
       }
 
+      public bool IsStrafing => _strafing;
+
       public float GetAverageCompressionRatio() => _wheels.Average(w => w.GetCompressionRatio());
 
       float _getCalibratedWeight(float defaultWeight, double positionZ)

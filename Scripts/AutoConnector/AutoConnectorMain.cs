@@ -17,25 +17,25 @@ using VRageMath;
 
 namespace IngameScript {
   partial class Program : MyGridProgram {
-    readonly CommandLine commandLine;
-    readonly IProcessManager manager;
+    readonly CommandLine _commandLine;
+    readonly IProcessManager _manager;
 
     public Program() {
-      this.Runtime.UpdateFrequency = UpdateFrequency.Update1;
-      this.manager = Process.CreateManager(Echo);
-      var logger = new Logger(this.manager, this.Me.GetSurface(0), echo: this.Echo);
-      this.manager.SetLogger(logger.Log);
-      this.commandLine = new CommandLine("Auto connector station", logger.Log, this.manager);
+      Runtime.UpdateFrequency = UpdateFrequency.Update1;
+      _manager = Process.CreateManager(Echo);
+      var logger = new Logger(_manager, Me.GetSurface(0), echo: Echo);
+      _manager.SetLogger(logger.Log);
+      _commandLine = new CommandLine("Auto connector station", logger.Log, _manager);
       var ini = new MyIni();
-      ini.Parse(this.Me.CustomData);
-      new AutoConnectionDispatcher(this, this.commandLine, ini, logger.Log, this.manager);
+      ini.Parse(Me.CustomData);
+      new AutoConnectionDispatcher(this, _commandLine, ini, logger.Log, _manager);
     }
 
-    public void Save() => this.manager.Save(s => this.Me.CustomData = s);
+    public void Save() => _manager.Save(s => Me.CustomData = s);
 
     public void Main(string argument, UpdateType updateSource) {
-      this.commandLine.StartCmd(argument, CommandTrigger.User);
-      this.manager.Tick();
+      _commandLine.StartCmd(argument, CommandTrigger.User);
+      _manager.Tick();
     }
   }
 }

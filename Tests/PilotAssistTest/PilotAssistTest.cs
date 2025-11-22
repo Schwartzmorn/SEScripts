@@ -1,36 +1,42 @@
 namespace PilotAssistTest;
 
+using IngameScript;
+using System.Collections.Generic;
+using System.Linq;
+using Utilities.Mocks;
+using Utilities.Mocks.Base;
+
 class PilotAssistTest
 {
 
-  public class MockDeactivator : IPADeactivator
+  public class MockDeactivator : Program.IPADeactivator
   {
     public bool Deactivate = false;
-    public bool ShouldDeactivate() => this.Deactivate;
+    public bool ShouldDeactivate() => Deactivate;
   }
 
-  public class MockBraker : IPABraker
+  public class MockBraker : Program.IPABraker
   {
     public bool Handbrake = false;
-    public bool ShouldHandbrake() => this.Handbrake;
+    public bool ShouldHandbrake() => Handbrake;
   }
 
   // Mock
   public class WheelsController
   {
-    readonly List<float> powers = new List<float>();
-    readonly List<float> steers = new List<float>();
-    public float Power => this.powers.Last();
-    public float Steer => this.steers.Last();
-    public void SetPower(float power) => this.powers.Add(power);
-    public void SetSteer(float steer) => this.steers.Add(steer);
+    readonly List<float> _powers = [];
+    readonly List<float> _steers = [];
+    public float Power => _powers.Last();
+    public float Steer => _steers.Last();
+    public void SetPower(float power) => _powers.Add(power);
+    public void SetSteer(float steer) => _steers.Add(steer);
   }
 
-  Mockups.Blocks.MockShipController controller1;
-  Mockups.Blocks.MockShipController controller2;
-  Mockups.MockGridTerminalSystem gts;
+  MyShipControllerMock controller1;
+  MyShipControllerMock controller2;
+  MyGridTerminalSystemMock gts;
   Program.WheelsController mockWheelsController;
-  Program.ProcessSpawnerMock spawner;
+  Program.IProcessManager spawner;
   public void BeforeEach()
   {
     this.controller1 = new Mockups.Blocks.MockShipController()
@@ -123,17 +129,17 @@ class PilotAssistTest
 
     var pa = new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
 
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.IsFalse(pa.ManuallyBraked);
 
     this.controller1.HandBrake = true;
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.IsTrue(pa.ManuallyBraked);
 
     this.controller1.HandBrake = false;
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.IsFalse(pa.ManuallyBraked);
   }
@@ -152,40 +158,40 @@ class PilotAssistTest
 
     Assert.IsTrue(this.controller1.IsUnderControl);
 
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.IsFalse(this.controller1.HandBrake);
 
     this.controller1.IsUnderControl = false;
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.IsTrue(this.controller1.HandBrake);
 
     this.controller1.IsUnderControl = true;
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.IsFalse(this.controller1.HandBrake);
 
     handbraker.Handbrake = true;
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.IsTrue(this.controller1.HandBrake);
 
     deactivator.Deactivate = true;
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.IsTrue(this.controller1.HandBrake, "When deactivated, the handbrake is neither engaged nor disengaged automatically");
 
     handbraker.Handbrake = false;
     deactivator.Deactivate = false;
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.IsFalse(this.controller1.HandBrake);
 
     handbraker.Handbrake = true;
     deactivator.Deactivate = true;
     this.controller1.IsUnderControl = false;
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.IsFalse(this.controller1.HandBrake, "When deactivated, the handbrake is neither engaged nor disengaged automatically");
   }
@@ -203,13 +209,13 @@ class PilotAssistTest
     pa.AddDeactivator(deactivator);
 
     this.controller1.MoveIndicator = new VRageMath.Vector3(0, 0, 2);
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.AreEqual(-0.4f, this.mockWheelsController.Power);
     Assert.AreEqual(0, this.mockWheelsController.Steer);
 
     this.controller1.MoveIndicator = new VRageMath.Vector3(4, 0, 0);
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.AreEqual(0, this.mockWheelsController.Power);
     Assert.AreEqual(0.8f, this.mockWheelsController.Steer);
@@ -217,7 +223,7 @@ class PilotAssistTest
     deactivator.Deactivate = true;
 
     this.controller1.MoveIndicator = new VRageMath.Vector3(0, 0, 4);
-    this.spawner.MockProcessTick();
+    this.spawner.Tick();
 
     Assert.AreEqual(0, this.mockWheelsController.Power, "When deactivated, the controls are left as is");
     Assert.AreEqual(0.8f, this.mockWheelsController.Steer);

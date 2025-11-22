@@ -2,6 +2,7 @@ namespace ConnectionClientTest;
 
 using System;
 using System.Linq;
+using System.Reflection;
 using IngameScript;
 using NUnit.Framework;
 using Utilities;
@@ -28,7 +29,7 @@ class ConnectionClientTest
       _connector.CustomData += "state=" + state;
     }
     _ini = new Program.IniWatcher(_connector, _manager);
-    return new Program.ConnectionClient(_ini, _gts, _igc, _commandLine, _manager, null);
+    return new Program.ConnectionClient(_connector, _ini, _gts, _igc, _commandLine, _manager, null);
   }
 
   private void _tick(int n = 5)
@@ -65,7 +66,7 @@ class ConnectionClientTest
     };
     _igc = new MyIntergridCommunicationSystemMock(testBed);
     _listener = _igc.UnicastListenerMock;
-    _manager = Program.Process.CreateManager(null);
+    _manager = Program.Process.CreateManager();
     _commandLine = new Program.CommandLine("test", null, _manager);
   }
 
@@ -203,5 +204,21 @@ class ConnectionClientTest
 
     Assert.That(client.Progress, Is.EqualTo(0.5f));
     Assert.That(client.State, Is.EqualTo(Program.ConnectionState.WaitingCon));
+  }
+
+  [Test]
+  public void It_Uses_A_Random_Connector_By_Default()
+  {
+     _connector.CustomData = @"[connection-client]
+  server-channel=server channel
+";
+    _ini = new Program.IniWatcher(_connector, _manager);
+    var client = new Program.ConnectionClient(_connector, _ini, _gts, _igc, _commandLine, _manager, null);
+
+    FieldInfo field = typeof(Program.ConnectionClient).GetField("_connector", BindingFlags.NonPublic | BindingFlags.Instance);
+
+    var connector = field.GetValue(client);
+
+    Assert.That(connector, Is.SameAs(_connector));
   }
 }

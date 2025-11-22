@@ -20,11 +20,11 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Tests\Utilities\Utilities.csproj" />
+    <ProjectReference Include="../../Tests/Utilities/Utilities.csproj" />
   </ItemGroup>
-  <Import Project="..\..\Mixins\CommandLine\CommandLine.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\IniWatcher\IniWatcher.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\Process\Process.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\WheelsController\WheelsController.projitems" Label="Shared" />
+  <Import Project="../../Mixins/CommandLine/CommandLine.projitems" Label="Shared" />
+  <Import Project="../../Mixins/CoordinatesTransformer/CoordinatesTransformer.projitems" Label="Shared" />
+  <Import Project="../../Mixins/IniWatcher/IniWatcher.projitems" Label="Shared" />
+  <Import Project="../../Mixins/Process/Process.projitems" Label="Shared" />
+  <Import Project="../../Mixins/WheelsController/WheelsController.projitems" Label="Shared" />
 </Project>

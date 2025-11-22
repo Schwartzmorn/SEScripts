@@ -57,13 +57,6 @@ namespace IngameScript {
       /// <summary>Kills all the processes with the given <paramref name="name"/>.</summary>
       /// <param name="name">Name of the process(es) to kill</param>
       void KillAll(string name);
-      /// <summary>
-      /// Changes the smart scheduling.
-      /// <para>If the smart scheduling is active, the scheduler will try to spread the scheduled <see cref="Process"/> with a period greater than 1 over several cycles to avoid a burst.</para>
-      /// <para>By default, it is true. This does not effect the scheduling of processes with <see cref="Process.UseOnce"/> set to true.</para>
-      /// </summary>
-      /// <param name="smart">Whether the scheduler should try to schedule smartly the processed</param>
-      void SetSmart(bool smart);
       /// <summary>Makes all the scheduled <see cref="Process"/>es tick, cleans up the dead processes.</summary>
       void Tick();
       /// <summary>Dumps all the alive processes</summary>

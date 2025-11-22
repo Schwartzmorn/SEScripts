@@ -75,29 +75,32 @@ Second argument is angle", maxArgs: 2));
 
       void _recallPosition(Process p, string name)
       {
-        _checkProcess(p);
+        _checkProcess(null);
         if (_pos.ContainsKey(name))
         {
           _autoCont.SetTarget(_pos[name]);
+          _checkProcess(p.Spawn(null, $"arm-recall {name}"));
         }
       }
 
       void _drill(Process p, string name)
       {
-        _checkProcess(p);
+        _checkProcess(null);
         if (_pos.ContainsKey(name))
         {
           _autoCont.SetTarget(_pos[name]);
           _autoCont.SwitchTools(true);
+          _checkProcess(p.Spawn(null, $"arm-drill {name}"));
         }
       }
 
       void _autoElevate(Process p, List<string> s)
       {
-        _checkProcess(p);
+        _checkProcess(null);
         _autoCont.SetTarget(new ArmPos(
           s.Count == 0 ? ArmPos.L_ELEVATION : s[0] == "high" ? ArmPos.R_ELEVATION : s[0] == "low" ? ArmPos.L_ELEVATION : double.Parse(s[0]),
           s.Count > 1 ? MathHelper.ToRadians(float.Parse(s[1])) : 0));
+        _checkProcess(p.Spawn(null, $"arm-elevate {_autoCont.Target}"));
       }
 
       void _checkProcess(Process currentProcess)
@@ -111,6 +114,7 @@ Second argument is angle", maxArgs: 2));
 
       void _endProcess()
       {
+        // Used to stop the processes of of _drill, _autoElevate, recall once they reached their target the first time
         _currentProcess?.Done();
         _currentProcess = null;
       }

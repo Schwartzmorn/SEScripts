@@ -23,8 +23,14 @@ type=programmableblock
 trace=off
 minify=lite
 ignores=obj/**/*,MDK/**/*,**/*.debug.cs
-output=auto
-binarypath=auto
+output={output}
+binarypath={binarypath}
+"""
+
+MDKINI_TEST_TEMPLATE = """[mdk]
+ignores=obj/**/*,MDK/**/*,**/*.debug.cs
+output={output}
+binarypath={binarypath}
 """
 
 SLN_TEMPLATE = """
@@ -74,15 +80,20 @@ def fix_mixins(mixins_folder: str):
       fix_mixin(mixin_folder)
 
 
-def fix_script(script_folder: str, fix_mdk: bool):
+def fix_script(script_folder: str, is_test: bool):
   # remove any existing .mdk.ini files
   for file in os.listdir(script_folder):
     if file.endswith(".mdk.ini"):
       os.remove(os.path.join(script_folder, file))
-  if fix_mdk:
-    mdk_ini_path = os.path.join(script_folder, f"{os.path.basename(script_folder)}.mdk.ini")
-    with open(mdk_ini_path, "w", encoding="utf-8") as f:
-      f.write(MDKINI_TEMPLATE)
+  mdk_ini_path = os.path.join(script_folder, f"{os.path.basename(script_folder)}.mdk.ini")
+  with open(mdk_ini_path, "w", encoding="utf-8") as f:
+    output = 'auto'
+    binarypath = 'auto'
+    if os != 'nt':
+      output = '{}/.steam/steam/steamapps/compatdata/244850/pfx/drive_c/users/steamuser/AppData/Roaming/SpaceEngineers/IngameScripts/local'.format(os.environ['HOME'])
+      binarypath = '{}/.local/share/Steam/steamapps/common/SpaceEngineers/Bin64'.format(os.environ['HOME'])
+    mdkini_template = MDKINI_TEST_TEMPLATE if is_test else MDKINI_TEMPLATE
+    f.write(mdkini_template.format(output=output, binarypath=binarypath))
   # make sure the csproj file is named correctly
   csproj_path = os.path.join(script_folder, f"{os.path.basename(script_folder)}.csproj")
   for file in os.listdir(script_folder):
@@ -102,7 +113,9 @@ def fix_scripts(scripts_folder: str, fix_mdk: bool) -> list[str]:
 
 def update_project(name: str, path: str, projects: list[str], project_configurations: list[str]) -> None:
   project_guid = str(uuid.uuid4()).upper()
-  relative_path = os.path.join(path, name, f"{name}.csproj").replace('/', '\\')
+  relative_path = os.path.join(path, name, f"{name}.csproj")
+  if os.name == 'nt':
+    relative_path = relative_path.replace('/', '\\')
   projects.append(SLN_PROJECT_TEMPLATE.format(mixin_name=name, relative_path=relative_path, project_guid=project_guid))
   project_configurations.append(SLN_PROJECT_CONFIGURATION_TEMPLATE.format(project_guid=project_guid))
 
@@ -119,7 +132,31 @@ def generate_sln(scripts: list[str], tests: list[str]) -> None:
   project_configurations_str = "\n".join(project_configurations)
   with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), './OmniOS.sln'), "w", encoding="utf-8") as f:
     f.write(SLN_TEMPLATE.format(projects=projects_str, project_configurations=project_configurations_str))
-  
+
+
+def build_mdk2(mdk_version='2.1.7'):
+  import subprocess
+  import shutil
+  cwd = '{}/SpaceEngineers'.format(os.environ['HOME'])
+  if not os.path.exists(os.path.join(cwd, 'mdk2')):
+    res = subprocess.run(['git', 'clone', 'https://github.com/malforge/mdk2.git'], cwd=cwd)
+    res.check_returncode()
+
+  for project in ['Mdk.CommandLine', 'Mdk.CheckDotNet']:
+    project_cs = '"{}.csproj"'.format(project)
+    project_cwd = os.path.join(cwd, 'mdk2/Source', project)
+    res = subprocess.run(['dotnet', 'publish', project_cs, '-c', 'Release', '--self-contained', 'false', '-r', 'linux-x64', '/p:PublishSingleFile=true', '/p:IncludeNativeLibrariesForSelfExtract=true', '-o', '"*Undefined*Binaries"'],
+                  cwd=project_cwd)
+    res.check_returncode()
+
+  destination_path = '{home}/.nuget/packages/mal.mdk2.pbpackager/{version}/tools'.format(home=os.environ['HOME'], version=mdk_version)
+
+  for path in ['Source/Mdk.CommandLine/bin/Release/net9.0/linux-x64', 'Source/Mdk.CheckDotNet/bin/Release/net9.0/linux-x64']:
+    from_path = os.path.join(cwd, 'mdk2', path)
+    shutil.copytree(from_path, destination_path, dirs_exist_ok=True)
+
+  for exe in ['checkdotnet', 'mdk']:
+    shutil.move(os.path.join(destination_path, exe), os.path.join(destination_path, '{}.exe'.format(exe)))
 
 if __name__ == "__main__":
   mixins_folder = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), './Mixins'))
@@ -127,7 +164,9 @@ if __name__ == "__main__":
   tests_folder = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), './Tests'))
 
   fix_mixins(mixins_folder)
-  scripts = fix_scripts(scripts_folder, True)
-  tests = fix_scripts(tests_folder, False)
-
+  scripts = fix_scripts(scripts_folder, False)
+  tests = fix_scripts(tests_folder, True)
   generate_sln(scripts, tests)
+
+  if os.name == 'posix':
+    build_mdk2()

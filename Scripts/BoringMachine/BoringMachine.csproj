@@ -18,17 +18,17 @@
     </PackageReference>
     <PackageReference Include="Mal.Mdk2.References" Version="2.2.4" />
   </ItemGroup>
-  <Import Project="..\..\Mixins\ArmController\ArmController.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\Autopilot\Autopilot.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\AutoRoutine\AutoRoutine.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\Commandline\CommandLine.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\ConnectionClient\ConnectionClient.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\CoordinatesTransformer\CoordinatesTransformer.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\Display\Display.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\IniWatcher\IniWatcher.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\Logger\Logger.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\PilotAssist\PilotAssist.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\Process\Process.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\RotorHelper\RotorHelper.projitems" Label="Shared" />
-  <Import Project="..\..\Mixins\WheelsController\WheelsController.projitems" Label="Shared" />
+  <Import Project="../../Mixins/ArmController/ArmController.projitems" Label="Shared" />
+  <Import Project="../../Mixins/Autopilot/Autopilot.projitems" Label="Shared" />
+  <Import Project="../../Mixins/AutoRoutine/AutoRoutine.projitems" Label="Shared" />
+  <Import Project="../../Mixins/CommandLine/CommandLine.projitems" Label="Shared" />
+  <Import Project="../../Mixins/ConnectionClient/ConnectionClient.projitems" Label="Shared" />
+  <Import Project="../../Mixins/CoordinatesTransformer/CoordinatesTransformer.projitems" Label="Shared" />
+  <Import Project="../../Mixins/Display/Display.projitems" Label="Shared" />
+  <Import Project="../../Mixins/IniWatcher/IniWatcher.projitems" Label="Shared" />
+  <Import Project="../../Mixins/Logger/Logger.projitems" Label="Shared" />
+  <Import Project="../../Mixins/PilotAssist/PilotAssist.projitems" Label="Shared" />
+  <Import Project="../../Mixins/Process/Process.projitems" Label="Shared" />
+  <Import Project="../../Mixins/RotorHelper/RotorHelper.projitems" Label="Shared" />
+  <Import Project="../../Mixins/WheelsController/WheelsController.projitems" Label="Shared" />
 </Project>

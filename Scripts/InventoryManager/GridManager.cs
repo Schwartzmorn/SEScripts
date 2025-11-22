@@ -90,8 +90,7 @@ namespace IngameScript
       public bool Manages(IMyCubeGrid grid)
       {
         var metaGrid = _metaGrids.FirstOrDefault(sg => sg.IsSameMetaGrid(grid));
-        bool res = metaGrid == null || !_excludedGrids.Contains(metaGrid.Name);
-        return res;
+        return metaGrid == null || !_excludedGrids.Contains(metaGrid.Name);
       }
 
       public override string ToString() => string.Join("\n", _metaGrids.Select(mg => mg.ToString()));

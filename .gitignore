@@ -4,4 +4,5 @@ obj/
 *.mdk.local.ini
 Mixins/**/*.projitems
 Scripts/**/*.mdk.ini
+Tests/**/*.mdk.ini
 OmniOS.sln

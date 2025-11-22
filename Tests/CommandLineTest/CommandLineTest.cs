@@ -33,7 +33,7 @@ class CommandLineTest
   public void SetUp()
   {
     _logs.Clear();
-    _manager = Program.Process.CreateManager(null);
+    _manager = Program.Process.CreateManager();
     _cmdLine = new Program.CommandLine("Test", s => _logs.Add(s), _manager);
     _manager.KillAll();
   }

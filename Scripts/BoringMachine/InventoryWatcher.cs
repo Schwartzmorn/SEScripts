@@ -36,17 +36,18 @@ namespace IngameScript
       void _startWait(Process p, List<string> args)
       {
         bool over = args[0] == "over";
-        float loadFactor = float.Parse(args[1]);
-        p.Spawn(pc => _checkInv(pc, over, loadFactor), "inv-check", period: 10);
+        float thresholdLoadFactor = float.Parse(args[1]);
+        p.Spawn(pc => _checkInv(pc, over, thresholdLoadFactor), "inv-check", period: 10);
       }
 
-      void _checkInv(Process pc, bool over, float loadFactor)
+      void _checkInv(Process pc, bool over, float thresholdLoadFactor)
       {
-        if (over && LoadFactor < loadFactor)
+        var currentLoadFactor = LoadFactor;
+        if (over && currentLoadFactor < thresholdLoadFactor)
         {
           pc.Done();
         }
-        else if (!over && LoadFactor > loadFactor)
+        else if (!over && currentLoadFactor >= thresholdLoadFactor)
         {
           pc.Done();
         }

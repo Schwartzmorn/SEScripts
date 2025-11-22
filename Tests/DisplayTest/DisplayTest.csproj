@@ -20,7 +20,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Tests\Utilities\Utilities.csproj" />
+    <ProjectReference Include="../../Tests/Utilities/Utilities.csproj" />
   </ItemGroup>
-  <Import Project="..\..\Mixins\Display\Display.projitems" Label="Shared" />
+  <Import Project="../../Mixins/Display/Display.projitems" Label="Shared" />
 </Project>

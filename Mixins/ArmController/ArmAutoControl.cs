@@ -78,12 +78,12 @@ partial class Program {
 
     public bool Control(List<ArmRotor> rotors, IMyShipController cont) {
       float maxSpeed = IsDrilling ? 0.5f : 4;
-      bool moving = false;
+      bool reachedDestination = true;
       if(Target.Type == ArmPosType.Angle) {
         foreach (ArmRotor r in rotors) {
           float delta = r.AngleProxy(Target.Angle);
           r.Move(MathHelper.Clamp(delta * 30, -maxSpeed, maxSpeed));
-          moving |= Math.Abs(delta) > 0.01;
+          reachedDestination &= Math.Abs(delta) < 0.01;
         }
       } else {
         var g = Vector3D.Normalize(cont.GetNaturalGravity()); // gravity direction
@@ -108,14 +108,20 @@ partial class Program {
         float speed = MathHelper.Clamp((float)(delta + deltaAngle) * 20, -maxSpeed, 4);
 
         rotors.ForEach(r => r.Move(speed));
-        moving = Math.Abs(delta) > 0.01;
+        reachedDestination = Math.Abs(delta) < 0.01;
       }
-      return !moving;
+      return reachedDestination;
     }
 
     public void Save(MyIni ini) => ini.Set(SECTION, "pos", Target.ToString());
 
-    public void SwitchTools(bool s) => _tools.ForEach(d => d.Enabled = s);
+    public void SwitchTools(bool s) => _tools.ForEach(d =>
+    {
+      if (d.Enabled != s)
+      {
+        d.Enabled = s;
+      }
+    });
 
     Vector3D _getToolsPosW() {
       var pos = new Vector3D(0, 0, 0);

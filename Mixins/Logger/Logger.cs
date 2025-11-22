@@ -23,7 +23,7 @@ namespace IngameScript {
           s.FontColor = col ?? Color.White;
           s.BackgroundColor = bgdCol ?? Color.Black;
           var sb = new StringBuilder("G");
-          nMsgs = (int)((GetMultiplier(s) * s.SurfaceSize.Y / s.MeasureStringInPixels(sb, s.Font, s.FontSize).Y) + 0.1f);
+          nMsgs = (int)((_getMultiplier(s) * s.SurfaceSize.Y / s.MeasureStringInPixels(sb, s.Font, s.FontSize).Y) + 0.1f);
           _surface = s;
         }
         _messages = new CircularBuffer<string>(nMsgs);
@@ -44,7 +44,7 @@ namespace IngameScript {
           _surface?.WriteText(string.Join("\n", _messages));
         }
       }
-      static float GetMultiplier(IMyTextSurface s) {
+      static float _getMultiplier(IMyTextSurface s) {
         float sy = s.SurfaceSize.Y;
         if (s is IMyTerminalBlock) {//txt panel
           string t = (s as IMyTerminalBlock).BlockDefinition.SubtypeId;

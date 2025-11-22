@@ -14,7 +14,7 @@ class ProcessManagerTest
   private Program.IProcessManager _manager;
 
   [SetUp]
-  public void SetUp() => _manager = Program.Process.CreateManager(null);
+  public void SetUp() => _manager = Program.Process.CreateManager();
 
   [Test]
   public void It_Respects_Periodicity()

@@ -29,11 +29,10 @@ namespace IngameScript
     {
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       var topLefts = new List<IMyTextSurface>();
-      var topRights = new List<IMyTextSurface>();
       IMyTextSurface keyboard;
       IMyCockpit cockpit;
       _manager = Process.CreateManager(Echo);
-      _initCockpit(out cockpit, topLefts, topRights, out keyboard);
+      _initCockpit(out cockpit, topLefts, out keyboard);
       var ct = new CoordinatesTransformer(cockpit, _manager);
       var logger = new Logger(_manager, keyboard, new Color(0, 39, 15), new Color(27, 228, 33), Echo, 1.0f);
       _cmd = new CommandLine("Boring machine", logger.Log, _manager);
@@ -41,22 +40,24 @@ namespace IngameScript
       var wc = new WheelsController(_cmd, cockpit, GridTerminalSystem, ini, _manager, ct);
       var ac = new ArmController(ini, this, _cmd, cockpit, wc, _manager);
       var iw = new InventoryWatcher(_cmd, GridTerminalSystem, cockpit);
-      var cc = new ConnectionClient(ini, GridTerminalSystem, IGC, _cmd, _manager, logger.Log);
+      var cc = new ConnectionClient(Me, ini, GridTerminalSystem, IGC, _cmd, _manager, logger.Log);
       var rcs = new List<IMyRemoteControl>();
       GridTerminalSystem.GetBlocksOfType(rcs, r => r.CubeGrid == Me.CubeGrid);
       IMyRemoteControl frc = rcs.First(r => r.CustomName.Contains("Forward"));
       IMyRemoteControl brc = rcs.First(r => r.CustomName.Contains("Backward"));
       var ap = new Autopilot(ini, wc, _cmd, frc, logger.Log, _manager);
-      var ah = new PilotAssist(GridTerminalSystem, ini, logger.Log, _manager, wc);
+      var ah = new PilotAssist(Me, GridTerminalSystem, ini, logger.Log, _manager, wc, _cmd);
       ah.AddBraker(cc);
       ah.AddDeactivator(ap);
       var ar = new AutoRoutineHandler(_cmd);
-      // TODO parse routines
-      new MiningRoutines(ini, _cmd, ap, _manager);
+      var arParser = new RoutineParser(_cmd);
+      //ar.AddRoutines(arParser.Parse(GridTerminalSystem.GetBlockWithName("BM Ore Detector").CustomData));
+
+      // new MiningRoutines(ini, _cmd, ap, _manager);
       var progs = new List<IMyProgrammableBlock>();
       GridTerminalSystem.GetBlocksOfType(progs, pr => pr.CubeGrid == Me.CubeGrid);
-      var genStatus = new GeneralStatus(this, ac, cc);
-      new ScreensController(genStatus, iw, topLefts, topRights, _scheme, cockpit.CustomData, _manager);
+      var genStatus = new GeneralStatus(this, ac, cc, wc);
+      new ScreensController(genStatus, iw, topLefts, _scheme, cockpit.CustomData, _manager);
     }
 
     public void Save() => _manager.Save(s => Me.CustomData = s);
@@ -70,7 +71,7 @@ namespace IngameScript
       }
     }
 
-    void _initCockpit(out IMyCockpit cockpit, List<IMyTextSurface> topLefts, List<IMyTextSurface> topRights, out IMyTextSurface keyboard)
+    void _initCockpit(out IMyCockpit cockpit, List<IMyTextSurface> topLefts, out IMyTextSurface loggerScreen)
     {
       var cockpits = new List<IMyCockpit>();
       GridTerminalSystem.GetBlocksOfType(cockpits, c => c.CubeGrid == Me.CubeGrid);
@@ -80,7 +81,7 @@ namespace IngameScript
       }
 
       cockpit = cockpits[0];
-      keyboard = null;
+      loggerScreen = null;
       foreach (IMyCockpit cpit in cockpits)
       {
         for (int i = 0; i < cpit.SurfaceCount; ++i)
@@ -92,11 +93,15 @@ namespace IngameScript
           }
           else if (surface.DisplayName == "Top Right Screen")
           {
-            topRights.Add(surface);
+            if (loggerScreen == null)
+            {
+              // we want the logger on the keyboard screen if possible
+              loggerScreen = surface;
+            }
           }
           else if (surface.DisplayName == "Keyboard")
           {
-            keyboard = surface;
+            loggerScreen = surface;
           }
         }
       }
