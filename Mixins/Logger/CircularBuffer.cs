@@ -16,23 +16,26 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
     /// <summary>FIFO container of fixed max capacity. Once the capacity is reached, any insertion replaces the first inserted</summary>
     /// <typeparam name="T">Type of object held in the buffer</typeparam>
-    public class CircularBuffer<T> : IEnumerable<T> {
+    public class CircularBuffer<T> : IEnumerable<T>
+    {
       readonly T[] _queue;
       int _start = 0;
       public int Count { get; private set; }
       int Capacity => _queue.Count();
-      
+
       /// <summary>Creates a buffer</summary>
       /// <param name="capacity">maximum capacity of the buffer</param>
       public CircularBuffer(int capacity)
       {
         _queue = new T[capacity];
       }
-      
+
       /// <summary>Adds an element to the queue</summary>
       /// <param name="s">Element to add</param>
       /// <returns>itself</returns>
@@ -49,7 +52,7 @@ namespace IngameScript {
         }
         return this;
       }
-      
+
       /// <summary>Gets the first element and removes it</summary>
       /// <param name="dequeue">If true, the last element will be removed</param>
       /// <returns>the first inserted element</returns>
@@ -83,7 +86,7 @@ namespace IngameScript {
       public T this[int i] => (i >= Count || -i > Count)
               ? default(T)
               : _queue[_incr(_start, i < 0 ? Count + i : i)];
-              
+
       /// <summary>Returns an enumerator on all the element in the buffer, from the first inserted to the last</summary>
       /// <returns>The enumerator</returns>
       public IEnumerator<T> GetEnumerator()
@@ -95,7 +98,8 @@ namespace IngameScript {
         }
       }
       IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-      int _incr(int i, int incr = 1) {
+      int _incr(int i, int incr = 1)
+      {
         i += incr;
         return i >= Capacity ? i - Capacity : i;
       }

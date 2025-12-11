@@ -15,24 +15,29 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    public enum ConnectionType {
+namespace IngameScript
+{
+  partial class Program
+  {
+    public enum ConnectionType
+    {
       None,
       Front,
       Down
     }
-    public class Waypoint {
+    public class Waypoint
+    {
       public readonly Vector3D Position;
       public readonly float Angle;
       public readonly ConnectionType Connection;
       public readonly bool NeedPrecision;
 
-      public Waypoint(Vector3D position, float angle = 0, ConnectionType connection = ConnectionType.None, bool needPrecision = false) {
-        this.Position = position;
-        this.Angle = angle;
-        this.Connection = connection;
-        this.NeedPrecision = needPrecision;
+      public Waypoint(Vector3D position, float angle = 0, ConnectionType connection = ConnectionType.None, bool needPrecision = false)
+      {
+        Position = position;
+        Angle = angle;
+        Connection = connection;
+        NeedPrecision = needPrecision;
       }
     }
   }

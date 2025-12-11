@@ -1,231 +1,222 @@
 namespace PilotAssistTest;
 
 using IngameScript;
+using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Utilities;
 using Utilities.Mocks;
 using Utilities.Mocks.Base;
 
+[TestFixture]
 class PilotAssistTest
 {
 
-  public class MockDeactivator : Program.IPADeactivator
-  {
-    public bool Deactivate = false;
-    public bool ShouldDeactivate() => Deactivate;
-  }
+  TestBed _testBed;
+  MyShipControllerMock _controller1;
+  MyShipControllerMock _controller2;
+  MyGridTerminalSystemMock _gts;
+  MyCubeGridMock _grid;
+  Program.WheelsController _mockWheelsController;
+  Program.IProcessManager _spawner;
 
-  public class MockBraker : Program.IPABraker
+  [SetUp]
+  public void SetUp()
   {
-    public bool Handbrake = false;
-    public bool ShouldHandbrake() => Handbrake;
-  }
-
-  // Mock
-  public class WheelsController
-  {
-    readonly List<float> _powers = [];
-    readonly List<float> _steers = [];
-    public float Power => _powers.Last();
-    public float Steer => _steers.Last();
-    public void SetPower(float power) => _powers.Add(power);
-    public void SetSteer(float steer) => _steers.Add(steer);
-  }
-
-  MyShipControllerMock controller1;
-  MyShipControllerMock controller2;
-  MyGridTerminalSystemMock gts;
-  Program.WheelsController mockWheelsController;
-  Program.IProcessManager spawner;
-  public void BeforeEach()
-  {
-    this.controller1 = new Mockups.Blocks.MockShipController()
+    _testBed = new TestBed();
+    _gts = new MyGridTerminalSystemMock(_testBed);
+    _grid = new MyCubeGridMock(_gts);
+    _controller1 = new MyShipControllerMock(_grid)
     {
       CustomName = "Controller 1",
-      DisplayNameText = "Controller 1"
     };
-    this.controller2 = new Mockups.Blocks.MockShipController()
+    _controller2 = new MyShipControllerMock(_grid)
     {
       CustomName = "Controller 2",
-      DisplayNameText = "Controller 2"
     };
-    this.gts = new Mockups.MockGridTerminalSystem() {
-        this.controller1,
-        this.controller2
-      };
-    this.mockWheelsController = new Program.WheelsController();
-    this.spawner = new Program.ProcessSpawnerMock();
+    _mockWheelsController = new Program.WheelsController();
+    _spawner = Program.Process.CreateManager();
   }
 
+  [Test]
   public void InitWithoutController()
   {
-    this.controller1.CustomData = @"[pilot-assist]
+    _controller1.CustomData = @"[pilot-assist]
       controllers=Controller 3";
-    var ini = new Program.IniWatcher(this.controller1, this.spawner);
+    var ini = new Program.IniWatcher(_controller1, _spawner);
     try
     {
-      new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
+      _ = new Program.PilotAssist(_controller1, _gts, ini, null, _spawner, _mockWheelsController);
       Assert.Fail("Should have raised an error as there is no valid controller");
     }
     catch { }
   }
 
-  public void InitWithAssistWithoutHandbrake()
-  {
-    this.controller1.CustomData = @"[pilot-assist]
-      assist=true
-      controllers=Controller 1,Controller 2";
-    var ini = new Program.IniWatcher(this.controller1, this.spawner);
+  // Assist has been removed
+  // [Test]
+  // public void InitWithAssistWithoutHandbrake()
+  // {
+  //   _controller1.CustomData = @"[pilot-assist]
+  //     assist=true
+  //     controllers=Controller 1,Controller 2";
+  //   var ini = new Program.IniWatcher(_controller1, _spawner);
 
-    Assert.IsTrue(this.controller2.ControlWheels);
-    Assert.IsFalse(this.controller1.HandBrake);
+  //   Assert.That(_controller2.ControlWheels);
+  //   Assert.That(_controller1.HandBrake, Is.False);
 
-    var pa = new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
+  //   var pa = new Program.PilotAssist(_controller1, _gts, ini, null, _spawner, _mockWheelsController);
 
-    Assert.IsFalse(this.controller1.ControlWheels, "When assist is true, the controllers no longer control the wheels directly");
-    Assert.IsFalse(this.controller2.ControlWheels);
-    Assert.IsFalse(this.controller1.HandBrake);
+  //   Assert.That(_controller1.ControlWheels, Is.False, "When assist is true, the controllers no longer control the wheels directly");
+  //   Assert.That(_controller2.ControlWheels, Is.False);
+  //   Assert.That(_controller1.HandBrake, Is.False);
 
-    Assert.IsTrue(this.spawner.HasOnSave);
-    Assert.IsFalse(pa.ManuallyBraked);
-  }
+  //   Assert.That(pa.ManuallyBraked, Is.False);
+  // }
 
-  public void InitWithoutAssistWithHandbrake()
-  {
-    this.controller1.CustomData = @"[pilot-assist]
-      controllers=Controller 2";
-    var ini = new Program.IniWatcher(this.controller1, this.spawner);
+  // [Test]
+  // public void InitWithoutAssistWithHandbrake()
+  // {
+  //   _controller1.CustomData = @"[pilot-assist]
+  //     controllers=Controller 2";
+  //   var ini = new Program.IniWatcher(_controller1, _spawner);
 
-    this.controller2.ControlWheels = false;
-    this.controller2.HandBrake = true;
+  //   _controller2.ControlWheels = false;
+  //   _controller2.HandBrake = true;
 
-    var pa = new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
+  //   var pa = new Program.PilotAssist(_controller1, _gts, ini, null, _spawner, _mockWheelsController);
 
-    Assert.IsTrue(this.controller2.ControlWheels);
-    Assert.IsTrue(this.controller2.HandBrake);
-    Assert.IsTrue(pa.ManuallyBraked);
-  }
+  //   Assert.That(_controller2.ControlWheels);
+  //   Assert.That(_controller2.HandBrake);
+  //   Assert.That(pa.ManuallyBraked);
+  // }
 
+  [Test]
   public void Save()
   {
-    this.controller1.CustomData = @"[pilot-assist]
+    _controller1.CustomData = @"[pilot-assist]
       assist=true
       controllers=Controller 1,Controller 2,Controller 3
       sensitivity=4";
-    var ini = new Program.IniWatcher(this.controller1, this.spawner);
+    var ini = new Program.IniWatcher(_controller1, _spawner);
 
-    new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
+    var pa = new Program.PilotAssist(_controller1, _gts, ini, null, _spawner, _mockWheelsController);
 
-    string saved = this.spawner.GetSavedString();
+    string saved = null;
+    _spawner.Save(s => saved = s);
 
-    Assert.AreEqual("[pilot-assist]\nassist=true\ncontrollers=Controller 1,Controller 2\nsensitivity=4", saved.Trim());
+    Assert.That("[pilot-assist]\nassist=true\ncontrollers=Controller 1,Controller 2\nsensitivity=4", Is.EqualTo(saved.Trim()));
   }
 
+  [Test]
   public void DetectHandbrake()
   {
-    this.controller1.CustomData = @"[pilot-assist]
+    _controller1.CustomData = @"[pilot-assist]
       controllers=Controller 1";
-    var ini = new Program.IniWatcher(this.controller1, this.spawner);
+    var ini = new Program.IniWatcher(_controller1, _spawner);
+    _controller1.IsUnderControl = true;
 
-    var pa = new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
+    var pa = new Program.PilotAssist(_controller1, _gts, ini, null, _spawner, _mockWheelsController);
 
-    this.spawner.Tick();
+    _spawner.Tick();
 
-    Assert.IsFalse(pa.ManuallyBraked);
+    Assert.That(pa.ManuallyBraked, Is.False);
 
-    this.controller1.HandBrake = true;
-    this.spawner.Tick();
+    _controller1.HandBrake = true;
+    _spawner.Tick();
 
-    Assert.IsTrue(pa.ManuallyBraked);
+    Assert.That(pa.ManuallyBraked);
 
-    this.controller1.HandBrake = false;
-    this.spawner.Tick();
+    _controller1.HandBrake = false;
+    _spawner.Tick();
 
-    Assert.IsFalse(pa.ManuallyBraked);
+    Assert.That(pa.ManuallyBraked, Is.False);
   }
 
+  [Test]
   public void AutoBrake()
   {
-    this.controller1.CustomData = @"[pilot-assist]
+    _controller1.CustomData = @"[pilot-assist]
       controllers=Controller 1";
-    var ini = new Program.IniWatcher(this.controller1, this.spawner);
+    var ini = new Program.IniWatcher(_controller1, _spawner);
+    _controller1.IsUnderControl = true;
     var handbraker = new Program.MockBraker();
     var deactivator = new Program.MockDeactivator();
 
-    var pa = new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
+    var pa = new Program.PilotAssist(_controller1, _gts, ini, null, _spawner, _mockWheelsController);
     pa.AddBraker(handbraker);
     pa.AddDeactivator(deactivator);
 
-    Assert.IsTrue(this.controller1.IsUnderControl);
+    Assert.That(_controller1.IsUnderControl);
 
-    this.spawner.Tick();
+    _spawner.Tick();
 
-    Assert.IsFalse(this.controller1.HandBrake);
+    Assert.That(_controller1.HandBrake, Is.False);
 
-    this.controller1.IsUnderControl = false;
-    this.spawner.Tick();
+    _controller1.IsUnderControl = false;
+    _spawner.Tick();
 
-    Assert.IsTrue(this.controller1.HandBrake);
+    Assert.That(_controller1.HandBrake);
 
-    this.controller1.IsUnderControl = true;
-    this.spawner.Tick();
+    _controller1.IsUnderControl = true;
+    _spawner.Tick();
 
-    Assert.IsFalse(this.controller1.HandBrake);
+    Assert.That(_controller1.HandBrake, Is.False);
 
     handbraker.Handbrake = true;
-    this.spawner.Tick();
+    _spawner.Tick();
 
-    Assert.IsTrue(this.controller1.HandBrake);
+    Assert.That(_controller1.HandBrake);
 
     deactivator.Deactivate = true;
-    this.spawner.Tick();
+    _spawner.Tick();
 
-    Assert.IsTrue(this.controller1.HandBrake, "When deactivated, the handbrake is neither engaged nor disengaged automatically");
+    Assert.That(_controller1.HandBrake, "When deactivated, the handbrake is neither engaged nor disengaged automatically");
 
     handbraker.Handbrake = false;
     deactivator.Deactivate = false;
-    this.spawner.Tick();
+    _spawner.Tick();
 
-    Assert.IsFalse(this.controller1.HandBrake);
+    Assert.That(_controller1.HandBrake, Is.False);
 
     handbraker.Handbrake = true;
     deactivator.Deactivate = true;
-    this.controller1.IsUnderControl = false;
-    this.spawner.Tick();
+    _controller1.IsUnderControl = false;
+    _spawner.Tick();
 
-    Assert.IsFalse(this.controller1.HandBrake, "When deactivated, the handbrake is neither engaged nor disengaged automatically");
+    Assert.That(_controller1.HandBrake, Is.False, "When deactivated, the handbrake is neither engaged nor disengaged automatically");
   }
 
+  [Test]
   public void PilotAssist()
   {
-    this.controller1.CustomData = @"[pilot-assist]
+    _controller1.CustomData = @"[pilot-assist]
       assist=true
       controllers=Controller 1
       sensitivity=5";
-    var ini = new Program.IniWatcher(this.controller1, this.spawner);
+    var ini = new Program.IniWatcher(_controller1, _spawner);
     var deactivator = new Program.MockDeactivator();
 
-    var pa = new Program.PilotAssist(this.gts, ini, null, this.spawner, this.mockWheelsController);
+    var pa = new Program.PilotAssist(_controller1, _gts, ini, null, _spawner, _mockWheelsController);
     pa.AddDeactivator(deactivator);
 
-    this.controller1.MoveIndicator = new VRageMath.Vector3(0, 0, 2);
-    this.spawner.Tick();
+    _controller1.MoveIndicator = new VRageMath.Vector3(0, 0, 2);
+    _spawner.Tick();
 
-    Assert.AreEqual(-0.4f, this.mockWheelsController.Power);
-    Assert.AreEqual(0, this.mockWheelsController.Steer);
+    Assert.That(-0.4f, Is.EqualTo(_mockWheelsController.Power));
+    Assert.That(0, Is.EqualTo(_mockWheelsController.Steer));
 
-    this.controller1.MoveIndicator = new VRageMath.Vector3(4, 0, 0);
-    this.spawner.Tick();
+    _controller1.MoveIndicator = new VRageMath.Vector3(4, 0, 0);
+    _spawner.Tick();
 
-    Assert.AreEqual(0, this.mockWheelsController.Power);
-    Assert.AreEqual(0.8f, this.mockWheelsController.Steer);
+    Assert.That(0, Is.EqualTo(_mockWheelsController.Power));
+    Assert.That(0.8f, Is.EqualTo(_mockWheelsController.Steer));
 
     deactivator.Deactivate = true;
 
-    this.controller1.MoveIndicator = new VRageMath.Vector3(0, 0, 4);
-    this.spawner.Tick();
+    _controller1.MoveIndicator = new VRageMath.Vector3(0, 0, 4);
+    _spawner.Tick();
 
-    Assert.AreEqual(0, this.mockWheelsController.Power, "When deactivated, the controls are left as is");
-    Assert.AreEqual(0.8f, this.mockWheelsController.Steer);
+    Assert.That(0, Is.EqualTo(_mockWheelsController.Power), "When deactivated, the controls are left as is");
+    Assert.That(0.8f, Is.EqualTo(_mockWheelsController.Steer));
   }
 }

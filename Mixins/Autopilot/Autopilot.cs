@@ -43,11 +43,11 @@ namespace IngameScript
         _remote = remote;
         _transformer = new CoordinatesTransformer(remote, p);
         _wheels = wheels;
-
-        cmd.RegisterCommand(new Command("ap-move", Command.Wrap(_move), "Move forward", minArgs: 1, maxArgs: 2));
-        cmd.RegisterCommand(new Command("ap-goto", Command.Wrap(GoTo), "Go to the waypoint", nArgs: 1));
-        cmd.RegisterCommand(new Command("ap-switch", Command.Wrap(Switch), "Switches the autopilot on/off", nArgs: 1));
-        cmd.RegisterCommand(new Command("ap-save", Command.Wrap(Save), "Save the current position", nArgs: 1));
+        cmd.RegisterCommand(new ParentCommand("ap", "Interacts with the auto pilot")
+          .AddSubCommand(new Command("move", Command.Wrap(_move), "Move forward", minArgs: 1, maxArgs: 2))
+          .AddSubCommand(new Command("goto", Command.Wrap(GoTo), "Go to the waypoint", nArgs: 1))
+          .AddSubCommand(new Command("switch", Command.Wrap(Switch), "Switches the autopilot on/off", nArgs: 1))
+          .AddSubCommand(new Command("save", Command.Wrap(Save), "Save the current position", nArgs: 1)));
         manager.AddOnSave(_save);
       }
 
@@ -98,13 +98,13 @@ namespace IngameScript
       /// <param name="name">Name of the waypoint</param>
       public void Save(string name) => Network.Add(new MyWaypointInfo(name, _remote.GetPosition()));
 
-      void _move(List<string> args)
+      void _move(ArgumentsWrapper args)
       {
         double fw, rt = 0;
         double.TryParse(args[0], out fw);
-        if (args.Count > 1)
+        if (args.RemaingCount > 1)
         {
-          double.TryParse(args[0], out rt);
+          double.TryParse(args[1], out rt);
         }
         Move(fw, rt);
       }

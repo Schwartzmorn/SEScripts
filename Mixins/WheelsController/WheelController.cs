@@ -222,17 +222,16 @@ namespace IngameScript
 
       void _registerCommands(CommandLine command)
       {
-        command.RegisterCommand(new Command("wc-calibrate", Command.Wrap(Calibrate), "Calibrates the suspensions", nArgs: 0));
-        command.RegisterCommand(new Command("wc-position", Command.Wrap(SetPosition), "Changes the position on the wheels",
-                                detailedHelp: "From 0 (no compression) to 1 (completely compressed)", nArgs: 1));
-        command.RegisterCommand(new Command("wc-power", Command.Wrap(args => SetPower(float.Parse(args[0]))), "Set power override", nArgs: 1));
-        command.RegisterCommand(new Command("wc-reset", Command.Wrap(Reset), "Delete all suspension calibrations", nArgs: 0));
-        command.RegisterCommand(new Command("wc-roll", Command.Wrap(SetRoll), "Set roll override", nArgs: 1));
-        command.RegisterCommand(new Command("wc-steer", Command.Wrap(args => SetSteer(float.Parse(args[0]))), "Set power override", nArgs: 1));
-        command.RegisterCommand(new Command("wc-strafe", Command.Wrap(SetStrafing), "Set power override",
-                                detailedHelp: "Possible values:\n  on\n  off\n  switch", nArgs: 1));
-        command.RegisterCommand(new Command("wc-turn-radius", Command.Wrap(_turnRadius), "Overrides the turn radius", nArgs: 1));
-        command.RegisterCommand(new Command("wc-turn-center", Command.Wrap(_turnCenter), "Offsets the turn center", nArgs: 1));
+        command.RegisterCommand(new ParentCommand("wc", "Interacts with the wheel controller")
+          .AddSubCommand(new Command("wc-calibrate", Command.Wrap(Calibrate), "Calibrates the suspensions", nArgs: 0))
+          .AddSubCommand(new Command("wc-position", Command.Wrap(SetPosition), "Changes the position on the wheels\nFrom 0 (no compression) to 1 (completely compressed)", nArgs: 1))
+          .AddSubCommand(new Command("wc-power", Command.Wrap(args => SetPower(float.Parse(args[0]))), "Set power override", nArgs: 1))
+          .AddSubCommand(new Command("wc-reset", Command.Wrap(Reset), "Delete all suspension calibrations", nArgs: 0))
+          .AddSubCommand(new Command("wc-roll", Command.Wrap(SetRoll), "Set roll override", nArgs: 1))
+          .AddSubCommand(new Command("wc-steer", Command.Wrap(args => SetSteer(float.Parse(args[0]))), "Set power override", nArgs: 1))
+          .AddSubCommand(new Command("wc-strafe", Command.Wrap(SetStrafing), "Set power override\nPossible values:\n  on\n  off\n  switch", nArgs: 1))
+          .AddSubCommand(new Command("wc-turn-radius", Command.Wrap(_turnRadius), "Overrides the turn radius", nArgs: 1))
+          .AddSubCommand(new Command("wc-turn-center", Command.Wrap(_turnCenter), "Offsets the turn center", nArgs: 1)));
       }
 
       void _turnCenter(string arg) => WheelBase.CenterOfTurnZOffset = double.Parse(arg);

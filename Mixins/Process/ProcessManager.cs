@@ -66,6 +66,7 @@ namespace IngameScript
           if (_program != null)
           {
             _metrics = new Metrics();
+            program.Runtime.UpdateFrequency = UpdateFrequency.Update1;
           }
         }
 

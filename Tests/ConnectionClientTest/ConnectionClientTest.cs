@@ -61,7 +61,6 @@ class ConnectionClientTest
   server-channel=server channel
 ",
       CustomName = "connector name",
-      WorldMatrix = MatrixD.Identity,
       WorldPositionMock = new Vector3D(5, 15, 25)
     };
     _igc = new MyIntergridCommunicationSystemMock(testBed);
@@ -91,7 +90,7 @@ class ConnectionClientTest
   {
     Program.ConnectionClient client = _getConnectionClient(null);
 
-    _startCmd("-ac-connect");
+    _startCmd("ac connect");
 
     _tick(1);
 
@@ -99,16 +98,16 @@ class ConnectionClientTest
     Assert.That(client.State, Is.EqualTo(Program.ConnectionState.WaitingCon));
     Assert.That(_igc.LastBroadcastMessage.Item1, Is.EqualTo("server channel"));
     // 0 - 0 = -0, allegedly
-    Assert.That(_igc.LastBroadcastMessage.Item2, Is.EqualTo("-ac-con \"Small\" \"5\" \"15\" \"25\" \"-0\" \"-0\" \"-1\""));
+    Assert.That(_igc.LastBroadcastMessage.Item2, Is.EqualTo("acd connect \"Small\" \"5\" \"15\" \"25\" \"-0\" \"-0\" \"-1\""));
 
-    _listener.QueueMessage("-ac-progress 0.25");
+    _listener.QueueMessage("cc-progress 0.25");
 
     _tick();
 
     Assert.That(client.Progress, Is.EqualTo(0.25f));
     Assert.That(client.State, Is.EqualTo(Program.ConnectionState.WaitingCon));
 
-    _listener.QueueMessage("-ac-done");
+    _listener.QueueMessage("cc-done");
     _tick();
 
     Assert.That(client.State, Is.EqualTo(Program.ConnectionState.Connected));
@@ -120,7 +119,7 @@ class ConnectionClientTest
   {
     Program.ConnectionClient client = _getConnectionClient(null);
 
-    _startCmd("-ac-connect");
+    _startCmd("ac connect");
 
     _tick(55); // enough to timeout
     Assert.That(client.State, Is.EqualTo(Program.ConnectionState.Ready));
@@ -136,17 +135,17 @@ class ConnectionClientTest
   {
     Program.ConnectionClient client = _getConnectionClient(null);
 
-    _startCmd("-ac-connect");
+    _startCmd("ac connect");
 
     _tick(40); // not enought to timeout
 
-    _listener.QueueMessage("-ac-progress 0.125");
+    _listener.QueueMessage("cc-progress 0.125");
 
     _tick(40);
 
     Assert.That(client.State, Is.EqualTo(Program.ConnectionState.WaitingCon));
 
-    _listener.QueueMessage("-ac-progress 0.25");
+    _listener.QueueMessage("cc-progress 0.25");
 
     _tick(40);
 
@@ -158,23 +157,23 @@ class ConnectionClientTest
   {
     Program.ConnectionClient client = _getConnectionClient("Connected");
 
-    _startCmd("-ac-disconnect");
+    _startCmd("ac disconnect");
 
     _tick(1);
 
     Assert.That(client.Progress, Is.EqualTo(0));
     Assert.That(client.State, Is.EqualTo(Program.ConnectionState.WaitingDisc));
     Assert.That(_igc.LastBroadcastMessage.Item1, Is.EqualTo("server channel"));
-    Assert.That(_igc.LastBroadcastMessage.Item2, Is.EqualTo("-ac-disc"));
+    Assert.That(_igc.LastBroadcastMessage.Item2, Is.EqualTo("acd disconnect"));
 
-    _listener.QueueMessage("-ac-progress 0.25");
+    _listener.QueueMessage("cc-progress 0.25");
 
     _tick();
 
     Assert.That(client.Progress, Is.EqualTo(0.25f));
     Assert.That(client.State, Is.EqualTo(Program.ConnectionState.WaitingDisc));
 
-    _listener.QueueMessage("-ac-done");
+    _listener.QueueMessage("cc-done");
     _tick();
 
     Assert.That(client.State, Is.EqualTo(Program.ConnectionState.Ready));
@@ -186,7 +185,7 @@ class ConnectionClientTest
   {
     Program.ConnectionClient client = _getConnectionClient("Connected");
 
-    _listener.QueueMessage("-ac-cancel");
+    _listener.QueueMessage("cc-cancel");
 
     _tick(6);
 
@@ -198,7 +197,7 @@ class ConnectionClientTest
     Assert.That(client.Progress, Is.EqualTo(0));
     Assert.That(client.State, Is.EqualTo(Program.ConnectionState.Standby));
 
-    _listener.QueueMessage("-ac-progress 0.5");
+    _listener.QueueMessage("cc-progress 0.5");
 
     _tick(6);
 
@@ -209,7 +208,7 @@ class ConnectionClientTest
   [Test]
   public void It_Uses_A_Random_Connector_By_Default()
   {
-     _connector.CustomData = @"[connection-client]
+    _connector.CustomData = @"[connection-client]
   server-channel=server channel
 ";
     _ini = new Program.IniWatcher(_connector, _manager);

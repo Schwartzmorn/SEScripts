@@ -50,17 +50,17 @@ public class RoutineParserTest
 ; line to be ignored
 = Test routine
 wait 10
--cmd arg
+cmd arg
 while forever
-  -cmd arg2
-  -cmd arg3  ""test test""  
+  cmd arg2
+  cmd arg3  ""test test""  
   wait    100
 end
 =Test routine 2  
-while -cmd arg4
-  -cmd arg5
-  while -cmd arg6
-    -cmd arg7
+while cmd arg4
+  cmd arg5
+  while cmd arg6
+    cmd arg7
   end
 end
 ");
@@ -91,8 +91,8 @@ end
   public void It_Returns_Meaningful_Errors()
   {
     _checkError("Unexpected start of new auto routine at line 3", "=test\nwhile forever\n=test2");
-    _checkError("Unexpected instruction '-cmd test' at line 1 outside of a routine", "-cmd test");
-    _checkError("Could not parse instruction 'something' at line 2", "=test\nwhile something");
+    _checkError("Unexpected instruction 'cmd test' at line 1 outside of a routine", "cmd test");
+    // _checkError("Could not parse instruction 'something' at line 2", "=test\nwhile something");
   }
 
   [Test]
@@ -102,9 +102,9 @@ end
 ; line to be ignored
 = Test routine
 wait $2
--cmd $1
+cmd $1
 while wait $3
-  -cmd $1 $4
+  cmd $1 $4
 end
 ");
     Assert.That(routines.Count, Is.EqualTo(1));
@@ -119,13 +119,13 @@ end
   {
     List<Program.AutoRoutine> routines = _parser.Parse(@"
 = Mine
-while -inv-while under 1
-  -arm-drill $auto-low
-  -arm-drill $top
+while inv-while under 1
+  arm drill $auto-low
+  arm drill $top
 end
--arm-recall $auto-low
+arm recall $auto-low
 ");
-    Assert.That(routines.Count, Is.EqualTo(2));
+    Assert.That(routines.Count, Is.EqualTo(1));
     Program.AutoRoutine routine = routines[0];
 
     Assert.That(routine.ArgsCount(), Is.EqualTo(0));

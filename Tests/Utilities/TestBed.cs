@@ -34,7 +34,7 @@ public class ProgramWrapper
 
   public Action Initialize;
 
-  public void Run(string arg) => RunMain(arg, UpdateType.Terminal);
+  public void Run(string arg, UpdateType updateType = UpdateType.Terminal) => RunMain(arg, updateType);
   public Action<string, UpdateType> RunMain;
   public Action RunOnSave;
 

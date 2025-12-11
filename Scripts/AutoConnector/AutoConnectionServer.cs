@@ -16,178 +16,229 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
     /// <summary>This class handles the requests made to an <see cref="AutoConnector"/>, sending updates to requestor, handling reconnection, automatic disconnections</summary>
-    public struct ConnectionRequest {
+    public struct ConnectionRequest
+    {
       public long Address;
       public MyCubeSize Size;
       public Vector3D Position;
       public Vector3D Orientation;
     }
 
-    public class AutoConnectionServer {
+    public class AutoConnectionServer
+    {
       private static readonly double DISTANCE_CUTOFF = 2;
       private static readonly string INI_SECTION = "connection-server-";
 
-      public string Name => this.connector.Name;
+      public string Name => _connector.Name;
       public ConnectionRequest? CurrentRequest { get; private set; }
       public ConnectionRequest? PreviousRequest { get; private set; }
 
-      readonly AutoConnector connector;
-      readonly IMyIntergridCommunicationSystem igc;
-      readonly Action<string> logger;
-      readonly Process mainProcess;
+      readonly AutoConnector _connector;
+      readonly IMyIntergridCommunicationSystem _igc;
+      readonly Action<string> _logger;
+      readonly Process _mainProcess;
 
       public AutoConnectionServer(MyIni ini, IMyIntergridCommunicationSystem igc, AutoConnector connector, IProcessSpawner spawner, Action<string> logger)
-          : this(igc, connector, spawner) {
-        this.logger = logger;
-        this.deserialize(ini);
+          : this(igc, connector, spawner)
+      {
+        _logger = logger;
+        _deserialize(ini);
       }
 
-      public AutoConnectionServer(IMyIntergridCommunicationSystem igc, AutoConnector connector, IProcessSpawner spawner) {
-        this.connector = connector;
-        this.igc = igc;
-        this.mainProcess = spawner.Spawn(p => this.Update(), $"ac-server '{this.Name}'", onDone => this.connector.Stop());
-        this.logger?.Invoke($"Connector {this.Name} ready");
+      public AutoConnectionServer(IMyIntergridCommunicationSystem igc, AutoConnector connector, IProcessSpawner spawner)
+      {
+        _connector = connector;
+        _igc = igc;
+        _mainProcess = spawner.Spawn(p => Update(), $"ac-server '{Name}'", onDone => _connector.Stop());
+        _logger?.Invoke($"Connector {Name} ready");
       }
 
-      public bool IsInRange(Vector3D position) => this.connector.GetDistance(position) < DISTANCE_CUTOFF;
+      public bool IsInRange(Vector3D position) => _connector.GetDistance(position) < DISTANCE_CUTOFF;
 
-      public bool HasPendingRequest(long address) => address == this.CurrentRequest?.Address || address == this.PreviousRequest?.Address;
+      public bool HasPendingRequest(long address) => address == CurrentRequest?.Address || address == PreviousRequest?.Address;
 
-      public void Connect(ConnectionRequest request) {
-        if (this.CurrentRequest != null && this.CurrentRequest?.Address == request.Address) {
-          this.CurrentRequest = request;
-        } else {
-          if (this.PreviousRequest != null && this.PreviousRequest.Value.Address != request.Address) {
-            this.sendCancel(this.PreviousRequest.Value);
+      public void Connect(ConnectionRequest request)
+      {
+        if (CurrentRequest != null && CurrentRequest?.Address == request.Address)
+        {
+          CurrentRequest = request;
+        }
+        else
+        {
+          if (PreviousRequest != null && PreviousRequest.Value.Address != request.Address)
+          {
+            _sendCancel(PreviousRequest.Value);
           }
-          this.PreviousRequest = this.CurrentRequest;
-          this.CurrentRequest = request;
+          PreviousRequest = CurrentRequest;
+          CurrentRequest = request;
         }
-        if(this.PreviousRequest != null) {
-          this.sendCancel(this.PreviousRequest.Value);
+        if (PreviousRequest != null)
+        {
+          _sendCancel(PreviousRequest.Value);
         }
-        this.connector.Connect(this.CurrentRequest.Value.Size, this.CurrentRequest.Value.Position, this.CurrentRequest.Value.Orientation);
-        this.startConnectionCallback(this.CurrentRequest.Value);
+        _connector.Connect(CurrentRequest.Value.Size, CurrentRequest.Value.Position, CurrentRequest.Value.Orientation);
+        _startConnectionCallback(CurrentRequest.Value);
       }
 
-      public void Disconnect(long address) {
-        if (this.PreviousRequest != null && (this.PreviousRequest?.Address == address)) {
-          this.PreviousRequest = null;
-        } else if (this.CurrentRequest != null && (this.CurrentRequest?.Address == address)) {
-          ConnectionRequest requestToNotify = this.CurrentRequest.Value;
-          this.CurrentRequest = this.PreviousRequest;
-          this.PreviousRequest = null;
-          if (this.CurrentRequest != null) {
-            this.Connect(this.CurrentRequest.Value);
-          } else {
-            this.connector.Disconnect();
-            this.mainProcess.KillChildren();
+      public void Disconnect(long address)
+      {
+        if (PreviousRequest != null && (PreviousRequest?.Address == address))
+        {
+          PreviousRequest = null;
+        }
+        else if (CurrentRequest != null && (CurrentRequest?.Address == address))
+        {
+          ConnectionRequest requestToNotify = CurrentRequest.Value;
+          CurrentRequest = PreviousRequest;
+          PreviousRequest = null;
+          if (CurrentRequest != null)
+          {
+            Connect(CurrentRequest.Value);
           }
-          double totalLength = this.connector.GetRemainingLength();
-          this.mainProcess.Spawn(p => this.checkDisconnectionProgress(p, requestToNotify, totalLength), "disconnection-progress", p => this.sendMessage(requestToNotify, "-ac-done"), 10);
-        }
-      }
-
-      public void Reset() {
-        this.mainProcess.KillChildren();
-        if (this.CurrentRequest != null) {
-          this.sendCancel(this.CurrentRequest.Value);
-        }
-        if(this.PreviousRequest != null) {
-          this.sendCancel(this.PreviousRequest.Value);
-        }
-        this.CurrentRequest = null;
-        this.PreviousRequest = null;
-        this.connector.Disconnect();
-      }
-
-      public void Save(MyIni ini) {
-        if(this.CurrentRequest != null) {
-          string sectionName = $"{INI_SECTION}{this.connector.Name}";
-          this.saveRequest(ini, sectionName, "current", this.CurrentRequest.Value);
-          if(this.PreviousRequest != null) {
-            this.saveRequest(ini, sectionName, "previous", this.PreviousRequest.Value);
+          else
+          {
+            _connector.Disconnect();
+            _mainProcess.KillChildren();
           }
+          double totalLength = _connector.GetRemainingLength();
+          _mainProcess.Spawn(p => _checkDisconnectionProgress(p, requestToNotify, totalLength), "disconnection-progress", p => _sendMessage(requestToNotify, "cc-done"), 10);
         }
-        this.connector.Save(ini);
-      }
-      public bool Update() => this.connector.Update();
-
-      public void Kill() => this.mainProcess.Kill();
-
-      void startConnectionCallback(ConnectionRequest request) {
-        this.mainProcess.KillChildren();
-        double length = this.connector.GetRemainingLength();
-        this.mainProcess.Spawn(p => this.checkConnectionProgress(p, request, length), "connection-progress", period: 10);
       }
 
-      void checkConnectionProgress(Process p, ConnectionRequest request, double totalLength) {
-        float progress = (float)((totalLength - this.connector.GetRemainingLength()) / totalLength);
-        if (this.connector.IsMoving()) {
-          this.sendMessage(request, $"-ac-progress {MathHelper.Clamp(progress, 0, 1)}");
-        } else {
-          this.mainProcess.KillChildren();
-          if (this.connector.IsConnected()) {
-            this.sendMessage(request, "-ac-done");
-            this.mainProcess.Spawn(this.checkManualDisconnection, "check-manual-disc", period: 10);
-          } else {
-            this.sendMessage(request, "-ac-ko");
-            this.Disconnect(request.Address);
+      public void Reset()
+      {
+        _mainProcess.KillChildren();
+        if (CurrentRequest != null)
+        {
+          _sendCancel(CurrentRequest.Value);
+        }
+        if (PreviousRequest != null)
+        {
+          _sendCancel(PreviousRequest.Value);
+        }
+        CurrentRequest = null;
+        PreviousRequest = null;
+        _connector.Disconnect();
+      }
+
+      public void Save(MyIni ini)
+      {
+        if (CurrentRequest != null)
+        {
+          string sectionName = $"{INI_SECTION}{_connector.Name}";
+          _saveRequest(ini, sectionName, "current", CurrentRequest.Value);
+          if (PreviousRequest != null)
+          {
+            _saveRequest(ini, sectionName, "previous", PreviousRequest.Value);
           }
         }
+        _connector.Save(ini);
+      }
+      public bool Update() => _connector.Update();
+
+      public void Kill() => _mainProcess.Kill();
+
+      void _startConnectionCallback(ConnectionRequest request)
+      {
+        _mainProcess.KillChildren();
+        double length = _connector.GetRemainingLength();
+        _mainProcess.Spawn(p => _checkConnectionProgress(p, request, length), "connection-progress", period: 10);
       }
 
-      void checkManualDisconnection(Process p) {
-        if (!this.connector.IsConnected()) {
-          this.mainProcess.KillChildren();
-          if (this.CurrentRequest != null) {
-            this.Disconnect(this.CurrentRequest.Value.Address);
-          } else {
-            this.Reset();
+      void _checkConnectionProgress(Process p, ConnectionRequest request, double totalLength)
+      {
+        float progress = (float)((totalLength - _connector.GetRemainingLength()) / totalLength);
+        if (_connector.IsMoving())
+        {
+          _sendMessage(request, $"cc-progress {MathHelper.Clamp(progress, 0, 1)}");
+        }
+        else
+        {
+          _mainProcess.KillChildren();
+          if (_connector.IsConnected())
+          {
+            _sendMessage(request, "cc-done");
+            _mainProcess.Spawn(_checkManualDisconnection, "check-manual-disc", period: 10);
+          }
+          else
+          {
+            _sendMessage(request, "cc-ko");
+            Disconnect(request.Address);
           }
         }
       }
 
-      void checkDisconnectionProgress(Process p, ConnectionRequest request, double totalLength) {
-        float progress = (float)((totalLength - this.connector.GetRemainingLength()) / totalLength) * 3;
-        if (progress > 1) {
+      void _checkManualDisconnection(Process p)
+      {
+        if (!_connector.IsConnected())
+        {
+          _mainProcess.KillChildren();
+          if (CurrentRequest != null)
+          {
+            Disconnect(CurrentRequest.Value.Address);
+          }
+          else
+          {
+            Reset();
+          }
+        }
+      }
+
+      void _checkDisconnectionProgress(Process p, ConnectionRequest request, double totalLength)
+      {
+        float progress = (float)((totalLength - _connector.GetRemainingLength()) / totalLength) * 3;
+        if (progress > 1)
+        {
           p.Kill();
-        } else {
-          this.sendMessage(request, $"-ac-progress {MathHelper.Clamp(progress, 0, 1)}");
+        }
+        else
+        {
+          _sendMessage(request, $"cc-progress {MathHelper.Clamp(progress, 0, 1)}");
         }
       }
 
-      void sendCancel(ConnectionRequest request) => this.sendMessage(request, "-ac-cancel");
+      void _sendCancel(ConnectionRequest request) => _sendMessage(request, "cc-cancel");
 
-      void sendMessage(ConnectionRequest request, string message) => this.igc.SendUnicastMessage(request.Address, "", message);
+      void _sendMessage(ConnectionRequest request, string message) => _igc.SendUnicastMessage(request.Address, "", message);
 
-      void saveRequest(MyIni ini, string sectionName, string requestName, ConnectionRequest request) {
+      void _saveRequest(MyIni ini, string sectionName, string requestName, ConnectionRequest request)
+      {
         ini.Set(sectionName, $"{requestName}-address", request.Address);
         ini.SetVector(sectionName, $"{requestName}-orientation", request.Orientation);
         ini.SetVector(sectionName, $"{requestName}-position", request.Position);
         ini.Set(sectionName, $"{requestName}-size", request.Size.ToString());
       }
 
-      void deserialize(MyIni ini) {
-        string sectionName = $"{INI_SECTION}{this.connector.Name}";
-        if (ini.ContainsSection(sectionName)) {
-          this.CurrentRequest = this.deserializeRequest(ini, sectionName, "current");
-          if (ini.ContainsKey(sectionName, "previous")) {
-            this.PreviousRequest = this.deserializeRequest(ini, sectionName, "previous");
+      void _deserialize(MyIni ini)
+      {
+        string sectionName = $"{INI_SECTION}{_connector.Name}";
+        if (ini.ContainsSection(sectionName))
+        {
+          CurrentRequest = _deserializeRequest(ini, sectionName, "current");
+          if (ini.ContainsKey(sectionName, "previous"))
+          {
+            PreviousRequest = _deserializeRequest(ini, sectionName, "previous");
           }
         }
-        if (this.connector.IsConnected()) {
-          this.mainProcess.Spawn(this.checkManualDisconnection, "check-manual-disc", period: 10);
-        } else if (this.CurrentRequest != null) {
-          this.startConnectionCallback(this.CurrentRequest.Value);
+        if (_connector.IsConnected())
+        {
+          _mainProcess.Spawn(_checkManualDisconnection, "check-manual-disc", period: 10);
+        }
+        else if (CurrentRequest != null)
+        {
+          _startConnectionCallback(CurrentRequest.Value);
         }
       }
 
-      ConnectionRequest deserializeRequest(MyIni ini, string sectionName, string requestName) {
-        return new ConnectionRequest {
+      ConnectionRequest _deserializeRequest(MyIni ini, string sectionName, string requestName)
+      {
+        return new ConnectionRequest
+        {
           Address = ini.GetThrow(sectionName, $"{requestName}-address").ToInt64(),
           Orientation = ini.GetVector(sectionName, $"{requestName}-orientation"),
           Position = ini.GetVector(sectionName, $"{requestName}-position"),

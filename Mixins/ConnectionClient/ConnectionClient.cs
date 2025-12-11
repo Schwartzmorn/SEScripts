@@ -46,10 +46,10 @@ namespace IngameScript
 
         _mainProcess = manager.Spawn(_listen, "cc-listen", period: 5);
         _listenerCmd = new CommandLine("Connection client listener", null, _mainProcess);
-        _listenerCmd.RegisterCommand(new Command("ac-progress", Command.Wrap(_progress), "", nArgs: 1));
-        _listenerCmd.RegisterCommand(new Command("ac-done", Command.Wrap(_done), ""));
-        _listenerCmd.RegisterCommand(new Command("ac-cancel", Command.Wrap(_serverCancel), ""));
-        _listenerCmd.RegisterCommand(new Command("ac-ko", Command.Wrap(_ko), ""));
+        _listenerCmd.RegisterCommand(new Command("cc-progress", Command.Wrap(_progress), "", nArgs: 1));
+        _listenerCmd.RegisterCommand(new Command("cc-done", Command.Wrap(_done), ""));
+        _listenerCmd.RegisterCommand(new Command("cc-cancel", Command.Wrap(_serverCancel), ""));
+        _listenerCmd.RegisterCommand(new Command("cc-ko", Command.Wrap(_ko), ""));
         _listener = _igc.UnicastListener;
 
         ini.Add(this);
@@ -229,13 +229,13 @@ namespace IngameScript
 
       void _sendCon()
       {
-        CommandSerializer com = new CommandSerializer("ac-con").AddArg(_connector.CubeGrid.GridSizeEnum);
+        CommandSerializer com = new CommandSerializer("acd connect").AddArg(_connector.CubeGrid.GridSizeEnum);
         _addVector(_connector.GetPosition(), com);
         _addVector(_connector.WorldMatrix.Forward, com);
         _igc.SendBroadcastMessage(_serverChannel, com.ToString());
       }
 
-      void _sendDisc() => _igc.SendBroadcastMessage(_serverChannel, new CommandSerializer("ac-disc").ToString());
+      void _sendDisc() => _igc.SendBroadcastMessage(_serverChannel, new CommandSerializer("acd disconnect").ToString());
 
       void _listen(Process p)
       {
@@ -288,9 +288,11 @@ namespace IngameScript
 
       void _addCmds(CommandLine cmd)
       {
-        cmd.RegisterCommand(new Command("ac-connect", Command.Wrap(_connect), "Requests for an auto connection", nArgs: 0));
-        cmd.RegisterCommand(new Command("ac-disconnect", Command.Wrap(_deco), "Requests for disconnection", nArgs: 0));
-        cmd.RegisterCommand(new Command("ac-switch", Command.Wrap(_switchConnection), "Requests for connection/disconnection", nArgs: 0));
+        cmd.RegisterCommand(new ParentCommand("ac", "Interacts with the auto connector")
+          .AddSubCommand(new Command("connect", Command.Wrap(_connect), "Requests for an auto connection", nArgs: 0))
+          .AddSubCommand(new Command("disconnect", Command.Wrap(_deco), "Requests for disconnection", nArgs: 0))
+          .AddSubCommand(new Command("switch", Command.Wrap(_switchConnection), "Requests for connection/disconnection", nArgs: 0)));
+
       }
 
       void _log(string s) => _logger?.Invoke("cc: " + s);

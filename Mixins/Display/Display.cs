@@ -36,7 +36,7 @@ namespace IngameScript
       /// <summary><see cref="IDisposable"/> wrapper around a <see cref="MySpriteDrawFrame"/> with a more convenient interface</summary>
       public class Frame : IDisposable
       {
-        readonly MySpriteDrawFrame _f;
+        public readonly MySpriteDrawFrame _f;
         readonly Display _d;
         /// <summary>Creates a frame for a <see cref="Display"/>. Inherits its offset and <see cref="ShapeCollections"/></summary>
         /// <param name="display">Display on which to draw the frame</param>

@@ -97,7 +97,6 @@ public class MyMotorStatorMock : MyMechanicalConnectionBlockMock, IMyMotorStator
     }
   }
   public bool RotorLock { get; set; }
-  public override bool IsLocked => RotorLock; // Not sure if accurate
 
   public void RotateToAngle(MyRotationDirection dir, float desiredAng, float velAbsRpm)
   {

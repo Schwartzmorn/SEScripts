@@ -17,14 +17,18 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
+namespace IngameScript
+{
+  partial class Program
+  {
     /// <summary>Class that parses the routines</summary>
-    public class RoutineParser {
+    public class RoutineParser
+    {
       readonly CommandLine _commandLine;
       /// <summary>Creates a new parser</summary>
       /// <param name="commandLine">Command line that will be used to execute commands</param>
-      public RoutineParser(CommandLine commandLine) {
+      public RoutineParser(CommandLine commandLine)
+      {
         _commandLine = commandLine;
       }
       /// <summary>
@@ -42,50 +46,73 @@ namespace IngameScript {
       /// In lieu of arguments, a routine can use placeholder denoted by '$1', '$2', etc. that will then be replaced by the arguments given at the start of the autoroutine
       /// <param name="routineString"></param>
       /// <returns></returns>
-      public List<AutoRoutine> Parse(string routineString) {
+      public List<AutoRoutine> Parse(string routineString)
+      {
         var routines = new List<AutoRoutine>();
         var current = new Stack<List<Instruction>>();
         int count = 0;
-        foreach (string l in routineString.Split(new char[]{ '\n' })) {
+        foreach (string l in routineString.Split(new char[] { '\n' }))
+        {
           ++count;
           string line = l.Trim();
-          if (line == "" || line.StartsWith(";")) {
+          if (line == "" || line.StartsWith(";"))
+          {
             continue;
           }
-          if (line.StartsWith("=")) {
-            if (current.Count > 1) {
+          if (line.StartsWith("="))
+          {
+            if (current.Count > 1)
+            {
               throw new InvalidOperationException($"Unexpected start of new auto routine at line {count}");
-            } else if (current.Count == 1) {
+            }
+            else if (current.Count == 1)
+            {
               current.Pop();
             }
             current.Push(new List<Instruction>());
             routines.Add(new AutoRoutine(line.Substring(1).Trim(), current.Peek()));
-          } else if (current.Count == 0) {
+          }
+          else if (current.Count == 0)
+          {
             throw new InvalidOperationException($"Unexpected instruction '{line}' at line {count} outside of a routine");
-          } else if (line.StartsWith("while")) {
+          }
+          else if (line.StartsWith("while"))
+          {
             var instructions = new List<Instruction>();
             current.Peek().Add(new WhileInstruction(_parse(line.Substring(5).Trim(), count), instructions));
             current.Push(instructions);
-          } else if (line == "end") {
+          }
+          else if (line == "end")
+          {
             current.Pop();
-          } else {
+          }
+          else
+          {
             current.Peek().Add(_parse(line, count));
           }
         }
         return routines;
       }
 
-      SingleInstruction _parse(string s, int count) {
-        try {
-          if (s.StartsWith("wait")) {
+      SingleInstruction _parse(string s, int count)
+      {
+        try
+        {
+          if (s.StartsWith("wait"))
+          {
             return new WaitInstruction(s.Substring(4));
-          } else if (s == "forever") {
+          }
+          else if (s == "forever")
+          {
             return new ForeverInstruction();
-          } else if (s.StartsWith("-")) {
-            MyTuple<string, List<string>> parsed = _commandLine.ParseCommand(s);
+          }
+          else
+          {
+            MyTuple<string, ArgumentsWrapper> parsed = _commandLine.ParseCommand(s);
             return new CommandInstruction(parsed.Item1, parsed.Item2, _commandLine);
           }
-        } catch (Exception) { }
+        }
+        catch (Exception) { }
         throw new InvalidOperationException($"Could not parse instruction '{s}' at line {count}");
       }
     }

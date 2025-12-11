@@ -51,18 +51,18 @@ namespace IngameScript
         _update();
         main.Spawn(process => _update(), "solar-manager-update", period: 10000);
         manager.AddOnSave(_save);
-        command.RegisterCommand(new Command("solar-adjust", Command.Wrap(_adjust), "adjusts the position of a rotor", minArgs: 2, maxArgs: 3,
-            detailedHelp: @"first argument is the offset in degree
+        command.RegisterCommand(new Command("solar-adjust", Command.Wrap(_adjust), @"Adjusts the position of a rotor.
+first argument is the offset in degree
 second argument is the id of the rotor
-third (optional) is the id of the auxilliary rotor"));
+third (optional) is the id of the auxilliary rotor", minArgs: 2, maxArgs: 3));
         command.RegisterCommand(new Command("solar-track", Command.Wrap(_track), "forces an idle rotor to start tracking", nArgs: 1));
       }
 
-      void _adjust(List<string> args)
+      void _adjust(ArgumentsWrapper args)
       {
         float offset = float.Parse(args[0]);
         int rotorId = int.Parse(args[1]);
-        int rotorAuxId = (args.Count == 3) ? int.Parse(args[2]) : 0;
+        int rotorAuxId = (args.RemaingCount == 3) ? int.Parse(args[2]) : 0;
         _solarRotors.FirstOrDefault(r => r.IDNumber == rotorId)?.Adjust(offset, rotorAuxId);
       }
 

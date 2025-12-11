@@ -29,19 +29,19 @@ public class AutoRoutineHandlerTest
   {
     string result = "";
     _commandLine.RegisterCommand(new Program.Command("cmd", (args, logger) =>
-      VRage.MyTuple.Create<int, bool, Action<Program.Process>>(1, true, p =>
+       p =>
       {
         result = string.Join(",", args);
-      }), ""
+      }, ""
     ));
 
     _arHandler.AddRoutines([
         new Program.AutoRoutine("test", [
-          new Program.CommandInstruction("cmd", ["arg1", "$1"], _commandLine)
+          new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["arg1", "$1"]), _commandLine)
         ])
       ]);
 
-    _commandLine.StartCmd("-ar-execute test placeholder-arg", Program.CommandTrigger.User);
+    _commandLine.StartCmd("ar execute test placeholder-arg", Program.CommandTrigger.User);
 
     // On tick to start the autoroutine, on tick to execute the command
     _manager.Tick();
@@ -65,7 +65,7 @@ public class AutoRoutineHandlerTest
         ])
     ]);
 
-    _commandLine.StartCmd("-ar-list", Program.CommandTrigger.User);
+    _commandLine.StartCmd("ar list", Program.CommandTrigger.User);
     _manager.Tick();
 
     Assert.That(_logs.Any(s => s.Contains("'test-none': takes no argument")));

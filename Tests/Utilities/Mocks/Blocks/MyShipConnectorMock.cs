@@ -11,7 +11,7 @@ public class MyShipConnectorMock(MyCubeGridMock cubeGridMock) : MyFunctionalBloc
 
   public bool IsLocked => throw new System.NotSupportedException("Obsolete, use IsConnected instead");
 
-  public bool IsConnected => throw new System.NotImplementedException();
+  public bool IsConnected => Status == MyShipConnectorStatus.Connected;
 
   public MyShipConnectorMock PendingOtherConnector { get; set; }
 

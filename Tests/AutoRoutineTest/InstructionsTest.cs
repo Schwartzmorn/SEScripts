@@ -25,9 +25,9 @@ public class InstructionsTest
     return processes;
   }
 
-  private VRage.MyTuple<int, bool, Action<Program.Process>> _command(List<string> args, Action<string> logger)
+  private Action<Program.Process> _command(Program.ArgumentsWrapper args, Action<string> logger)
   {
-    return VRage.MyTuple.Create<int, bool, Action<Program.Process>>(1, true, p => { _commandCalls.Add(string.Join(",", args)); });
+    return p => { _commandCalls.Add(string.Join(",", args)); };
   }
 
   [SetUp]
@@ -44,9 +44,9 @@ public class InstructionsTest
   [Test]
   public void CommandInstruction_Calls_The_Command()
   {
-    var cmd = new Program.CommandInstruction("cmd", ["arg1", "arg2"], _commandLine);
+    var cmd = new Program.CommandInstruction("cmd", new Program.ArgumentsWrapper(["arg1", "arg2"]), _commandLine);
 
-    cmd.Execute(_process, _spyCallback, []);
+    cmd.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
     List<string> processes = _getProcesses();
 
     Assert.That(processes.Count, Is.EqualTo(2));
@@ -67,9 +67,9 @@ public class InstructionsTest
   public void CommandInstruction_Can_Be_Killed()
   {
     // We check that the callback is executed correctly when we kill the process
-    var cmd = new Program.CommandInstruction("cmd", [], _commandLine);
+    var cmd = new Program.CommandInstruction("cmd", new Program.ArgumentsWrapper([]), _commandLine);
 
-    cmd.Execute(_process, _spyCallback, []);
+    cmd.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
 
     A.CallTo(() => _spyCallback(A<Program.Process>.Ignored)).MustNotHaveHappened();
 
@@ -87,7 +87,7 @@ public class InstructionsTest
   {
     var wait = new Program.WaitInstruction("4");
 
-    wait.Execute(_process, _spyCallback, new List<string>());
+    wait.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
     List<string> processes = _getProcesses();
 
     Assert.That(processes.Count, Is.EqualTo(2));
@@ -116,7 +116,7 @@ public class InstructionsTest
   {
     var wait = new Program.WaitInstruction("1");
 
-    wait.Execute(_process, _spyCallback, []);
+    wait.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
 
     A.CallTo(() => _spyCallback(A<Program.Process>.Ignored)).MustNotHaveHappened();
 
@@ -134,7 +134,7 @@ public class InstructionsTest
   {
     var always = new Program.ForeverInstruction();
 
-    always.Execute(_process, _spyCallback, new List<string>());
+    always.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
     List<string> processes = _getProcesses();
 
     Assert.That(processes.Count, Is.EqualTo(2));
@@ -158,12 +158,12 @@ public class InstructionsTest
   public void MultipleInstruction_Runs_Instructions_Sequentially()
   {
     var multiple = new Program.MultipleInstruction([
-      new Program.CommandInstruction("cmd", ["1"], _commandLine),
+      new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["1"]), _commandLine),
         new Program.WaitInstruction("2"),
-        new Program.CommandInstruction("cmd", ["2"], _commandLine)
+        new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["2"]), _commandLine)
     ]);
 
-    multiple.Execute(_process, _spyCallback, new List<string>());
+    multiple.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
 
     _tick();
 
@@ -189,12 +189,12 @@ public class InstructionsTest
   public void MultipleInstruction_Continues_If_One_Instruction_Is_Killed()
   {
     var multiple = new Program.MultipleInstruction([
-      new Program.CommandInstruction("cmd", ["1"], _commandLine),
+      new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["1"]), _commandLine),
       new Program.WaitInstruction("2"),
-      new Program.CommandInstruction("cmd", ["2"], _commandLine)
+      new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["2"]), _commandLine)
     ]);
 
-    multiple.Execute(_process, _spyCallback, []);
+    multiple.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
 
     _tick();
 
@@ -216,12 +216,12 @@ public class InstructionsTest
     var whileInstruction = new Program.WhileInstruction(
       new Program.WaitInstruction("5"),
       [
-        new Program.CommandInstruction("cmd", ["1"], _commandLine),
-        new Program.CommandInstruction("cmd", ["2"], _commandLine),
-        new Program.CommandInstruction("cmd", ["3"], _commandLine),
+        new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["1"]), _commandLine),
+        new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["2"]), _commandLine),
+        new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["3"]), _commandLine),
       ]
     );
-    whileInstruction.Execute(_process, _spyCallback, []);
+    whileInstruction.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
 
     foreach (int i in Enumerable.Range(0, 4))
     {
@@ -248,12 +248,12 @@ public class InstructionsTest
     var whileInstruction = new Program.WhileInstruction(
       new Program.WaitInstruction("5"),
       [
-          new Program.CommandInstruction("cmd", ["1"], _commandLine),
-          new Program.CommandInstruction("cmd", ["2"], _commandLine),
-          new Program.CommandInstruction("cmd", ["3"], _commandLine),
+          new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["1"]), _commandLine),
+          new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["2"]), _commandLine),
+          new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["3"]), _commandLine),
       ]
     );
-    whileInstruction.Execute(_process, _spyCallback, new List<string>());
+    whileInstruction.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
 
     _tick();
 
@@ -275,12 +275,12 @@ public class InstructionsTest
   {
     var multipleInstruction = new Program.MultipleInstruction(
       [
-        new Program.CommandInstruction("cmd", ["$1"], _commandLine),
-        new Program.CommandInstruction("cmd", ["$1", "$4"], _commandLine),
+        new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["$1"]), _commandLine),
+        new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["$1", "$4"]), _commandLine),
         new Program.WaitInstruction("$3"),
       ]
     );
-    multipleInstruction.Execute(_process, _spyCallback, new List<string> { "arg1", "arg2", "4", "arg4" });
+    multipleInstruction.Execute(_process, _spyCallback, new Program.ArgumentsWrapper(["arg1", "arg2", "4", "arg4"]));
 
     _tick();
 

@@ -17,18 +17,21 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program: MyGridProgram {
+namespace IngameScript
+{
+  partial class Program : MyGridProgram
+  {
     readonly CommandLine _cmd;
     readonly IProcessManager _manager;
     ColorScheme _scheme = new ColorScheme();
 
-    public Program() {
+    public Program()
+    {
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       IMyTextSurface topLeft, topRight, keyboard;
       IMyCockpit cockpit;
       _manager = Process.CreateManager(Echo);
-      initCockpit(out cockpit, out topLeft, out topRight, out keyboard);
+      _initCockpit(out cockpit, out topLeft, out topRight, out keyboard);
       var ct = new CoordinatesTransformer(cockpit, _manager);
       var logger = new Logger(_manager, keyboard, _scheme.Light, _scheme.Dark, Echo);
       logger.Log("Booting up...");
@@ -44,29 +47,39 @@ namespace IngameScript {
 
     public void Save() { }
 
-    public void Main(string arg, UpdateType us) {
+    public void Main(string arg, UpdateType us)
+    {
       _cmd.StartCmd(arg, CommandTrigger.User);
-      if((us & UpdateType.Update1) > 0) {
+      if ((us & UpdateType.Update1) > 0)
+      {
         _manager.Tick();
       }
     }
 
-    void initCockpit(out IMyCockpit cockpit, out IMyTextSurface topLeft, out IMyTextSurface topRight, out IMyTextSurface keyboard) {
+    void _initCockpit(out IMyCockpit cockpit, out IMyTextSurface topLeft, out IMyTextSurface topRight, out IMyTextSurface keyboard)
+    {
       var cockpits = new List<IMyCockpit>();
       GridTerminalSystem.GetBlocksOfType(cockpits, c => c.CubeGrid == Me.CubeGrid);
-      if(cockpits.Count == 0) {
+      if (cockpits.Count == 0)
+      {
         throw new ArgumentException("No cockpit found");
       }
 
       cockpit = cockpits[0];
       topLeft = topRight = keyboard = null;
-      for(int i = 0; i < cockpit.SurfaceCount; ++i) {
+      for (int i = 0; i < cockpit.SurfaceCount; ++i)
+      {
         IMyTextSurface surface = cockpit.GetSurface(i);
-        if(surface.DisplayName == "Top Left Screen") {
+        if (surface.DisplayName == "Top Left Screen")
+        {
           topLeft = surface;
-        } else if(surface.DisplayName == "Top Right Screen") {
+        }
+        else if (surface.DisplayName == "Top Right Screen")
+        {
           topRight = surface;
-        } else if(surface.DisplayName == "Keyboard") {
+        }
+        else if (surface.DisplayName == "Keyboard")
+        {
           keyboard = surface;
         }
       }

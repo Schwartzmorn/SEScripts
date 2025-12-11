@@ -33,7 +33,7 @@ namespace IngameScript
         cmd.RegisterCommand(new Command("inv-while", Command.Wrap(_startWait), "Wait for cargo inventory to reach a certain point", nArgs: 2));
       }
 
-      void _startWait(Process p, List<string> args)
+      void _startWait(Process p, ArgumentsWrapper args)
       {
         bool over = args[0] == "over";
         float thresholdLoadFactor = float.Parse(args[1]);

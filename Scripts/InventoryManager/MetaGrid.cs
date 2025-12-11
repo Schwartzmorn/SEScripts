@@ -30,12 +30,6 @@ namespace IngameScript
       private IMyCubeGrid _grid;
       private readonly HashSet<long> _grids = new HashSet<long>();
       private int _volume = -1;
-      /// <summary>Creates a new Metagrid</summary>
-      /// <param name="grid">First grid of the meta grid</param>
-      public MetaGrid(IMyCubeGrid grid)
-      {
-        AddGrid(grid);
-      }
       /// <summary>Adds a grid to the metagrid</summary>
       /// <param name="grid">grid to add</param>
       public void AddGrid(IMyCubeGrid grid)

@@ -1,3 +1,4 @@
+using System;
 using Sandbox.ModAPI.Ingame;
 using VRage.Game.ModAPI.Ingame;
 
@@ -10,8 +11,16 @@ public abstract class MyMechanicalConnectionBlockMock(MyCubeGridMock cubeGridMoc
 
   public IMyAttachableTopBlock Top { get; set; }
 
-  public float SafetyLockSpeed { get; set; }
-  public bool SafetyLock { get; set; }
+  public float SafetyLockSpeed
+  {
+    get => throw new NotSupportedException("Obsolete");
+    set => throw new NotSupportedException("Obsolete");
+  }
+  public bool SafetyLock
+  {
+    get => throw new NotSupportedException("Obsolete");
+    set => throw new NotSupportedException("Obsolete");
+  }
 
   public bool IsAttached => Top != null;
 
@@ -38,5 +47,8 @@ public abstract class MyMechanicalConnectionBlockMock(MyCubeGridMock cubeGridMoc
     }
   }
 
-  public abstract bool IsLocked { get; }
+  public bool IsLocked
+  {
+    get => throw new NotSupportedException("Obsolete");
+  }
 }

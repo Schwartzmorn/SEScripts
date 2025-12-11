@@ -1,4 +1,6 @@
+using System.Linq;
 using Sandbox.ModAPI.Ingame;
+using Utilities.Mocks.Blocks;
 using VRageMath;
 
 namespace Utilities.Mocks.Base;
@@ -9,15 +11,15 @@ public class MyShipControllerMock(MyCubeGridMock myCubeGridMock) : MyTerminalBlo
 
   public bool IsUnderControl { get; set; }
 
-  public bool HasWheels => throw new System.NotImplementedException();
+  public bool HasWheels => CubeGridMock.CubeBlockMocks.Any(b => b is MyMotorSuspensionMock);
 
-  public bool ControlWheels { get; set; }
-  public bool ControlThrusters { get; set; }
+  public bool ControlWheels { get; set; } = true;
+  public bool ControlThrusters { get; set; } = true;
   public bool HandBrake { get; set; }
   public bool DampenersOverride { get; set; }
   public bool ShowHorizonIndicator { get; set; }
 
-  public Vector3 MoveIndicator => throw new System.NotImplementedException();
+  public Vector3 MoveIndicator { get; set; }
 
   public Vector2 RotationIndicator => throw new System.NotImplementedException();
 

@@ -16,18 +16,22 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRageMath;
 
-namespace IngameScript {
+namespace IngameScript
+{
   /// <summary>Small extension class to the MyInI class</summary>
-  static class IniHelper {
+  static class IniHelper
+  {
     public static readonly char[] SEP = new char[] { ',' };
     /// <summary>Returns the value requested and throws if it does not exist.</summary>
     /// <param name="ini">This</param>
     /// <param name="section">Name of the section</param>
     /// <param name="key">Key</param>
     /// <returns>The value corresponding to the key in the section</returns>
-    public static MyIniValue GetThrow(this MyIni ini, string section, string key) {
+    public static MyIniValue GetThrow(this MyIni ini, string section, string key)
+    {
       MyIniValue res = ini.Get(section, key);
-      if (res.IsEmpty) {
+      if (res.IsEmpty)
+      {
         throw new InvalidOperationException($"Need key '{key}' in section '{section}' in custom data");
       }
       return res;
@@ -37,7 +41,8 @@ namespace IngameScript {
     /// <param name="section">Section where to put the vector</param>
     /// <param name="name">Key where to put the vector</param>
     /// <param name="v">Vector to serialize</param>
-    public static void SetVector(this MyIni ini, string section, string name, Vector3D v) {
+    public static void SetVector(this MyIni ini, string section, string name, Vector3D v)
+    {
       ini.Set(section, $"{name}-x", v.X);
       ini.Set(section, $"{name}-y", v.Y);
       ini.Set(section, $"{name}-z", v.Z);
@@ -54,9 +59,11 @@ namespace IngameScript {
     /// <summary>Parses the text and throws if the parse was unsucessful.</summary>
     /// <param name="ini">This</param>
     /// <param name="data">Serialized ini</param>
-    public static void Parse(this MyIni ini, string data) {
+    public static void Parse(this MyIni ini, string data)
+    {
       MyIniParseResult res;
-      if (!ini.TryParse(data, out res)) {
+      if (!ini.TryParse(data, out res))
+      {
         throw new InvalidOperationException($"Error '{res.Error}' at line {res.LineNo} when parsing");
       }
     }

@@ -8,7 +8,11 @@ using VRageMath;
 
 public class MyEntityMock(long entityId) : IMyEntity
 {
-  public Vector3D WorldPositionMock { get; set; }
+  public Vector3D WorldPositionMock
+  {
+    get { return WorldMatrix.Translation; }
+    set { _worldMatrix.Translation = value; }
+  }
 
   public readonly List<MyInventoryMock> InventoryMocks = [];
 
@@ -40,11 +44,13 @@ public class MyEntityMock(long entityId) : IMyEntity
 
   public BoundingBoxD WorldAABBHr => throw new System.NotImplementedException();
 
-  public MatrixD WorldMatrix { get; set; }
+  private MatrixD _worldMatrix = MatrixD.Identity;
+  public MatrixD WorldMatrix { get => _worldMatrix; set => _worldMatrix = value; }
 
   public BoundingSphereD WorldVolume => throw new System.NotImplementedException();
 
   public BoundingSphereD WorldVolumeHr => throw new System.NotImplementedException();
 
-  public Vector3D GetPosition() => WorldPositionMock;
+  // TODO check this
+  public Vector3D GetPosition() => WorldMatrix.Translation;
 }

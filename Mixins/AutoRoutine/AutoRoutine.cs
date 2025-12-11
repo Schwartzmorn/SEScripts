@@ -36,8 +36,9 @@ namespace IngameScript
       readonly Dictionary<string, AutoRoutine> _routines = new Dictionary<string, AutoRoutine>();
       public AutoRoutineHandler(CommandLine commandLine)
       {
-        commandLine.RegisterCommand(new Command("ar-execute", _execute, "Execute a routine", minArgs: 1));
-        commandLine.RegisterCommand(new Command("ar-list", Command.Wrap(_list), "Lists all the routines", nArgs: 0));
+        commandLine.RegisterCommand(new ParentCommand("ar", "Interacts with the autoroutines")
+          .AddSubCommand(new Command("execute", _execute, "Execute a routine", minArgs: 1))
+          .AddSubCommand(new Command("list", Command.Wrap(_list), "Lists all the routines", nArgs: 0)));
       }
 
       public void AddRoutines(List<AutoRoutine> routines)
@@ -48,7 +49,7 @@ namespace IngameScript
         }
       }
 
-      void _list(List<string> args, Action<string> logger)
+      void _list(ArgumentsWrapper _args, Action<string> logger)
       {
         logger("Available routines:");
         foreach (KeyValuePair<string, AutoRoutine> kv in _routines)
@@ -58,17 +59,18 @@ namespace IngameScript
         }
       }
 
-      MyTuple<int, bool, Action<Process>> _execute(List<string> args, Action<string> logger)
+      Action<Process> _execute(ArgumentsWrapper args, Action<string> logger)
       {
-        return MyTuple.Create<int, bool, Action<Process>>(1, true, p =>
+        return p =>
         {
           AutoRoutine routine;
           if (_routines.TryGetValue(args[0], out routine))
           {
             int argc = routine.ArgsCount();
-            if (args.Count > argc)
+            if (args.RemaingCount > argc)
             {
-              routine.Execute(p, null, args.GetRange(1, argc));
+              args.Next();
+              routine.Execute(p, null, args);
             }
             else
             {
@@ -79,7 +81,7 @@ namespace IngameScript
           {
             logger($"Could not find routine {args[0]}");
           }
-        });
+        };
       }
     }
   }

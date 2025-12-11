@@ -28,7 +28,7 @@ namespace IngameScript
       /// <param name="parent">parent process to spawn the processes</param>
       /// <param name="onDone">Callback to execute when the process is terminated</param>
       /// <param name="args">Arguments provided to the auto routine</param>
-      public abstract void Execute(Process parent, Action<Process> onDone, List<string> args);
+      public abstract void Execute(Process parent, Action<Process> onDone, ArgumentsWrapper args);
       /// <summary>Returns the minimum number of arguments needed by the instruction</summary>
       /// <returns>the number of arguments</returns>
       public abstract int ArgsCount();
@@ -63,12 +63,12 @@ namespace IngameScript
       /// <param name="parent">Process used to spawn the instructions</param>
       /// <param name="onDone">Callback to use once the last instruction terminates</param>
       /// <param name="args">Arguments provided to the auto routine</param>
-      public override void Execute(Process parent, Action<Process> onDone, List<string> args)
+      public override void Execute(Process parent, Action<Process> onDone, ArgumentsWrapper args)
       {
         _executeNext(_instructions.GetEnumerator(), parent, onDone, args);
       }
       public override int ArgsCount() => (_instructions != null && _instructions.Count > 0) ? _instructions.Max(i => i.ArgsCount()) : 0;
-      void _executeNext(List<Instruction>.Enumerator instruction, Process parent, Action<Process> onDone, List<string> args)
+      void _executeNext(List<Instruction>.Enumerator instruction, Process parent, Action<Process> onDone, ArgumentsWrapper args)
       {
         if (parent.Active)
         {
@@ -94,7 +94,7 @@ namespace IngameScript
       {
         _condition = condition;
       }
-      public override void Execute(Process parent, Action<Process> onDone, List<string> args)
+      public override void Execute(Process parent, Action<Process> onDone, ArgumentsWrapper args)
       {
         Process whileProcess = parent.Spawn(null, "ar-while", onDone, period: 1, useOnce: false);
         base.Execute(whileProcess, p => _onLoopDone(whileProcess, args), args);
@@ -106,7 +106,7 @@ namespace IngameScript
         whileProcess.Kill();
         onDone?.Invoke(whileProcess);
       }
-      void _onLoopDone(Process whileProcess, List<string> args)
+      void _onLoopDone(Process whileProcess, ArgumentsWrapper args)
       {
         if (whileProcess.Active)
         {
@@ -117,21 +117,21 @@ namespace IngameScript
     /// <summary>Simple instruction that execute a command from a <see cref="CommandLine"/></summary>
     public class CommandInstruction : SingleInstruction
     {
-      readonly List<string> _args;
+      readonly ArgumentsWrapper _args;
       readonly int _argsCount = 0;
       readonly string _command;
       readonly CommandLine _commandLine;
-      public CommandInstruction(string command, List<string> args, CommandLine commandLine)
+      public CommandInstruction(string command, ArgumentsWrapper args, CommandLine commandLine)
       {
         _command = command;
         _args = args;
         _commandLine = commandLine;
-        if (args.Count > 0)
+        if (args.RemaingCount > 0)
         {
           _argsCount = _args.Max(s => _getArgCount(s));
         }
       }
-      public override void Execute(Process parent, Action<Process> onDone, List<string> args)
+      public override void Execute(Process parent, Action<Process> onDone, ArgumentsWrapper args)
       {
         var actualArgs = _args.ToList();
         for (int i = 0; i < actualArgs.Count; ++i)
@@ -161,7 +161,7 @@ namespace IngameScript
       {
         _time = time.Trim();
       }
-      public override void Execute(Process parent, Action<Process> onDone, List<string> args)
+      public override void Execute(Process parent, Action<Process> onDone, ArgumentsWrapper args)
       {
         int time = _time.StartsWith("$")
           ? int.Parse(args[int.Parse(_time.Substring(1)) - 1])
@@ -173,7 +173,7 @@ namespace IngameScript
     /// <summary>Simple instruction that never terminates</summary>
     public class ForeverInstruction : SingleInstruction
     {
-      public override void Execute(Process parent, Action<Process> onDone, List<string> args)
+      public override void Execute(Process parent, Action<Process> onDone, ArgumentsWrapper args)
       {
         // period is actually irrelevant since it does not do anything
         parent.Spawn(null, "ar-forever", onDone, period: 100);

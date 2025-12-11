@@ -35,8 +35,6 @@ class PowerWheelTest
     _controller = new MyShipControllerMock(_cubeGridMock)
     {
       ShipMassMock = new MyShipMass(1820, 1820, 1820),
-      WorldPositionMock = Vector3D.Zero,
-      WorldMatrix = MatrixD.Identity
     };
     _wheelBase = new Program.WheelBase();
   }
@@ -50,10 +48,10 @@ class PowerWheelTest
       Strength = 1,
       // This should be the world matrix in case the wheels are in the correct orientation
       WorldMatrix = new MatrixD(
-                   0, 0, left ? 1 : -1, 0,
-       left ? -1 : 1, 0, 0, 0,
-                   0, -1, 0, 0,
-               pos.X, pos.Y, pos.Z, 1),
+              0, 0, left ? 1 : -1, 0,
+              left ? -1 : 1, 0, 0, 0,
+              0, -1, 0, 0,
+              pos.X, pos.Y, pos.Z, 1),
       WorldPositionMock = pos
     };
 
@@ -154,6 +152,7 @@ class PowerWheelTest
     {
       Program.PowerWheel powerWheel = p.Item1;
       var wheel = p.Item2;
+      wheel.SteerAngle = 1;
       powerWheel.Turn(-2);
       Assert.That(wheel.InvertSteer, Is.False, $"Wheel {powerWheel.Position}");
       powerWheel.Turn(-0.5);

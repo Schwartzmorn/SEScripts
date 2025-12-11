@@ -26,11 +26,10 @@ public class ArmControllerTest
       Strength = 1,
       // This should be the world matrix in case the wheels are in the correct orientation
       WorldMatrix = new MatrixD(
-                   0, 0, left ? 1 : -1, 0,
-       left ? -1 : 1, 0, 0, 0,
-                   0, -1, 0, 0,
-               pos.X, pos.Y, pos.Z, 1),
-      WorldPositionMock = pos
+              0, 0, left ? 1 : -1, 0,
+              left ? -1 : 1, 0, 0, 0,
+              0, -1, 0, 0,
+              pos.X, pos.Y, pos.Z, 1),
     };
 
     (motor.Top as MyAttachableBlockMock).WorldPositionMock = pos + new Vector3D(0, -1, 0);
@@ -49,8 +48,6 @@ public class ArmControllerTest
     {
       CustomName = "Cockpit",
       ShipMassMock = new MyShipMass(1820, 1820, 1820),
-      WorldPositionMock = Vector3D.Zero,
-      WorldMatrix = MatrixD.Identity
     };
     // front wheels
     _ = _getSuspension(new Vector3D(-1, 0, -4), true);
@@ -80,7 +77,7 @@ pos=0,4.5
     // we loaded the saved target
     Assert.That(_program.Controller.TargetPosition, Is.EqualTo(new Program.ArmPos(4.5f, 0)));
 
-    _wrapper.Run("-arm-recall $auto-low");
+    _wrapper.Run("arm recall $auto-low");
     _testBed.Tick();
 
     // we have changed the target

@@ -23,26 +23,40 @@ namespace IngameScript
   {
     public class Container
     {
-      public string DisplayName => _cargo.CustomName;
+      public string DisplayName => Cargo.CustomName;
 
-      private readonly IMyCargoContainer _cargo;
-      private readonly bool _isOutput;
+      public readonly IMyCargoContainer Cargo;
       private readonly HashSet<string> _subtypes = new HashSet<string>();
       private readonly HashSet<ItemType> _types = new HashSet<ItemType>();
-      private readonly bool _whitelist;
+      private readonly Dictionary<MyItemType, int> _memoizedAffinities = new Dictionary<MyItemType, int>();
+      private bool _isOutput;
+      private bool _whitelist;
+      private string _ini;
 
       public Container(IMyCargoContainer block)
       {
-        _cargo = block;
+        Cargo = block;
+        ParseIni();
+      }
+
+      public void ParseIni()
+      {
+        if (_ini == Cargo.CustomData)
+        {
+          return;
+        }
+        _ini = Cargo.CustomData;
         var ini = new MyIni();
-        ini.TryParse(block.CustomData);
+        ini.TryParse(_ini);
         _isOutput = ini.Get("filter", "is-output").ToBoolean(false);
         if (!_isOutput)
         {
           _whitelist = ini.Get("filter", "type").ToString("whitelist") == "whitelist";
-          string[] types = ini.Get("filter", "item-types").ToString().Split(SPLIT_VALUES_CHAR, StringSplitOptions.RemoveEmptyEntries);
           string[] subtypes = ini.Get("filter", "item-subtypes").ToString().ToLower().Split(SPLIT_VALUES_CHAR, StringSplitOptions.RemoveEmptyEntries);
+          _subtypes.Clear();
           _subtypes.UnionWith(subtypes);
+          _types.Clear();
+          string[] types = ini.Get("filter", "item-types").ToString().Split(SPLIT_VALUES_CHAR, StringSplitOptions.RemoveEmptyEntries);
           _types.UnionWith(types.Select(t =>
           {
             ItemType i = ItemType.Unknown;
@@ -51,6 +65,7 @@ namespace IngameScript
           }).Where(i => i != ItemType.Unknown));
         }
       }
+
       public static int CompareTo(Container A, Container B, MyItemType item)
       {
         if (A == B)
@@ -69,45 +84,60 @@ namespace IngameScript
       {
         return GetIntrinsicAffinity(item) + _hasItem(item);
       }
-      public IMyInventory GetInventory() => _cargo?.GetInventory();
+      public IMyInventory GetInventory() => Cargo?.GetInventory();
       private int _hasItem(MyItemType item) => GetInventory().FindItem(item) == null ? 0 : 1;
       public int GetIntrinsicAffinity(MyItemType item)
       {
+        int affinity;
+        if (_memoizedAffinities.TryGetValue(item, out affinity))
+        {
+          return affinity;
+        }
         if (_isOutput)
         {
-          return -6;
+          affinity = -6;
         }
         else if (_types.Count == 0 && _subtypes.Count == 0)
         {
-          return 2;
+          // Generic cargo
+          affinity = 2;
         }
         else if (_whitelist)
         {
           if (_subtypes.Contains(item.SubtypeId.ToLower()))
           {
-            return 8;
+            affinity = 8;
           }
-          if (_types.Contains(item.GetItemType()))
+          else if (_types.Contains(item.GetItemType()))
           {
-            return 6;
+            affinity = 6;
           }
-          // is KO with whitelist
-          return 0;
+          else
+          {
+            // is KO with whitelist
+            affinity = 0;
+
+          }
         }
         else
         { // blacklist
           if (_subtypes.Contains(item.SubtypeId.ToLower()))
           {
-            return -4;
+            affinity = -4;
           }
-          if (_types.Contains(item.GetItemType()))
+          else if (_types.Contains(item.GetItemType()))
           {
-            return -2;
+            affinity = -2;
           }
-          // is OK with blacklist
-          return 4;
-        }
+          else
+          {
+            // is OK with blacklist
+            affinity = 4;
 
+          }
+        }
+        _memoizedAffinities[item] = affinity;
+        return affinity;
       }
     }
   }

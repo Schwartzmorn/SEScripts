@@ -51,13 +51,15 @@ namespace IngameScript
         var tools = new List<IMyFunctionalBlock>();
         p.GridTerminalSystem.GetBlocksOfType(tools, t => t.IsSameConstructAs(cont) && (t is IMyShipToolBase || t is IMyShipDrill));
         _autoCont = new ArmAutoControl(ini, Angle, wCont, tools);
+        cmd.RegisterCommand(new ParentCommand("arm", "Interacts with the arm")
+          .AddSubCommand(new Command("del", Command.Wrap(_deletePosition), "Deletes a saved position of the arm", nArgs: 1))
+          .AddSubCommand(new Command("arm-elevation", Command.Wrap(_autoElevate), @"Makes the arm elevate at the correct position.
+First argument is elevation ('high'/'low'/float)
+Second argument is angle", minArgs: 1, maxArgs: 2))
+          .AddSubCommand(new Command("drill", Command.Wrap(_drill), "Engages the drills and move slowly to position", nArgs: 1))
+          .AddSubCommand(new Command("recall", Command.Wrap(_recallPosition), "Recalls a saved position of the arm", nArgs: 1))
+          .AddSubCommand(new Command("arm-save", Command.Wrap(_savePosition), "Saves the current position of the arm", nArgs: 1)));
 
-        cmd.RegisterCommand(new Command("arm-del", Command.Wrap(_deletePosition), "Deletes a saved position of the arm", nArgs: 1));
-        cmd.RegisterCommand(new Command("arm-elevation", Command.Wrap(_autoElevate), "Makes the arm elevate at the correct position", detailedHelp: @"First argument is elevation ('high'/'low'/float)
-Second argument is angle", maxArgs: 2));
-        cmd.RegisterCommand(new Command("arm-drill", Command.Wrap(_drill), "Engages the drills and move slowly to position", nArgs: 1));
-        cmd.RegisterCommand(new Command("arm-recall", Command.Wrap(_recallPosition), "Recalls a saved position of the arm", nArgs: 1));
-        cmd.RegisterCommand(new Command("arm-save", Command.Wrap(_savePosition), "Saves the current position of the arm", nArgs: 1));
         manager.Spawn(pc => _updateRotors(cont), "arm-handle");
         manager.AddOnSave(_save);
       }
@@ -94,12 +96,12 @@ Second argument is angle", maxArgs: 2));
         }
       }
 
-      void _autoElevate(Process p, List<string> s)
+      void _autoElevate(Process p, ArgumentsWrapper args)
       {
         _checkProcess(null);
         _autoCont.SetTarget(new ArmPos(
-          s.Count == 0 ? ArmPos.L_ELEVATION : s[0] == "high" ? ArmPos.R_ELEVATION : s[0] == "low" ? ArmPos.L_ELEVATION : double.Parse(s[0]),
-          s.Count > 1 ? MathHelper.ToRadians(float.Parse(s[1])) : 0));
+          args[0] == "high" ? ArmPos.R_ELEVATION : args[0] == "low" ? ArmPos.L_ELEVATION : double.Parse(args[0]),
+          args.RemaingCount > 1 ? MathHelper.ToRadians(float.Parse(args[1])) : 0));
         _checkProcess(p.Spawn(null, $"arm-elevate {_autoCont.Target}"));
       }
 

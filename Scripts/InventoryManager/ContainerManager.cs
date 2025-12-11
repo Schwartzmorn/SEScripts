@@ -23,7 +23,7 @@ namespace IngameScript
   {
     public class ContainerManager : LazyFilter
     {
-      readonly List<Container> _containers = new List<Container>();
+      readonly Dictionary<long, Container> _containers = new Dictionary<long, Container>();
 
       readonly List<IMyCargoContainer> _tmpList = new List<IMyCargoContainer>();
 
@@ -31,19 +31,32 @@ namespace IngameScript
 
       readonly Action<string> _logger;
 
+      readonly GridManager _gridManager;
+
       public ContainerManager(IMyGridTerminalSystem gts, GridManager gridManager, IProcessSpawner spawner, Action<string> logger)
       {
         _logger = logger;
-        spawner.Spawn(p => Scan(gts, gridManager), "container-scanner", period: 100);
-        Scan(gts, gridManager);
+        _gridManager = gridManager;
+        spawner.Spawn(p => Scan(gts), "container-scanner", period: 100);
+        Scan(gts);
       }
 
-      public void Scan(IMyGridTerminalSystem GTS, GridManager gridManager)
+      public void Scan(IMyGridTerminalSystem GTS)
       {
         var previousCount = _containers.Count;
-        _containers.Clear();
-        GTS.GetBlocksOfType(_tmpList, cont => cont.GetInventory() != null && gridManager.Manages(cont.CubeGrid));
-        _containers.AddRange(_tmpList.Select(c => new Container(c)));
+        GTS.GetBlocksOfType(_tmpList, cont => cont.GetInventory() != null && _gridManager.Manages(cont.CubeGrid));
+
+        foreach (var c in _tmpList)
+        {
+          Container cont;
+          if (!_containers.TryGetValue(c.EntityId, out cont))
+          {
+            cont = new Container(c);
+            _containers[c.EntityId] = cont;
+          }
+          cont.ParseIni();
+        }
+
         if (previousCount != _containers.Count)
         {
           _log($"Found {_containers.Count} containers");
@@ -54,18 +67,24 @@ namespace IngameScript
       {
         FilterLazily();
         _tmpSortedList.Clear();
-        _tmpSortedList.AddRange(_containers.FindAll(c => c.GetIntrinsicAffinity(item.Type) > minAff));
+        _tmpSortedList.AddRange(_containers.Values.Where(c => c.GetIntrinsicAffinity(item.Type) > minAff));
         _tmpSortedList.Sort((a, b) => Container.CompareTo(a, b, item.Type));
         return _tmpSortedList;
       }
 
-      public List<Container> GetContainers()
+      public IReadOnlyCollection<Container> GetContainers()
       {
         FilterLazily();
-        return _containers.ToList();
+        return _containers.Values;
       }
 
-      protected override void Filter() => _containers.RemoveAll(c => c.GetInventory() == null);
+      protected override void Filter()
+      {
+        foreach (var c in _containers.Where(c => c.Value?.GetInventory() == null || !_gridManager.Manages(c.Value.Cargo.CubeGrid)).ToList())
+        {
+          _containers.Remove(c.Key);
+        }
+      }
 
       void _log(string s) => _logger?.Invoke("CM: " + s);
     }

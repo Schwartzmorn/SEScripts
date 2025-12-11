@@ -59,8 +59,6 @@ public class MyMotorSuspensionMock : MyMechanicalConnectionBlockMock, IMyMotorSu
   public float SteeringOverride { get; set; }
   public float PropulsionOverride { get; set; }
 
-  public override bool IsLocked => throw new System.NotImplementedException();
-
   public override void Tick()
   {
   }
