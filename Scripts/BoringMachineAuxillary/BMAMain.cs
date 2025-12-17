@@ -33,7 +33,7 @@ namespace IngameScript
       _manager = Process.CreateManager(Echo);
       _initCockpit(out cockpit, out topLeft, out topRight, out keyboard);
       var ct = new CoordinatesTransformer(cockpit, _manager);
-      var logger = new Logger(_manager, keyboard, _scheme.Light, _scheme.Dark, Echo);
+      var logger = new ScreenLogger(_manager, keyboard, _scheme.Light, _scheme.Dark, Echo);
       logger.Log("Booting up...");
       _cmd = new CommandLine("Boring machine", logger.Log, _manager);
       var genStatus = new GeneralStatus(this, _cmd);

@@ -15,15 +15,18 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program : MyGridProgram {
+namespace IngameScript
+{
+  partial class Program : MyGridProgram
+  {
     readonly CommandLine _commandLine;
     readonly IProcessManager _manager;
 
-    public Program() {
+    public Program()
+    {
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       _manager = Process.CreateManager(Echo);
-      var logger = new Logger(_manager, Me.GetSurface(0), echo: Echo);
+      var logger = new ScreenLogger(_manager, Me.GetSurface(0), echo: Echo);
       _manager.SetLogger(logger.Log);
       _commandLine = new CommandLine("Auto connector station", logger.Log, _manager);
       var ini = new MyIni();
@@ -33,7 +36,8 @@ namespace IngameScript {
 
     public void Save() => _manager.Save(s => Me.CustomData = s);
 
-    public void Main(string argument, UpdateType updateSource) {
+    public void Main(string argument, UpdateType updateSource)
+    {
       _commandLine.StartCmd(argument, CommandTrigger.User);
       _manager.Tick();
     }

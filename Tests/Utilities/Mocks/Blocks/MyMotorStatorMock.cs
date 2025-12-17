@@ -14,7 +14,12 @@ public class MyMotorStatorMock : MyMechanicalConnectionBlockMock, IMyMotorStator
     Angle = Math.Clamp(angle, 0, MathHelper.TwoPi);
   }
 
-  public float Angle { get; set; }
+  private float _angle;
+  public float Angle
+  {
+    get => _angle;
+    set => _angle = value;
+  }
 
   // values from 0 to 33 600 000, but not enforced ?
   public float Torque { get; set; }
@@ -105,5 +110,17 @@ public class MyMotorStatorMock : MyMechanicalConnectionBlockMock, IMyMotorStator
 
   public override void Tick()
   {
+    if (!Enabled || RotorLock)
+    {
+      return;
+    }
+    // does not always work, but should for my tests
+    _angle = Math.Clamp(_normalizeAngle(_angle + (TargetVelocityRad / 100)), LowerLimitRad, UpperLimitRad);
+  }
+
+  // Makes sure the angle is between -Pi and +Pi
+  static float _normalizeAngle(float angle)
+  {
+    return angle - (MathHelper.Floor((angle + MathHelper.Pi) / MathHelper.TwoPi) * MathHelper.TwoPi);
   }
 }

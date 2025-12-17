@@ -17,8 +17,10 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  public static class RotorHelper {
+namespace IngameScript
+{
+  public static class RotorHelper
+  {
     const float PRECISION = 0.005f;
     /// <summary>
     /// Returns the smallest angle to travel to reach the given position, taking into account limits.
@@ -27,23 +29,31 @@ namespace IngameScript {
     /// <param name="stator">stator whose position we want to change</param>
     /// <param name="target">position to reach. It is assumed to be in the limits of the stator</param>
     /// <returns>the angle to travel</returns>
-    public static float AngleProxy(this IMyMotorStator stator, float target) {
+    public static float AngleProxy(this IMyMotorStator stator, float target)
+    {
       // gets the shortest path
-      float ap = Mod(target - stator.Angle + MathHelper.Pi, 2 * MathHelper.Pi) - MathHelper.Pi;
+      float ap = Mod(target - stator.Angle + MathHelper.Pi, MathHelper.TwoPi) - MathHelper.Pi;
       // check whether we'll bump into a limit. We assume the target is within the limits
       float proxyTarget = target;
-      if (ap > 0 && stator.UpperLimitRad < 7) {
-        while (proxyTarget < stator.Angle) {
+      if (ap > 0 && stator.UpperLimitRad < 7)
+      {
+        while (proxyTarget < stator.Angle)
+        {
           proxyTarget += 2 * MathHelper.Pi;
         }
-        if (proxyTarget > stator.UpperLimitRad + PRECISION) {
+        if (proxyTarget > stator.UpperLimitRad + PRECISION)
+        {
           ap -= 2 * MathHelper.Pi;
         }
-      } else if (ap < 0 && stator.LowerLimitRad > -7) {
-        while (proxyTarget > stator.Angle) {
+      }
+      else if (ap < 0 && stator.LowerLimitRad > -7)
+      {
+        while (proxyTarget > stator.Angle)
+        {
           proxyTarget -= 2 * MathHelper.Pi;
         }
-        if (proxyTarget < stator.LowerLimitRad - PRECISION) {
+        if (proxyTarget < stator.LowerLimitRad - PRECISION)
+        {
           ap += 2 * MathHelper.Pi;
         }
       }
@@ -64,16 +74,21 @@ namespace IngameScript {
     /// <param name="stator"></param>
     /// <param name="upperLimit"></param>
     /// <returns></returns>
-    public static bool HasReachedEnd(this IMyMotorStator stator, bool upperLimit) {
-      if (upperLimit && stator.Angle > stator.UpperLimitRad - PRECISION) {
+    public static bool HasReachedEnd(this IMyMotorStator stator, bool upperLimit)
+    {
+      if (upperLimit && stator.Angle > stator.UpperLimitRad - PRECISION)
+      {
         return true;
-      } else if (!upperLimit && stator.Angle < stator.LowerLimitRad + PRECISION) {
+      }
+      else if (!upperLimit && stator.Angle < stator.LowerLimitRad + PRECISION)
+      {
         return true;
       }
       return false;
     }
 
-    public static bool HasReached(this IMyMotorStator stator, float angle) {
+    public static bool HasReached(this IMyMotorStator stator, float angle)
+    {
       return Math.Abs(stator.AngleProxy(angle)) < PRECISION || stator.HasReachedEnd();
     }
 

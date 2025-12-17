@@ -68,7 +68,7 @@ public class InstancingTests
     _testBed.Tick();
 
     // Check the sas has been locked
-    Assert.That(_programWrapper.EchoMessages.Last(), Contains.Substring("A test sas"));
+    Assert.That(_programWrapper.EchoMessages.Last().Item2.Last(), Contains.Substring("A test sas"));
     Assert.That(innerDoor.Status, Is.EqualTo(DoorStatus.Opening));
     Assert.That(outerDoor.Status, Is.EqualTo(DoorStatus.Closed));
     Assert.That(innerDoor.Enabled);

@@ -69,8 +69,8 @@ class CommandLineTest
 
     _manager.Tick();
 
-    Assert.That(_logs.Count, Is.EqualTo(6), "One for the introduction + 1 for each command except test3 (help, kill, ps, test1, test2)");
-    foreach (string s in new List<string> { "help", "kill", "ps", "test1", "test2" })
+    Assert.That(_logs.Count, Is.EqualTo(7), "One for the introduction + 1 for each command except test3 (help, kill, ps, test1, test2)");
+    foreach (string s in new List<string> { "help", "kill", "ps", "test1", "test2", "echo" })
     {
       Assert.That(_logs.FirstOrDefault(l => l.StartsWith($"{s}")), Is.Not.Null);
     }
@@ -139,5 +139,14 @@ class CommandLineTest
 
     Assert.That(p1.Alive, Is.False);
     Assert.That(p2.Alive, Is.False);
+  }
+
+  [Test]
+  public void It_Provides_A_Echo_Command()
+  {
+    _cmdLine.StartCmd("echo This is a message", Program.CommandTrigger.Cmd);
+    _manager.Tick();
+
+    Assert.That(_logs.Last(), Is.EqualTo("This is a message"));
   }
 }

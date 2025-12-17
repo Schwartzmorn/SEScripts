@@ -91,6 +91,7 @@ namespace IngameScript
             current.Peek().Add(_parse(line, count));
           }
         }
+
         return routines;
       }
 
@@ -98,18 +99,14 @@ namespace IngameScript
       {
         try
         {
-          if (s.StartsWith("wait"))
+          var parsed = _commandLine.ParseCommand(s);
+          switch (parsed.Item1)
           {
-            return new WaitInstruction(s.Substring(4));
-          }
-          else if (s == "forever")
-          {
-            return new ForeverInstruction();
-          }
-          else
-          {
-            MyTuple<string, ArgumentsWrapper> parsed = _commandLine.ParseCommand(s);
-            return new CommandInstruction(parsed.Item1, parsed.Item2, _commandLine);
+            case "wait": { return new WaitInstruction(parsed.Item2.Peek()); }
+            case "forever": { return new ForeverInstruction(); }
+            // special case for echo to avoid quoting all the arguments and to avoid complexifying the CommandSerializer
+            case "echo": { return new CommandInstruction("echo", new ArgumentsWrapper(new List<string> { s.Substring(4).Trim() }), _commandLine); }
+            default: { return new CommandInstruction(parsed.Item1, parsed.Item2, _commandLine); }
           }
         }
         catch (Exception) { }

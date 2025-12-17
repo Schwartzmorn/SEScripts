@@ -50,7 +50,7 @@ namespace IngameScript
       }
     }
     /// <summary>Instruction that executes a list of instruction one after the other</summary>
-    public class MultipleInstruction : Instruction
+    public abstract class MultipleInstruction : Instruction
     {
       readonly List<Instruction> _instructions;
       /// <summary>Creates a sequence of instructions that will be executed one after the other until the last one</summary>
@@ -98,13 +98,13 @@ namespace IngameScript
       {
         Process whileProcess = parent.Spawn(null, "ar-while", onDone, period: 1, useOnce: false);
         base.Execute(whileProcess, p => _onLoopDone(whileProcess, args), args);
-        _condition.Execute(whileProcess, p => _onConditionDone(whileProcess, onDone), args);
+        _condition.Execute(whileProcess, p => _onConditionDone(whileProcess), args);
       }
       public override int ArgsCount() => Math.Max(_condition.ArgsCount(), base.ArgsCount());
-      void _onConditionDone(Process whileProcess, Action<Process> onDone)
+      void _onConditionDone(Process whileProcess)
       {
-        whileProcess.Kill();
-        onDone?.Invoke(whileProcess);
+        whileProcess.Done();
+        whileProcess.KillChildren();
       }
       void _onLoopDone(Process whileProcess, ArgumentsWrapper args)
       {
@@ -180,7 +180,6 @@ namespace IngameScript
       }
       public override int ArgsCount() => 0;
     }
-
 
   }
 }

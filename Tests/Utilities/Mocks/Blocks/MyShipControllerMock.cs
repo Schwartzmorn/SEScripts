@@ -21,9 +21,9 @@ public class MyShipControllerMock(MyCubeGridMock myCubeGridMock) : MyTerminalBlo
 
   public Vector3 MoveIndicator { get; set; }
 
-  public Vector2 RotationIndicator => throw new System.NotImplementedException();
+  public Vector2 RotationIndicator { get; set; }
 
-  public float RollIndicator => throw new System.NotImplementedException();
+  public float RollIndicator { get; set; }
 
   public Vector3D CenterOfMass { get; set; }
 

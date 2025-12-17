@@ -16,10 +16,13 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program : MyGridProgram {
+namespace IngameScript
+{
+  partial class Program : MyGridProgram
+  {
 
-    void MArmOS_Configuration() {
+    void MArmOS_Configuration()
+    {
       var RZ = new Rotor(Name: "W1 Rotor Z", Axis: "Z");
 
       var PH1L = new Piston(Name: "W1 Piston H1L", Axis: "X", Home: 0.075, MaxSpeed: 0.1);
@@ -64,7 +67,7 @@ namespace IngameScript {
       // connector initialization
       var cockpit = GridTerminalSystem.GetBlockWithName("W1 Cockpit") as IMyCockpit;
       this.manager = Process.CreateManager(Echo);
-      var logger = new Logger(this.manager, cockpit.GetSurface(0), echo: this.Echo, size: 1);
+      var logger = new ScreenLogger(this.manager, cockpit.GetSurface(0), echo: this.Echo, size: 1);
       this.commandline = new CommandLine("MarmOS", logger.Log, this.manager);
       var ini = new IniWatcher(Me, this.manager);
       var connector = GridTerminalSystem.GetBlockWithName("W1 Connector (Front)") as IMyShipConnector;
@@ -73,15 +76,18 @@ namespace IngameScript {
       var autoHandbrake = new PilotAssist(Me, this.GridTerminalSystem, ini, logger.Log, this.manager, wheelsController);
       autoHandbrake.AddBraker(connectionClient);
 
-      this.marmosMain = this.manager.Spawn(p => {
+      this.marmosMain = this.manager.Spawn(p =>
+      {
         this.MArmOS_Main(arguments);
         this.arguments = "";
       }, period: 10);
     }
 
-    public void Main(string argument, UpdateType updateSource) {
+    public void Main(string argument, UpdateType updateSource)
+    {
       this.commandline.StartCmd(argument, CommandTrigger.User);
-      if (argument != "") {
+      if (argument != "")
+      {
         this.arguments = argument;
       }
       this.manager.Tick();
@@ -127,7 +133,8 @@ namespace IngameScript {
     */
     // Nothing should need to be changed below this line. It is the inner working of MArmOS.
 
-    public Program() {
+    public Program()
+    {
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       mEcho = Echo;
       MyGTS = GridTerminalSystem;
@@ -137,7 +144,8 @@ namespace IngameScript {
       Controller.MyControllers = new List<Controller>();
 
       MArmOS_Configuration();
-      if (Controller.MyControllers.Count < 1) {
+      if (Controller.MyControllers.Count < 1)
+      {
         MyLog("No Controller Defined. Using 'DefaultController' instead.");
         DefaultController = new UserControl(
           Arm: DefaultArm
@@ -158,25 +166,32 @@ namespace IngameScript {
       MyLog("Configuration complete.");
     }
 
-    public void MArmOS_Main(string argument) {
+    public void MArmOS_Main(string argument)
+    {
       mEcho = Echo;
       MyGTS = GridTerminalSystem;
       Me = Me;
-      if (GlobStep > 1006) {
+      if (GlobStep > 1006)
+      {
         SleepMode = true;
         Controller.UpdateControllers(argument);
-        if (SleepMode) {
+        if (SleepMode)
+        {
           if (Sleep != SleepMode)
             marmosMain.Period = 10;
           MyEcho("Script running in Sleep mode for performance friendlyness");
           GlobStep += 9;
-        } else {
+        }
+        else
+        {
           if (Sleep != SleepMode)
             marmosMain.Period = 1;
           MyEcho("Script running at max speed");
         }
         Sleep = SleepMode;
-      } else {
+      }
+      else
+      {
         MyEcho("Loading...");
       }
       if (ErrorFlag > GlobStep) MyEcho("Errors detected. Build a panel and name it '" + LogScreenName + "' to display a detailed log.");
@@ -211,37 +226,49 @@ namespace IngameScript {
     static uint ErrorFlag = 0;
     static uint WarningFlag = 0;
 
-    static List<IMyTerminalBlock> EchoPanels {
-      get {
-        if (EchoStep < GlobStep - 60 && EchoScreenName != "") {
+    static List<IMyTerminalBlock> EchoPanels
+    {
+      get
+      {
+        if (EchoStep < GlobStep - 60 && EchoScreenName != "")
+        {
           MyGTS.SearchBlocksOfName(EchoScreenName, echoPanels);
           EchoStep = GlobStep;
         }
-        foreach (IMyTerminalBlock Panel in echoPanels) {
+        foreach (IMyTerminalBlock Panel in echoPanels)
+        {
           ((IMyTextPanel)Panel).ContentType = ContentType.TEXT_AND_IMAGE;
         }
         return echoPanels;
       }
     }
-    static List<IMyTerminalBlock> DebugPanels {
-      get {
-        if (DebugStep < GlobStep - 60 && DebugScreenName != "") {
+    static List<IMyTerminalBlock> DebugPanels
+    {
+      get
+      {
+        if (DebugStep < GlobStep - 60 && DebugScreenName != "")
+        {
           MyGTS.SearchBlocksOfName(DebugScreenName, debugPanels);
           DebugStep = GlobStep;
         }
-        foreach (IMyTerminalBlock Panel in debugPanels) {
+        foreach (IMyTerminalBlock Panel in debugPanels)
+        {
           ((IMyTextPanel)Panel).ContentType = ContentType.TEXT_AND_IMAGE;
         }
         return debugPanels;
       }
     }
-    static List<IMyTerminalBlock> LogPanels {
-      get {
-        if (LogStep < GlobStep - 60) {
+    static List<IMyTerminalBlock> LogPanels
+    {
+      get
+      {
+        if (LogStep < GlobStep - 60)
+        {
           MyGTS.SearchBlocksOfName(LogScreenName, logPanels);
           LogStep = GlobStep;
         }
-        foreach (IMyTerminalBlock Panel in logPanels) {
+        foreach (IMyTerminalBlock Panel in logPanels)
+        {
           ((IMyTextPanel)Panel).ContentType = ContentType.TEXT_AND_IMAGE;
           ((IMyTextPanel)Panel).SetValue("FontSize", 0.4F);
         }
@@ -250,44 +277,57 @@ namespace IngameScript {
     }
 
     // << ---- G L O B A L   F U N C T I O N S ---- >>
-    static void MyEcho(String Text) {
+    static void MyEcho(String Text)
+    {
       mEcho(Text);
-      if (EchoStep != GlobStep) {
-        foreach (IMyTerminalBlock EchoPanel in EchoPanels) {
+      if (EchoStep != GlobStep)
+      {
+        foreach (IMyTerminalBlock EchoPanel in EchoPanels)
+        {
           ((IMyTextPanel)EchoPanel).WriteText(TexEcho, false);
         }
         TexEcho = EchoScreenName + ":\n" + Text + "\n";
         EchoStep = GlobStep;
-      } else {
+      }
+      else
+      {
         TexEcho += Text + "\n";
       }
     }
-    static void MyDebug(String Text) {
-      if (DebugStep != GlobStep) {
-        foreach (IMyTerminalBlock DebugPanel in DebugPanels) {
+    static void MyDebug(String Text)
+    {
+      if (DebugStep != GlobStep)
+      {
+        foreach (IMyTerminalBlock DebugPanel in DebugPanels)
+        {
           ((IMyTextPanel)DebugPanel).WriteText(TexDebug, false);
         }
         TexDebug = DebugScreenName + ":\n" + Text + "\n";
         DebugStep = GlobStep;
-      } else {
+      }
+      else
+      {
         TexDebug += Text + "\n";
       }
     }
     static String TexEcho = "";
     static String TexDebug = "";
     static String[] logs = new String[41];
-    static void MyLog(String Text) {
+    static void MyLog(String Text)
+    {
       logs[LogPointer] = Text;
       LogPointer = LogPointer < 40 ? LogPointer + 1 : 0;
       MyEcho("Log: < " + Text + " >");
       Text = "";
       int i = LogPointer;
-      do {
+      do
+      {
         if (logs[i] != null) { Text = Text + "\n" + logs[i]; }
         i = i < 40 ? i + 1 : 0;
       } while (i != LogPointer);
       Text = LogScreenName + ":\n" + Text;
-      foreach (IMyTerminalBlock LogPanel in LogPanels) {
+      foreach (IMyTerminalBlock LogPanel in LogPanels)
+      {
         ((IMyTextPanel)LogPanel).WriteText(Text, false);
       }
     }
@@ -301,13 +341,19 @@ namespace IngameScript {
       <<  ----  H A R D W A R E  --------------------------------------------------------------------  >>           H A R D W A R E
       <<  --------------------------------------------------------------------  H A R D W A R E  ----  >>           H A R D W A R E
     V1.1*/
-    class Hardware {
+    class Hardware
+    {
       // << ---- C O N S T R U C T O R ---- >>
-      public Hardware() {
-        if (GetType() != typeof(Addition)) {
-          if (DefaultArm == null) {
+      public Hardware()
+      {
+        if (GetType() != typeof(Addition))
+        {
+          if (DefaultArm == null)
+          {
             DefaultArm = this;
-          } else {
+          }
+          else
+          {
             DefaultArm = DefaultArm + this;
           }
         }
@@ -323,17 +369,22 @@ namespace IngameScript {
       public virtual void DebugInfo() { }
 
       // << ---- O P E R A T O R S ---- >>
-      static public Hardware operator +(Hardware p1, Hardware p2) {
-        if (p1.GetType() == typeof(Addition)) {
+      static public Hardware operator +(Hardware p1, Hardware p2)
+      {
+        if (p1.GetType() == typeof(Addition))
+        {
           Hardware H1 = ((Addition)p1).H1;
           p1 = ((Addition)p1).H2 + p2;
           return new Addition(H1, p1);
-        } else {
+        }
+        else
+        {
           return new Addition(p1, p2);
         }
       }
 
-      static public Hardware operator *(Hardware p1, Hardware p2) {
+      static public Hardware operator *(Hardware p1, Hardware p2)
+      {
 
         return new Multiplication(p1, p2);
       }
@@ -342,22 +393,29 @@ namespace IngameScript {
       public uint PoseID, nPoseID, dPoseID = 0;
       public bool Override = false;
 
-      virtual public double Home {
+      virtual public double Home
+      {
         get { return home; }
         set { home = value; }
       }
-      public cPose Pose {
-        get {
-          if (PoseStep < GlobStep) {
+      public cPose Pose
+      {
+        get
+        {
+          if (PoseStep < GlobStep)
+          {
             pose = GetPose();
             PoseStep = GlobStep;
           }
           return pose;
         }
       }
-      public cPose nPose {
-        get {
-          if (nPoseStep < GlobStep || !nPoseUTD || true) {
+      public cPose nPose
+      {
+        get
+        {
+          if (nPoseStep < GlobStep || !nPoseUTD || true)
+          {
             npose = GetNextPose();
             nPoseStep = GlobStep;
             nPoseUTD = true;
@@ -365,16 +423,20 @@ namespace IngameScript {
           return npose;
         }
       }
-      public cPose dPose {
-        get {
-          if (dPoseStep < GlobStep || !dPoseUTD || true) {
+      public cPose dPose
+      {
+        get
+        {
+          if (dPoseStep < GlobStep || !dPoseUTD || true)
+          {
             dpose = GetDeltaPose();
             dPoseStep = GlobStep;
             dPoseUTD = true;
           }
           return dpose;
         }
-        set {
+        set
+        {
           //if ( value.Mat != MatrixD.Identity ){
           SetDeltaPose(value, this);
           nPoseUTD = false;
@@ -383,7 +445,8 @@ namespace IngameScript {
         }
       }
       // << ---- P U B L I C   F U N C T I O N S ---- >>
-      public void Move(cPose Target, Hardware Reference) {
+      public void Move(cPose Target, Hardware Reference)
+      {
         SetDeltaPose(Target, Reference);
         nPoseUTD = false;
         dPoseUTD = false;
@@ -399,9 +462,11 @@ namespace IngameScript {
       <<  ----  A D D I T I O N  --------------------------------------------------------------------  >>           A D D I T I O N
       <<  --------------------------------------------------------------------  A D D I T I O N  ----  >>           A D D I T I O N
     V1.1*/
-    class Addition : Hardware {
+    class Addition : Hardware
+    {
       // << ---- C O N S T R U C T O R ---- >>
-      public Addition(Hardware H1, Hardware H2) : base() {
+      public Addition(Hardware H1, Hardware H2) : base()
+      {
         this.H1 = H1;
         this.H2 = H2;
       }
@@ -409,10 +474,12 @@ namespace IngameScript {
       public Hardware H1, H2;
 
       // << ---- O V E R R I D E S ---- >>
-      public override cPose GetPose() {
+      public override cPose GetPose()
+      {
         var TH1Pose = H1.Pose;
         var TH2Pose = H2.Pose;
-        if (H1.PoseID != H1PoseID || H2.PoseID != H2PoseID) {
+        if (H1.PoseID != H1PoseID || H2.PoseID != H2PoseID)
+        {
           H1PoseID = H1.PoseID;
           H2PoseID = H2.PoseID;
           pose = TH1Pose + TH2Pose;
@@ -420,10 +487,12 @@ namespace IngameScript {
         }
         return pose;
       }
-      public override cPose GetNextPose() {
+      public override cPose GetNextPose()
+      {
         var TH1nPose = H1.nPose;
         var TH2nPose = H2.nPose;
-        if (H1.nPoseID != H1nPoseID || H2.nPoseID != H2nPoseID) {
+        if (H1.nPoseID != H1nPoseID || H2.nPoseID != H2nPoseID)
+        {
           H1nPoseID = H1.nPoseID;
           H2nPoseID = H2.nPoseID;
           npose = TH1nPose + TH2nPose;
@@ -431,10 +500,12 @@ namespace IngameScript {
         }
         return npose;
       }
-      public override cPose GetDeltaPose() {
+      public override cPose GetDeltaPose()
+      {
         var TnPose = nPose;
         var TPose = Pose;
-        if (nPoseID != nPoseID2 || PoseID != PoseID2) {
+        if (nPoseID != nPoseID2 || PoseID != PoseID2)
+        {
           dpose = TnPose - TPose;
           dpose.Pos = TnPose.Pos - TPose.Pos;
           PoseID2 = PoseID;
@@ -443,7 +514,8 @@ namespace IngameScript {
         }
         return dpose;
       }
-      public override void SetDeltaPose(cPose Value, Hardware Reference) {
+      public override void SetDeltaPose(cPose Value, Hardware Reference)
+      {
         var IdMat = H1.dPose.Mat;
         var IMat = H1.Pose.Mat;
         //var Ori = new cPose( H1.Pose.Ori );
@@ -461,15 +533,18 @@ namespace IngameScript {
         H2.Move(H2Target, H2);
         H1.Move(Value, this);
       }
-      public override void GoHome(double Speed) {
+      public override void GoHome(double Speed)
+      {
         H1.GoHome(Speed * HomeSpeedFactor);
         H2.GoHome(Speed * HomeSpeedPropagation);
       }
-      public override void SetHome() {
+      public override void SetHome()
+      {
         H1.SetHome();
         H2.SetHome();
       }
-      public override void DebugInfo() {
+      public override void DebugInfo()
+      {
         H1.DebugInfo();
         H2.DebugInfo();
       }
@@ -481,26 +556,34 @@ namespace IngameScript {
       <<  ----  M U L T I P L I C A T I O N  --------------------------------------------------------------------  >>           M U L T I P L I C A T I O N
       <<  --------------------------------------------------------------------  M U L T I P L I C A T I O N  ----  >>           M U L T I P L I C A T I O N
     V1.1*/
-    class Multiplication : Hardware {
+    class Multiplication : Hardware
+    {
       // << ---- C O N S T R U C T O R ---- >>
-      public Multiplication(Hardware H1, Hardware H2) : base() {
+      public Multiplication(Hardware H1, Hardware H2) : base()
+      {
         this.H1 = H1;
         this.H2 = H2;
       }
       // << ---- P U B L I C   V A R I A B L E S ---- >>
       // << ---- O V E R R I D E S ---- >>
-      public override cPose GetPose() {
-        if (!UseH2) {
+      public override cPose GetPose()
+      {
+        if (!UseH2)
+        {
           var TH1Pose = H1.Pose;
-          if (H1.PoseID != H1PoseID) {
+          if (H1.PoseID != H1PoseID)
+          {
             pose = TH1Pose;
             H1PoseID = H1.PoseID;
             PoseIDH1++;
           }
           PoseID = PoseIDH1;
-        } else {
+        }
+        else
+        {
           var TH2Pose = H2.Pose;
-          if (H2.PoseID != H2PoseID) {
+          if (H2.PoseID != H2PoseID)
+          {
             pose = TH2Pose;
             H2PoseID = H2.PoseID;
             PoseIDH2++;
@@ -509,18 +592,24 @@ namespace IngameScript {
         }
         return pose;
       }
-      public override cPose GetNextPose() {
-        if (!UseH2) {
+      public override cPose GetNextPose()
+      {
+        if (!UseH2)
+        {
           var h1nPose = H1.nPose;
-          if (H1.nPoseID != H1nPoseID) {
+          if (H1.nPoseID != H1nPoseID)
+          {
             npose = h1nPose;
             H1nPoseID = H1.nPoseID;
             nPoseIDH1++;
           }
           nPoseID = nPoseIDH1;
-        } else {
+        }
+        else
+        {
           var h2nPose = H2.nPose;
-          if (H2.nPoseID != H2nPoseID) {
+          if (H2.nPoseID != H2nPoseID)
+          {
             npose = h2nPose;
             H2nPoseID = H2.nPoseID;
             nPoseIDH2++;
@@ -529,18 +618,24 @@ namespace IngameScript {
         }
         return npose;
       }
-      public override cPose GetDeltaPose() {
-        if (!UseH2) {
+      public override cPose GetDeltaPose()
+      {
+        if (!UseH2)
+        {
           var h1dPose = H1.dPose;
-          if (H1.dPoseID != H1dPoseID) {
+          if (H1.dPoseID != H1dPoseID)
+          {
             dpose = h1dPose;
             H1dPoseID = H1.dPoseID;
             dPoseIDH1++;
           }
           dPoseID = dPoseIDH1;
-        } else {
+        }
+        else
+        {
           var h2dPose = H2.dPose;
-          if (H2.dPoseID != H2dPoseID) {
+          if (H2.dPoseID != H2dPoseID)
+          {
             dpose = h2dPose;
             H2dPoseID = H2.dPoseID;
             dPoseIDH2++;
@@ -549,8 +644,10 @@ namespace IngameScript {
         }
         return dpose;
       }
-      public override void SetDeltaPose(cPose value, Hardware Reference) {
-        if (ValidStep < GlobStep - 60) {
+      public override void SetDeltaPose(cPose value, Hardware Reference)
+      {
+        if (ValidStep < GlobStep - 60)
+        {
           var M1 = H1.Pose.Mat;
           var M2 = H1.Pose.Mat;
           if (Math.Abs(M1.M11 - M2.M11) > 0.01
@@ -560,42 +657,53 @@ namespace IngameScript {
             && Math.Abs(M1.M33 - M2.M33) > 0.01
             && Math.Abs(M1.M41 - M2.M41) > 0.01
             && Math.Abs(M1.M42 - M2.M42) > 0.01
-            && Math.Abs(M1.M43 - M2.M43) > 0.01) {
+            && Math.Abs(M1.M43 - M2.M43) > 0.01)
+          {
             MyLog("<<Error>>: Multiplicated parts must have equivalent shapes.");
             ErrorFlag = GlobStep + 1000;
             Invalid = true;
-          } else {
+          }
+          else
+          {
             Invalid = false;
           }
           ValidStep = GlobStep;
         }
-        if (!Invalid) {
+        if (!Invalid)
+        {
           H1.Move(value, Reference);
           UseH2 = true;
           H2.Move(value, Reference);
           UseH2 = false;
-        } else {
+        }
+        else
+        {
           MyEcho("< < Error > >: Multiplicated parts must have equivalent shapes.");
         }
       }
-      public override void GoHome(double Speed) {
+      public override void GoHome(double Speed)
+      {
         H1.GoHome(Speed);
         H2.GoHome(Speed);
       }
-      public override void SetHome() {
+      public override void SetHome()
+      {
         H1.SetHome();
         H2.SetHome();
       }
-      public override void DebugInfo() {
+      public override void DebugInfo()
+      {
         H1.DebugInfo();
         H2.DebugInfo();
       }
       // << ---- P R I V A T E   V A R I A B L E S ---- >>
       Hardware H1;
       Hardware H2;
-      bool UseH2 {
+      bool UseH2
+      {
         get { return useH2; }
-        set {
+        set
+        {
           useH2 = value;
           nPoseID = value ? dPoseIDH2 : dPoseIDH1;
         }
@@ -608,13 +716,15 @@ namespace IngameScript {
       <<  ----  S O L I D  --------------------------------------------------------------------  >>           S O L I D
       <<  --------------------------------------------------------------------  S O L I D  ----  >>           S O L I D
     V1.1*/
-    class Solid : Hardware {
+    class Solid : Hardware
+    {
 
       // << ---- C O N S T R U C T O R ---- >>
       public Solid(
         double X
         , double Y
-        , double Z) {
+        , double Z)
+      {
         solidPose = new cPose(new Vector3D(X, Y, Z));
         soliddPose = new cPose();
       }
@@ -632,7 +742,8 @@ namespace IngameScript {
       <<  ----  R O T A R Y  --------------------------------------------------------------------  >>           R O T A R Y
       <<  ------------------------------------  R O T A R Y  ------------------------------------  >>           R O T A R Y
     V1.1*/
-    class Rotary : Hardware {
+    class Rotary : Hardware
+    {
       // << ---- C O N S T R U C T O R ---- >>
       public Rotary(
         String Axis = "Z"
@@ -640,10 +751,12 @@ namespace IngameScript {
         , double MaxSpeed = 10
         , double Home = 0
         , bool AllowHome = true  // (rpm)
-         ) : base() {  // (0-1)
+         ) : base()
+      {  // (0-1)
 
 
-        if (OriMode < 0 || OriMode > 1) {
+        if (OriMode < 0 || OriMode > 1)
+        {
           var OldOri = OriMode;
           OriMode = Math.Max(0, Math.Min(1, OriMode));
 
@@ -667,69 +780,87 @@ namespace IngameScript {
       public double OriMode;
       public String Axis;
       public bool AllowHome;
-      public double Angle {
-        get {
-          if (AngleStep < GlobStep) {
+      public double Angle
+      {
+        get
+        {
+          if (AngleStep < GlobStep)
+          {
             angle = GetAngle();
             AngleStep = GlobStep;
           }
           return angle;
         }
       }
-      public double dAngle {
-        get {
+      public double dAngle
+      {
+        get
+        {
           dangle = GetDeltaAngle();
           return dangle;
         }
-        set {
-          if (Math.Abs(value) > 0.02 * dt) {
+        set
+        {
+          if (Math.Abs(value) > 0.02 * dt)
+          {
             value = ((56 * value) + Buffer) / 57;
             var S = MaxSpeed * dt;
             SetDeltaAngle(Clamp(value, -S, S));
             SleepMode = false;
-          } else {
+          }
+          else
+          {
             SetDeltaAngle(0);
           }
           Buffer = value;
         }
       }
       // << ---- O V E R R I D E S ---- >>
-      override public double Home {
+      override public double Home
+      {
         get { return home; }
         set { home = value * Math.PI / 180; }
       }
-      public override cPose GetPose() {
+      public override cPose GetPose()
+      {
         var TAngle = Angle;
-        if (TAngle != LastAngle) {
+        if (TAngle != LastAngle)
+        {
           pose.Mat = RotateOnAxis(Axis, TAngle);
           PoseID++;
           LastAngle = TAngle;
         }
         return pose;
       }
-      public override cPose GetNextPose() {
+      public override cPose GetNextPose()
+      {
         var TnAngle = Angle + dAngle;
-        if (TnAngle != LastnAngle) {
+        if (TnAngle != LastnAngle)
+        {
           npose.Mat = RotateOnAxis(Axis, TnAngle);
           nPoseID++;
           LastnAngle = TnAngle;
         }
         return npose;
       }
-      public override cPose GetDeltaPose() {
+      public override cPose GetDeltaPose()
+      {
         var TdAngle = dAngle;
-        if (TdAngle != LastdAngle) {
+        if (TdAngle != LastdAngle)
+        {
           dpose.Mat = RotateOnAxis(Axis, TdAngle);
           dPoseID++;
           LastdAngle = TdAngle;
         }
         return dpose;
       }
-      public override void SetDeltaPose(cPose TargetdPose, Hardware Reference) {  // (dPose/dt)
+      public override void SetDeltaPose(cPose TargetdPose, Hardware Reference)
+      {  // (dPose/dt)
         Vector2D PlanePos = RelativePlane(Reference.Pose.Pos, Axis);
         var Temp = 0.0;
         var Temp2 = 0.0;
-        if (OriMode != 0) {
+        if (OriMode != 0)
+        {
           var Ref = Reference.dPose;
           var RA = RelOri(Reference.dPose, Axis);
           var A = RelOri(TargetdPose, Axis);
@@ -738,8 +869,10 @@ namespace IngameScript {
         }
 
         dAngle = 0;
-        if (OriMode != 1) {
-          if ((PlanePos.X * PlanePos.X) + (PlanePos.Y * PlanePos.Y) > DeadBand) {
+        if (OriMode != 1)
+        {
+          if ((PlanePos.X * PlanePos.X) + (PlanePos.Y * PlanePos.Y) > DeadBand)
+          {
             Vector2D PTV = RelativePlane(TargetdPose.Pos, Axis);
             Vector2D ENPP = RelativePlane(Reference.nPose.Pos, Axis);
             Vector2D TNPP = (PlanePos + PTV);
@@ -751,18 +884,24 @@ namespace IngameScript {
         dAngle = ((1 - OriMode) * Temp2) + ((OriMode) * Temp);
 
       }
-      public override void GoHome(double Speed) {
-        if (Home != Angle && AllowHome) {
+      public override void GoHome(double Speed)
+      {
+        if (Home != Angle && AllowHome)
+        {
           var ang = -Clamp(AngleProxy(Angle, Home) * Speed, -Speed * dt, Speed * dt);
           dAngle = ang * dt;
         }
       }
       public override void SetHome() => Home = Angle;
-      public override void DebugInfo() {
+      public override void DebugInfo()
+      {
         var Text = "Rotary: " + Axis + " " + (AngleProxy(0, Angle) / Math.PI * 180).ToString("0") + "°";
-        if (dAngle > 0) {
+        if (dAngle > 0)
+        {
           Text += "+" + (dAngle / dt / Math.PI * 30).ToString("0") + "rpm";
-        } else {
+        }
+        else
+        {
           Text += (dAngle / dt / Math.PI * 30).ToString("0") + "rpm";
         }
         MyEcho(Text);
@@ -772,8 +911,10 @@ namespace IngameScript {
       double home = 0, angle = 0, dangle = 0, LastAngle = -100000, LastnAngle = -100000, LastdAngle = -100000, Buffer = 0, Buffer2 = 0;
       uint AngleStep = 0;
       // << ---- P R I V A T E   F U N C T I O N S ---- >>
-      MatrixD RotateOnAxis(String Axis, double Angle = 0) {
-        switch (Axis) {
+      MatrixD RotateOnAxis(String Axis, double Angle = 0)
+      {
+        switch (Axis)
+        {
           case "X": return RotX(Angle);
           case "Y": return RotY(Angle);
           case "Z": return RotZ(Angle);
@@ -783,8 +924,10 @@ namespace IngameScript {
           default: return MatrixD.Identity;
         }
       }
-      Vector2D RelativePlane(Vector3D Vec, String Axis) {
-        switch (Axis) {
+      Vector2D RelativePlane(Vector3D Vec, String Axis)
+      {
+        switch (Axis)
+        {
           case "X": return new Vector2D(Vec.Y, -Vec.Z);
           case "Y": return new Vector2D(-Vec.X, -Vec.Z);
           case "Z": return new Vector2D(-Vec.X, Vec.Y);
@@ -794,11 +937,13 @@ namespace IngameScript {
           default: return new Vector2D(Vec.Y, Vec.Z);
         }
       }
-      public double RelOri(cPose Ori, String Axis) {
+      public double RelOri(cPose Ori, String Axis)
+      {
         double Out;
         var Mat = Ori.Mat;
         MyDebug(Axis);
-        switch (Axis) {
+        switch (Axis)
+        {
           case "X": Out = Math.Atan2(Math.Round(Mat.M32 - Mat.M23, 12), Math.Round(Mat.M22 + Mat.M33, 12)); break;
           case "Y": Out = Math.Atan2(Math.Round(Mat.M13 - Mat.M31, 12), Math.Round(Mat.M11 + Mat.M33, 12)); break;
           case "Z": Out = Math.Atan2(Math.Round(Mat.M21 - Mat.M12, 12), Math.Round(Mat.M11 + Mat.M22, 12)); break;
@@ -809,7 +954,8 @@ namespace IngameScript {
         }
         return Out;
       }
-      public double AngleProxy(double A1 = 0, double A2 = 0) {  // Give the smallest difference between two angles in rad
+      public double AngleProxy(double A1 = 0, double A2 = 0)
+      {  // Give the smallest difference between two angles in rad
         A1 = A2 - A1;
         A1 = Mod(A1 + Math.PI, 2 * Math.PI) - Math.PI;
         return A1;
@@ -820,14 +966,16 @@ namespace IngameScript {
       <<  ----  L I N E A R  --------------------------------------------------------------------  >>           L I N E A R
       <<  --------------------------------------------------------------------  L I N E A R  ----  >>           L I N E A R
     V1.1*/
-    class Linear : Hardware {
+    class Linear : Hardware
+    {
 
       // << ---- C O N S T R U C T O R ---- >>
       public Linear(
         String Axis = "X"
         , double MaxSpeed = 5
         , double Home = 0
-        , bool AllowHome = true) {  // (m/s)
+        , bool AllowHome = true)
+      {  // (m/s)
         Direction = AxisToDirection(Axis);
         this.MaxSpeed = MaxSpeed;
         this.Axis = Axis;
@@ -843,53 +991,68 @@ namespace IngameScript {
       public double MaxSpeed;
       public String Axis;
       public bool AllowHome;
-      public double Length {
-        get {
-          if (LengthStep < GlobStep) {
+      public double Length
+      {
+        get
+        {
+          if (LengthStep < GlobStep)
+          {
             length = GetLength();
             LengthStep = GlobStep;
           }
           return length;
         }
       }
-      public double dLength {
-        get {
+      public double dLength
+      {
+        get
+        {
           dlength = GetDeltaLength();
           return dlength;
         }
-        set {
-          if (Math.Abs(value) > 0.001 * dt) {
+        set
+        {
+          if (Math.Abs(value) > 0.001 * dt)
+          {
             var S = MaxSpeed * dt;
             SetDeltaLength(Clamp(((6 * value) + Buffer) / 7, -S, S));
             SleepMode = false;
-          } else {
+          }
+          else
+          {
             SetDeltaLength(Buffer / 2);
           }
           Buffer = value;
         }
       }
       // << ---- O V E R R I D E S ---- >>
-      public override cPose GetPose() {
+      public override cPose GetPose()
+      {
         var TLength = Length;
-        if (TLength != LastLength) {
+        if (TLength != LastLength)
+        {
           pose.Mat = MatrixD.CreateTranslation(Direction * TLength);
           LastLength = TLength;
           PoseID++;
         }
         return pose;
       }
-      public override cPose GetNextPose() {
+      public override cPose GetNextPose()
+      {
         var TnLength = Length + dLength;
-        if (TnLength != LastnLength) {
+        if (TnLength != LastnLength)
+        {
           npose.Mat = MatrixD.CreateTranslation(Direction * (TnLength));
           nPoseID++;
           LastnLength = TnLength;
         }
         return npose;
       }
-      public override cPose GetDeltaPose() {
+      public override cPose GetDeltaPose()
+      {
         var TdLength = dLength;
-        if (TdLength != LastdLength) {
+        if (TdLength != LastdLength)
+        {
           dpose.Mat = MatrixD.CreateTranslation(Direction * TdLength);
           dPoseID++;
           LastdLength = TdLength;
@@ -897,16 +1060,21 @@ namespace IngameScript {
         return dpose;
       }
       public override void SetDeltaPose(cPose TargetdPose, Hardware Reference) => dLength = ((double)Vector3D.Dot(TargetdPose.Pos - Reference.dPose.Pos, Direction));
-      public override void GoHome(double Speed) {
+      public override void GoHome(double Speed)
+      {
         if (Home != Length && AllowHome)
           dLength = Clamp((Home - Length) * Speed * dt, -Speed * dt, Speed * dt);
       }
       public override void SetHome() => Home = Length;
-      public override void DebugInfo() {
+      public override void DebugInfo()
+      {
         var Text = "Linear: " + Axis + " " + Length.ToString("0.0") + "m";
-        if (dLength > 0) {
+        if (dLength > 0)
+        {
           Text += "+" + (dLength / dt).ToString("0.0") + "m/s";
-        } else {
+        }
+        else
+        {
           Text += (dLength / dt).ToString("0.0") + "m/s";
         }
         MyEcho(Text);
@@ -917,8 +1085,10 @@ namespace IngameScript {
       double length = 0, dlength = 0, LastLength = -100000, LastdLength = -100000, LastnLength = -100000, Buffer = 0;
       uint LengthStep = 0;
       // << ---- P R I V A T E   F U N C T I O N S ---- >>
-      Vector3D AxisToDirection(String Axis) {
-        switch (Axis) {
+      Vector3D AxisToDirection(String Axis)
+      {
+        switch (Axis)
+        {
           case "X": return new Vector3D(1, 0, 0);
           case "Y": return new Vector3D(0, 1, 0);
           case "Z": return new Vector3D(0, 0, 1);
@@ -933,7 +1103,8 @@ namespace IngameScript {
       <<  ----  R O T O R  --------------------------------------------------------------------  >>           R O T O R
       <<  --------------------------------------------------------------------  R O T O R  ----  >>           R O T O R
     V1.1*/
-    class Rotor : Rotary {
+    class Rotor : Rotary
+    {
 
       // << ---- C O N S T R U C T O R ---- >>
       public Rotor(
@@ -948,7 +1119,8 @@ namespace IngameScript {
         , double SoftMinLimit = 1
         , double Home = 0
         , bool AllowHome = true)
-        : base(Axis, OriMode, MaxSpeed, Home, AllowHome) {
+        : base(Axis, OriMode, MaxSpeed, Home, AllowHome)
+      {
 
         MyLog("Loading Rotor: " + Name);
         this.Offset = Offset * Math.PI / 180;
@@ -963,12 +1135,16 @@ namespace IngameScript {
       public double SoftMinLimit;
       public double SoftMaxLimit;
       public double Offset;
-      public IMyMotorStator Motor {
-        get {
-          if (RotorStep < GlobStep - NORMALFPS) {
+      public IMyMotorStator Motor
+      {
+        get
+        {
+          if (RotorStep < GlobStep - NORMALFPS)
+          {
             motor = (IMyMotorStator)MyGTS.GetBlockWithName(Name);
             RotorStep = GlobStep;
-            if (motor == null) {
+            if (motor == null)
+            {
               MyLog("<<Error>>: Rotor '" + Name + "' Not found.");
               ErrorFlag = GlobStep + 200;
             }
@@ -977,9 +1153,11 @@ namespace IngameScript {
         }
       }
       // << ---- O V E R R I D E S ---- >>
-      public override void SetDeltaAngle(double dAngle = 0) {
+      public override void SetDeltaAngle(double dAngle = 0)
+      {
         double Vel;
-        if (!Override && Motor != null) {
+        if (!Override && Motor != null)
+        {
           // Get the desired acceleration
           Vel = dAngle / Math.PI * 30 / dt;
           // Softening the limits by limiting speed near them
@@ -990,30 +1168,41 @@ namespace IngameScript {
           Vel = Math.Min(MaxSpeed * SoftMax, Vel);
           Vel = Math.Max(-MaxSpeed * SoftMin, Vel);
           // Applying the velocity to the Motor
-          if (Math.Abs(Vel) < MaxSpeed + 5) {
+          if (Math.Abs(Vel) < MaxSpeed + 5)
+          {
             //Motor.SetValue("Velocity",(Single)Vel );  // (rpm)  // old ways
             Motor.TargetVelocityRad = (Single)(Vel * Math.PI / 30);  // (rad)
           }
         }
       }
-      public override double GetAngle() {
-        if (Motor != null) {
+      public override double GetAngle()
+      {
+        if (Motor != null)
+        {
           return -Motor.Angle + Offset;  // (rad)
-        } else {
+        }
+        else
+        {
           return 0;
         }
       }
-      public override double GetDeltaAngle() {
+      public override double GetDeltaAngle()
+      {
         if (Motor != null
             && Motor.Enabled && Motor.Angle < Motor.UpperLimitRad
-            && Motor.Angle > Motor.LowerLimitRad) {
+            && Motor.Angle > Motor.LowerLimitRad)
+        {
           return -Motor.TargetVelocityRad * dt; // from rad to drad/ds
-        } else {
+        }
+        else
+        {
           return 0;
         }
       }
-      public override void GoHome(double Speed) {
-        if (Home != Angle && AllowHome) {
+      public override void GoHome(double Speed)
+      {
+        if (Home != Angle && AllowHome)
+        {
           // TODO check this sign
           var ang = -Clamp(this.motor.AngleProxy((float)Home) * Speed, -Speed * dt, Speed * dt) * dt;
           dAngle = ang;
@@ -1028,7 +1217,8 @@ namespace IngameScript {
       <<  ----  H Y D R A U L I C  --------------------------------------------------------------------  >>           H Y D R A U L I C
       <<  --------------------------------------------------------------------  H Y D R A U L I C  ----  >>           H Y D R A U L I C
     V1.1*/
-    class Hydraulic : Rotary {
+    class Hydraulic : Rotary
+    {
       // << ---- C O N S T R U C T O R ---- >>
       public Hydraulic(
         String Axis = "Z"
@@ -1042,7 +1232,8 @@ namespace IngameScript {
         , double Normal2 = 0
         , double Home = 0
         , bool AllowHome = true)
-        : base(Axis, OriMode, MaxSpeed, Home, AllowHome) {
+        : base(Axis, OriMode, MaxSpeed, Home, AllowHome)
+      {
 
         this.Actuator = Actuator;
         Sign = Invert ? -1 : 1;
@@ -1056,23 +1247,27 @@ namespace IngameScript {
       public Hardware Actuator;
 
       // << ---- O V E R R I D E S ---- >>
-      public override double GetAngle() {
+      public override double GetAngle()
+      {
         var D = Actuator.Pose.Pos.X;
         var A = Math.Acos(((D * D) - L1_2p2_2) / L1mL2m2) + Offset;
         MyDebug("Hydraulic Angle: " + (A / Math.PI * 180).ToString("0.00") + "°");
         return A;
       }
-      public override double GetDeltaAngle() {
+      public override double GetDeltaAngle()
+      {
         var D = Actuator.Pose.Pos.X;
         var nD = Actuator.nPose.Pos.X;
-        if (D != LD || nD != LnD) {
+        if (D != LD || nD != LnD)
+        {
           nangle = Math.Acos(((nD * nD) - L1_2p2_2) / L1mL2m2) - Math.Acos(((D * D) - L1_2p2_2) / L1mL2m2);
           LD = D;
           LnD = nD;
         }
         return nangle;
       }
-      public override void SetDeltaAngle(double dAngle) {
+      public override void SetDeltaAngle(double dAngle)
+      {
         double D = Actuator.Pose.Pos.X;
         double nD = Math.Sqrt(L1_2p2_2 + (L1mL2m2 * Math.Cos(Angle + dAngle - Offset)));
         Actuator.Move(new cPose(new Vector3D(-(nD - D) * Sign, 0, 0)), Actuator);
@@ -1091,7 +1286,8 @@ namespace IngameScript {
       <<  ----  P I S T O N  --------------------------------------------------------------------  >>           P I S T O N
       <<  --------------------------------------------------------------------  P I S T O N  ----  >>           P I S T O N
     V1.1*/
-    class Piston : Linear {
+    class Piston : Linear
+    {
 
       // << ---- C O N S T R U C T O R ---- >>
       public Piston(
@@ -1103,7 +1299,8 @@ namespace IngameScript {
         , double SoftMinLimit = 1
         , double Home = 0
         , bool AllowHome = true)
-        : base(Axis, MaxSpeed, Home, AllowHome) {
+        : base(Axis, MaxSpeed, Home, AllowHome)
+      {
 
         MyLog("Loading Piston: " + Name);
         this.Name = Name;
@@ -1116,33 +1313,44 @@ namespace IngameScript {
       public String Name;
       public double SoftMinLimit;
       public double SoftMaxLimit;
-      public IMyPistonBase MyPiston {
-        get {
-          if (PistonStep < GlobStep - NORMALFPS) {
+      public IMyPistonBase MyPiston
+      {
+        get
+        {
+          if (PistonStep < GlobStep - NORMALFPS)
+          {
             piston = (IMyPistonBase)MyGTS.GetBlockWithName(Name);
             PistonStep = GlobStep;
           }
-          if (piston == null) {
+          if (piston == null)
+          {
             MyLog("<<Error>>: Piston '" + Name + "' Not found.");
             ErrorFlag = GlobStep + 200;
           }
           return piston;
         }
-        private set {
+        private set
+        {
           piston = value;
         }
       }
       // << ---- O V E R R I D E S ---- >>
-      public override double GetLength() {
-        if (MyPiston != null) {
+      public override double GetLength()
+      {
+        if (MyPiston != null)
+        {
           return MyPiston.CurrentPosition;  // (m)
-        } else {
+        }
+        else
+        {
           return 0;
         }
       }
-      public override void SetDeltaLength(double dLength) {  // (dm/dt)
+      public override void SetDeltaLength(double dLength)
+      {  // (dm/dt)
         double Vel = 0;
-        if (!Override && MyPiston != null) {
+        if (!Override && MyPiston != null)
+        {
           // Get the desired velocity
           Vel = dLength / dt;  // (m/s)
                                // Softening the limits by limiting speed near them
@@ -1156,13 +1364,17 @@ namespace IngameScript {
             MyPiston.Velocity = (Single)Vel;
         }
       }
-      public override double GetDeltaLength() {
+      public override double GetDeltaLength()
+      {
         if (MyPiston != null
           && MyPiston.Enabled
           && MyPiston.CurrentPosition <= MyPiston.MaxLimit - 0.01
-          && MyPiston.CurrentPosition >= MyPiston.MinLimit + 0.01) {
+          && MyPiston.CurrentPosition >= MyPiston.MinLimit + 0.01)
+        {
           return MyPiston.Velocity * dt;  // (dm/dt)
-        } else {
+        }
+        else
+        {
           return 0;  // (dm/dt)
         }
       }
@@ -1174,7 +1386,8 @@ namespace IngameScript {
       <<  ----  R O T O R W H E E L  --------------------------------------------------------------------  >>           R O T O R W H E E L
       <<  --------------------------------------------------------------------  R O T O R W H E E L  ----  >>           R O T O R W H E E L
     V1.1*/
-    class RotorWheel : Linear {
+    class RotorWheel : Linear
+    {
 
       // << ---- C O N S T R U C T O R ---- >>
       public RotorWheel(
@@ -1184,19 +1397,23 @@ namespace IngameScript {
         , int Direction = 1
         , double MaxSpeed = 20
         , bool AllowHome = false) // (m/s)
-        : base(Axis, MaxSpeed, 0, AllowHome) {
+        : base(Axis, MaxSpeed, 0, AllowHome)
+      {
         bool Error = false;
-        if (Wheel == null) {
+        if (Wheel == null)
+        {
           MyLog("<<Error>>: Wheel undefined.");
           ErrorFlag = GlobStep + 200;
           Error = true;
         }
-        if (Wheel.Axis == Axis) {
+        if (Wheel.Axis == Axis)
+        {
           MyLog("<<Error>>: A RotorWheel's axis of rotation can't be the same as its axis of displacement.");
           ErrorFlag = GlobStep + 200;
           Error = true;
         }
-        if (!Error) {
+        if (!Error)
+        {
           this.Wheel = Wheel;
           this.Radius = Radius;
           this.Direction = Direction;
@@ -1208,11 +1425,13 @@ namespace IngameScript {
       public double Radius = 0.75;
       public int Direction = 1;
       // << ---- O V E R R I D E S ---- >>
-      public override double GetLength() {
+      public override double GetLength()
+      {
         Position += GetDeltaLength() * Direction / 6;
         return Position;
       }
-      public override void SetDeltaLength(double dLength) {  // (dm/dt)
+      public override void SetDeltaLength(double dLength)
+      {  // (dm/dt)
         if (Radius != 0)
           Wheel.dAngle = -dLength / Radius * Direction * 0.999;
       }
@@ -1224,14 +1443,16 @@ namespace IngameScript {
       <<  ----  S O L I D   L G  --------------------------------------------------------------------  >>           S O L I D   L G
       <<  --------------------------------------------------------------------  S O L I D   L G  ----  >>           S O L I D   L G
     V1.1*/
-    class SolidLG : Solid {
+    class SolidLG : Solid
+    {
 
       // << ---- C O N S T R U C T O R ---- >>
       public SolidLG(
         double X = 0
         , double Y = 0
         , double Z = 0)
-        : base(X * LG, Y * LG, Z * LG) {
+        : base(X * LG, Y * LG, Z * LG)
+      {
         MyLog("Loading SolidLG: (" + X.ToString() + ", " + Y.ToString() + ", " + Z.ToString() + ")");
       }
     }
@@ -1239,14 +1460,16 @@ namespace IngameScript {
       <<  ----  S O L I D   S G  --------------------------------------------------------------------  >>           S O L I D   S G
       <<  --------------------------------------------------------------------  S O L I D   S G  ----  >>           S O L I D   S G
     V1.1*/
-    class SolidSG : Solid {
+    class SolidSG : Solid
+    {
 
       // << ---- C O N S T R U C T O R ---- >>
       public SolidSG(
         double X = 0
         , double Y = 0
         , double Z = 0)
-        : base(X * SG, Y * SG, Z * SG) {
+        : base(X * SG, Y * SG, Z * SG)
+      {
         MyLog("Loading SolidSG: (" + X.ToString() + ", " + Y.ToString() + ", " + Z.ToString() + ")");
       }
     }
@@ -1254,14 +1477,16 @@ namespace IngameScript {
       <<  ----  C U B I T S  --------------------------------------------------------------------  >>           C U B I T S
       <<  --------------------------------------------------------------------  C U B I T S  ----  >>           C U B I T S
     V1.1*/
-    class Cubits : Solid {
+    class Cubits : Solid
+    {
 
       // << ---- C O N S T R U C T O R ---- >>
       public Cubits(
         double X = 0
         , double Y = 0
         , double Z = 0)
-        : base(X * C, Y * C, Z * C) {
+        : base(X * C, Y * C, Z * C)
+      {
         MyLog("Loading Cubits: (" + X.ToString() + ", " + Y.ToString() + ", " + Z.ToString() + ")");
       }
     }
@@ -1269,21 +1494,25 @@ namespace IngameScript {
       <<  ----  c P O S E  --------------------------------------------------------------------  >>           c P O S E
       <<  --------------------------------------------------------------------  c P O S E  ----  >>           c P O S E
     V1.1*/
-    class cPose {
+    class cPose
+    {
 
       // << ---- C O N S T R U C T O R ---- >>
-      public cPose(MatrixD Mat) {
+      public cPose(MatrixD Mat)
+      {
         this.Mat = Mat;
 
         ori = MatrixD.Identity;
         NullOri = (Mat.M11 == 1 && Mat.M22 == 1 && Mat.M33 == 1);
       }
-      public cPose(Vector3D Pos = new Vector3D()) {
+      public cPose(Vector3D Pos = new Vector3D())
+      {
         Mat = MatrixD.CreateTranslation(Pos);
         NullOri = true;
         ori = MatrixD.Identity;
       }
-      public cPose(cPose O) {
+      public cPose(cPose O)
+      {
         Mat = new MatrixD(
           O.Mat.M11, O.Mat.M12, O.Mat.M13, O.Mat.M14,
           O.Mat.M21, O.Mat.M22, O.Mat.M23, O.Mat.M24,
@@ -1294,11 +1523,16 @@ namespace IngameScript {
       }
 
       // << ---- o p e r a t o r s ---- >>
-      static public cPose operator +(cPose c1, cPose c2) {
-        if (c1.NullOri) {
-          if (c2.NullOri) {
+      static public cPose operator +(cPose c1, cPose c2)
+      {
+        if (c1.NullOri)
+        {
+          if (c2.NullOri)
+          {
             return new cPose(c1.Pos + c2.Pos);
-          } else {
+          }
+          else
+          {
             MatrixD M = c2.Mat;
             return new cPose(new MatrixD(
               M.M11, M.M12, M.M13, 0,
@@ -1306,15 +1540,22 @@ namespace IngameScript {
               M.M31, M.M32, M.M33, 0,
               M.M41 + c1.Pos.X, M.M42 + c1.Pos.Y, M.M43 + c1.Pos.Z, 1));
           }
-        } else {
+        }
+        else
+        {
           return new cPose(c2.Mat * c1.Mat);  // <---- Check order (ok)
         }
       }
-      static public cPose operator -(cPose c1, cPose c2) {
-        if (c1.NullOri) {
-          if (c2.NullOri) {
+      static public cPose operator -(cPose c1, cPose c2)
+      {
+        if (c1.NullOri)
+        {
+          if (c2.NullOri)
+          {
             return new cPose(c1.Pos - c2.Pos);
-          } else {
+          }
+          else
+          {
             MatrixD M = MatrixD.Invert(c2.Mat);
             return new cPose(new MatrixD(
               M.M11, M.M12, M.M13, 0,
@@ -1322,23 +1563,30 @@ namespace IngameScript {
               M.M31, M.M32, M.M33, 0,
               M.M41 + c1.Pos.X, M.M42 + c1.Pos.Y, M.M43 + c1.Pos.Z, 1));
           }
-        } else {
+        }
+        else
+        {
           return new cPose(MatrixD.Invert(c2.Mat) * c1.Mat);  // <---- Check order
         }
       }
-      static public cPose operator -(cPose c1) {
+      static public cPose operator -(cPose c1)
+      {
         return new cPose(MatrixD.Invert(c1.Mat));
       }
-      static public cPose operator *(cPose c1, double c2) {
+      static public cPose operator *(cPose c1, double c2)
+      {
         var outp = new cPose();
         outp.Blend(c1, c2);
         return outp;
       }
       // << ---- P U B L I C   V A R I A B L E S ---- >>
-      public MatrixD Mat {
+      public MatrixD Mat
+      {
         get { return mat; }
-        set {
-          if (mat != value) {
+        set
+        {
+          if (mat != value)
+          {
             mat = value;
             UTDOri = false;
             NullOri = (mat.M11 == 1 && mat.M22 == 1 && mat.M33 == 1);
@@ -1348,9 +1596,12 @@ namespace IngameScript {
           }
         }
       }
-      public MatrixD Ori {
-        get {
-          if (!UTDOri) {
+      public MatrixD Ori
+      {
+        get
+        {
+          if (!UTDOri)
+          {
             ori = MatrixD.Identity;
             ori.M11 = Mat.M11; ori.M12 = Mat.M12; ori.M13 = Mat.M13;
             ori.M21 = Mat.M21; ori.M22 = Mat.M22; ori.M23 = Mat.M23;
@@ -1359,7 +1610,8 @@ namespace IngameScript {
           }
           return ori;
         }
-        set {
+        set
+        {
           var Mat = this.Mat;
           mat.M11 = value.M11; mat.M12 = value.M12; mat.M13 = value.M13;
           mat.M21 = value.M21; mat.M22 = value.M22; mat.M23 = value.M23;
@@ -1371,30 +1623,39 @@ namespace IngameScript {
           NullOri = (mat.M11 == 1 && mat.M22 == 1 && mat.M33 == 1);
         }
       }
-      public Vector3D Pos {
-        get {
+      public Vector3D Pos
+      {
+        get
+        {
           return mat.Translation;
         }
-        set {
+        set
+        {
           mat.M41 = value.X;
           mat.M42 = value.Y;
           mat.M43 = value.Z;
         }
       }
-      public double Yaw {
-        get {
+      public double Yaw
+      {
+        get
+        {
           if (!UTDYaw) { yaw = -Math.Atan2(-mat.M12, mat.M11); UTDYaw = true; }
           return yaw;
         }
       }
-      public double Pitch {
-        get {
+      public double Pitch
+      {
+        get
+        {
           if (!UTDPitch) { pitch = -Math.Asin(mat.M13); UTDPitch = true; }
           return pitch;
         }
       }
-      public double Roll {
-        get {
+      public double Roll
+      {
+        get
+        {
           if (!UTDRoll) { roll = -Math.Atan2(-mat.M23, mat.M33); UTDRoll = true; }
           return roll;
         }
@@ -1404,7 +1665,8 @@ namespace IngameScript {
         // this.Mat = this.Mat*(1-M)+c1.Mat*M;
         Mat = MatrixD.Lerp(Mat, c1.Mat, M);
       // << ---- O V E R R I D E S ---- >>
-      public override String ToString() {
+      public override String ToString()
+      {
         String Text = "Pos: ";
         Text += Pos.X.ToString("0.000") + ", ";
         Text += Pos.Y.ToString("0.000") + ", ";
@@ -1437,9 +1699,11 @@ namespace IngameScript {
       <<  ----  L I M I T S  --------------------------------------------------------------------  >>           L I M I T S
       <<  --------------------------------------------------------------------  L I M I T S  ----  >>           L I M I T S
     V1.0*/
-    class Limits {
+    class Limits
+    {
       // << ---- C O N S T R U C T O R ---- >>
-      public Limits(bool Inside = true) {
+      public Limits(bool Inside = true)
+      {
         this.Inside = Inside;
       }
       // << ---- I N T E R F A C E ---- >>
@@ -1452,7 +1716,8 @@ namespace IngameScript {
       <<  ----  C O N T R O L L E R  --------------------------------------------------------------------  >>           C O N T R O L L E R
       <<  --------------------------------------------------------------------  C O N T R O L L E R  ----  >>           C O N T R O L L E R
     V1.1*/
-    class Controller {
+    class Controller
+    {
 
       // << ---- C O N S T R U C T O R ---- >>
       public Controller(
@@ -1461,7 +1726,8 @@ namespace IngameScript {
         , Limits Workzone = null
         , double Speed = 5
         , double Softness = 5
-        ) {
+        )
+      {
 
         MyLog("Loading Controller of name: " + Name);
         this.Arm = Arm;
@@ -1470,7 +1736,8 @@ namespace IngameScript {
         this.Workzone = Workzone;
         this.Softness = Softness;
         MyControllers.Add(this);
-        if (Arm == null) {
+        if (Arm == null)
+        {
           MyLog("No Arm selected. DefaultArm will be used instead.");
           this.Arm = DefaultArm;
         }
@@ -1492,31 +1759,41 @@ namespace IngameScript {
       public static List<Controller> MyControllers = new List<Controller>();
 
       // << ---- P U B L I C   F U N C T I O N ---- >>
-      static public void UpdateControllers(String Argument = "") {
-        foreach (Controller Contr in MyControllers) {
+      static public void UpdateControllers(String Argument = "")
+      {
+        foreach (Controller Contr in MyControllers)
+        {
           Contr.Update(Argument);
         }
       }
-      public void GoHome(double HomeSpeed = 1) {
+      public void GoHome(double HomeSpeed = 1)
+      {
         MyLog("---- Going home ----");
         GoingHome = true;
         this.HomeSpeed = HomeSpeed;
         Correction = new cPose();
       }
       public void SetHome() => Arm.SetHome();
-      public void Update(String Argument = "") {
+      public void Update(String Argument = "")
+      {
         ParseArgument(Argument);
         cPose InputMovement;
         InputMovement = /*ConsiderWorkzone( */GetInputs();// );  // (dm/dt, drad/dt)
-        if (GoingHome) {
-          if (InputMovement.Pos.Length() < 0.001 && InputMovement.Mat.M11 > 0.999 && InputMovement.Mat.M22 > 0.999 && InputMovement.Mat.M33 > 0.999) {
+        if (GoingHome)
+        {
+          if (InputMovement.Pos.Length() < 0.001 && InputMovement.Mat.M11 > 0.999 && InputMovement.Mat.M22 > 0.999 && InputMovement.Mat.M33 > 0.999)
+          {
             MyEcho(Name + " Going Home...");
             Arm.GoHome(HomeSpeed);
-          } else {
+          }
+          else
+          {
             MyLog("'GoHome' interrupted by mouse or keyboard inputs");
             GoingHome = false;
           }
-        } else {
+        }
+        else
+        {
           ControlMovement.Blend(InputMovement, 1 / Softness);
           ApplyMovement(ControlMovement);
           MyEcho("Current Pose:");
@@ -1531,31 +1808,43 @@ namespace IngameScript {
       Limits Workzone;
       cPose VirtualPose, Correction = new cPose(), ControlMovement = new cPose();
       // << ---- P R I V A T E   F U N C T I O N S ---- >>
-      cPose ConsiderWorkzone(cPose InputMovement) {  // (dm/dt, drad/dt)
-        if (Workzone != null) {
+      cPose ConsiderWorkzone(cPose InputMovement)
+      {  // (dm/dt, drad/dt)
+        if (Workzone != null)
+        {
           Vector3D ColisionVector = Workzone.CheckLimits(Arm.Pose.Pos);
           return InputMovement;  // TODO
-        } else {
+        }
+        else
+        {
           return InputMovement;
         }
       }
-      void ApplyMovement(cPose ControlMovement) {  // (dm/dt, drad/s)
+      void ApplyMovement(cPose ControlMovement)
+      {  // (dm/dt, drad/s)
         var ControlMovement2 = new cPose(ControlMovement);
         ControlMovement2 += Correction;
         Arm.Move(ControlMovement2, Arm);  // (dm/dt, drad/dt)
         Correction = (Correction * 0.9) + ((-Arm.dPose + ControlMovement) * 0.5);
       }
-      void ParseArgument(String Argument = "") {
-        if (Argument != "") {
+      void ParseArgument(String Argument = "")
+      {
+        if (Argument != "")
+        {
           MyLog("Executing argument: " + Argument);
           String[] Lines = Argument.Split('\n');
-          foreach (String Line in Lines) {
+          foreach (String Line in Lines)
+          {
             String[] Commands = Line.Split(';');
-            foreach (String Command in Commands) {
+            foreach (String Command in Commands)
+            {
               String[] Special = Command.Split(' ');
-              if (Name != "" && Special[0] == Name) {
+              if (Name != "" && Special[0] == Name)
+              {
                 ExecuteCommand(Reform(Special, 1));
-              } else {
+              }
+              else
+              {
                 ExecuteCommand(Reform(Special, 0));
               }
             }
@@ -1563,23 +1852,33 @@ namespace IngameScript {
         }
       }
       // Function used to reassemble the end of a string[] to get a double string
-      public static String Reform(String[] Words, int i) {
+      public static String Reform(String[] Words, int i)
+      {
         String Word = "";
-        do {
+        do
+        {
           Word += Words[i];
           i++;
         } while (i < Words.Length && (Word += " ") != null);
         return Word;
       }
       // Function used to interpret an On/Off/Toggle
-      public static bool OnOffToggle(String Word, bool Value = false) {
-        if (Word == "On") {
+      public static bool OnOffToggle(String Word, bool Value = false)
+      {
+        if (Word == "On")
+        {
           return true;
-        } else if (Word == "Off" || Word == "0") {
+        }
+        else if (Word == "Off" || Word == "0")
+        {
           return false;
-        } else if (Word == "Toggle" || Word == "-1") {
+        }
+        else if (Word == "Toggle" || Word == "-1")
+        {
           return !Value;
-        } else {
+        }
+        else
+        {
           MyLog("<<Error>>: " + Word + " is Invalid. Use 'On/1, Off/0 or Toggle/-1'");
           ErrorFlag = GlobStep + 200;
         }
@@ -1592,7 +1891,8 @@ namespace IngameScript {
       <<  ----  U S E R C O N T R O L  --------------------------------------------------------------------  >>           U S E R C O N T R O L
       <<  --------------------------------------------------------------------  U S E R C O N T R O L  ----  >>           U S E R C O N T R O L
     V1.0*/
-    class UserControl : Controller {
+    class UserControl : Controller
+    {
 
       // << ---- C O N S T R U C T O R ---- >>
       public UserControl(
@@ -1610,16 +1910,19 @@ namespace IngameScript {
         , double PitchSpeed = 1
         , double RollSpeed = 1
         , bool UseArmAsReference = false
-        ) : base(Arm, Name, Workzone, Speed, Softness) {
+        ) : base(Arm, Name, Workzone, Speed, Softness)
+      {
         OnOff = StartOn;
         this.ShipControllerKeyword = ShipControllerKeyword;
         this.ReadKeyboard = ReadKeyboard;
         this.ReadMouse = ReadMouse;
         this.ReferenceFrame = null;
-        if (ReferenceFrame != null) {
+        if (ReferenceFrame != null)
+        {
           this.ReferenceFrame = ReferenceFrame;
         }
-        if (UseArmAsReference) {
+        if (UseArmAsReference)
+        {
           MyLog("ReferenceFrame set to Arm");
           this.ReferenceFrame = this.Arm;
         }
@@ -1641,11 +1944,14 @@ namespace IngameScript {
       public String ShipControllerKeyword;
       public Hardware ReferenceFrame;
       public cPose ConstantMovement;
-      public cPose Target {
-        get {
+      public cPose Target
+      {
+        get
+        {
           return target;
         }
-        set {
+        set
+        {
           UseTarget = (value.Mat != MatrixD.Identity);
           target = value;
           ConstantMovement = new cPose();
@@ -1658,7 +1964,8 @@ namespace IngameScript {
         double Z = 0,
         double Yaw = 0,
         double Pitch = 0,
-        double Roll = 0) {
+        double Roll = 0)
+      {
         ConstantMovement = new cPose(new Vector3D(X, Y, Z) * dt) + new cPose(RotZ(Yaw * dt * Math.PI / 180));
         ConstantMovement += new cPose(RotY(Pitch * dt * Math.PI / 180)) + new cPose(RotX(Roll * dt * Math.PI / 180));
       }
@@ -1667,7 +1974,8 @@ namespace IngameScript {
         double Z = 0,
         double Yaw = 0,
         double Pitch = 0,
-        double Roll = 0) {
+        double Roll = 0)
+      {
         ConstantMovement = new cPose(new Vector3D(X, Y, Z) * dt) + new cPose(RotZ(Yaw * dt * Math.PI / 180));
         ConstantMovement += new cPose(RotY(Pitch * dt * Math.PI / 180)) + new cPose(RotX(Roll * dt * Math.PI / 180));
         ConstantMovement = ApplyReferenceFrame(ConstantMovement);
@@ -1678,12 +1986,14 @@ namespace IngameScript {
         double Z = 0,
         double Yaw = 0,
         double Pitch = 0,
-        double Roll = 0) {
+        double Roll = 0)
+      {
         MyLog("Moving to: " + X.ToString("0.00") + " " + Y.ToString("0.00") + " " + Z.ToString("0.00"));
         Target = new cPose(new Vector3D(X, Y, Z)) + new cPose(RotZ(Yaw * Math.PI / 180));
         Target += new cPose(RotY(Pitch * Math.PI / 180)) + new cPose(RotX(Roll * Math.PI / 180));
       }
-      public void PrintPosition(String PanelName = "") {
+      public void PrintPosition(String PanelName = "")
+      {
 
         var Text = Name + "MoveTo ";
         Text += Arm.Pose.Pos.X.ToString("0.000") + " ";
@@ -1693,64 +2003,85 @@ namespace IngameScript {
         Text += (Arm.Pose.Pitch / Math.PI * 180).ToString("0.000") + " ";
         Text += (Arm.Pose.Roll / Math.PI * 180).ToString("0.000");
 
-        if (PanelName == "") {
+        if (PanelName == "")
+        {
           MyLog("<<Warning>> " + PanelName + " not found. Printing in log instead.");
           WarningFlag = GlobStep + 500;
           MyLog(Text);
-        } else {
+        }
+        else
+        {
           IMyTextPanel Panel = (IMyTextPanel)MyGTS.GetBlockWithName(PanelName);
           MyLog("Position Printed into " + PanelName);
           Panel.WriteText(Text, false);
         }
       }
-      public void ClearPanel(String PanelName) {
+      public void ClearPanel(String PanelName)
+      {
         IMyTextPanel Panel = (IMyTextPanel)MyGTS.GetBlockWithName(PanelName);
-        if (Panel == null) {
+        if (Panel == null)
+        {
           MyLog("<<Warning>> " + PanelName + " not found");
           WarningFlag = GlobStep + 500;
-        } else {
+        }
+        else
+        {
           Panel.WriteText("", false);
         }
       }
       // << ---- O V E R R I D E S ---- >>
-      public override cPose GetInputs() {
+      public override cPose GetInputs()
+      {
         cPose Input;
-        if (OnOff) {
-          if (ReadKeyboard) {
+        if (OnOff)
+        {
+          if (ReadKeyboard)
+          {
             var KI = GetKeyboardInput();
-            if (UseTarget && (KI.Pos.Length() > 0.1 * dt)) {
+            if (UseTarget && (KI.Pos.Length() > 0.1 * dt))
+            {
               UseTarget = false;
               MyLog("'MoveTo' interrupted by keyboard input.");
             }
             Input = KI;
-          } else {
+          }
+          else
+          {
             Input = new cPose();
           }
-          if (ReadMouse) {
+          if (ReadMouse)
+          {
             var MI = GetMouseInput();
-            if (UseTarget && (MI.Mat.M11 < 0.999 || MI.Mat.M22 < 0.999 || MI.Mat.M33 < 0.999)) {
+            if (UseTarget && (MI.Mat.M11 < 0.999 || MI.Mat.M22 < 0.999 || MI.Mat.M33 < 0.999))
+            {
               UseTarget = false;
               MyLog("'MoveTo' interrupted by mouse input.");
             }
             Input += GetMouseInput();
           }
-          if (ReferenceFrame != null) {
+          if (ReferenceFrame != null)
+          {
             Input = ApplyReferenceFrame(Input);
           }
-          if (UseTarget) {
+          if (UseTarget)
+          {
             Input += MoveToTarget();
           }
           Input += ConstantMovement;
-        } else {
+        }
+        else
+        {
           Input = new cPose();
           MyEcho("Controller is Off. You can turn it on by calling \"-OO True\"");
         }
         return Input;  // (dm/dt, drad/dt)
 
       }  // (m/s, rad/s)
-      public override void ExecuteCommand(String Command) {
+      public override void ExecuteCommand(String Command)
+      {
         //MyLog( Command );
-        try {
+        try
+        {
           String Word;
           var Words = Command.Split(' ');
           double X = 0; double Y = 0; double Z = 0;
@@ -1758,124 +2089,144 @@ namespace IngameScript {
           String PanelName;
           string PartName;
           MyLog("'" + Words[0] + "'");
-          switch (Words[0]) {
+          switch (Words[0])
+          {
             case "GoHome":
             case "-GH":
-            MyLog("GoingHome");
-            try {
-              HomeSpeed = STD(Words[1]);
-            } catch (Exception) { }
-            GoHome(HomeSpeed);
-            break;
+              MyLog("GoingHome");
+              try
+              {
+                HomeSpeed = STD(Words[1]);
+              }
+              catch (Exception) { }
+              GoHome(HomeSpeed);
+              break;
             case "SetHome":
             case "-SH":
-            SetHome();
-            break;
+              SetHome();
+              break;
             case "OnOff":
             case "-OO":
-            Word = Words[1];
-            OnOff = OnOffToggle(Word, OnOff);
-            MyLog("Changing OnOff State to: " + OnOff.ToString());
-            break;
+              Word = Words[1];
+              OnOff = OnOffToggle(Word, OnOff);
+              MyLog("Changing OnOff State to: " + OnOff.ToString());
+              break;
             case "ReadKeyboard":
             case "-RK":
-            Word = Words[1];
-            ReadKeyboard = OnOffToggle(Word, ReadKeyboard);
-            break;
+              Word = Words[1];
+              ReadKeyboard = OnOffToggle(Word, ReadKeyboard);
+              break;
             case "ReadMouse":
             case "-RM":
-            Word = Words[1];
-            ReadMouse = OnOffToggle(Word, ReadMouse);
-            break;
+              Word = Words[1];
+              ReadMouse = OnOffToggle(Word, ReadMouse);
+              break;
             case "PrintPosition":
             case "-PP":
-            try {
-              PanelName = Reform(Words, 1);
-              PrintPosition(PanelName);
-            } catch (Exception) {
-              PrintPosition();
-            }
-            break;
+              try
+              {
+                PanelName = Reform(Words, 1);
+                PrintPosition(PanelName);
+              }
+              catch (Exception)
+              {
+                PrintPosition();
+              }
+              break;
             case "ClearPanel":
             case "-CP":
-            PanelName = Reform(Words, 1);
-            ClearPanel(PanelName);
-            break;
+              PanelName = Reform(Words, 1);
+              ClearPanel(PanelName);
+              break;
             case "Speed":
             case "-S":
-            Speed = STD(Words[1]);
-            break;
+              Speed = STD(Words[1]);
+              break;
             case "Softness":
             case "-SO":
-            Softness = STD(Words[1]);
-            break;
+              Softness = STD(Words[1]);
+              break;
             case "Move":
             case "-M":
-            UseTarget = false;
-            try {
-              X = STD(Words[1]);
-              Y = STD(Words[2]);
-              Z = STD(Words[3]);
-              Yaw = STD(Words[4]);
-              Pitch = STD(Words[5]);
-              Roll = STD(Words[6]);
-            } catch (Exception) { }
+              UseTarget = false;
+              try
+              {
+                X = STD(Words[1]);
+                Y = STD(Words[2]);
+                Z = STD(Words[3]);
+                Yaw = STD(Words[4]);
+                Pitch = STD(Words[5]);
+                Roll = STD(Words[6]);
+              }
+              catch (Exception) { }
 
-            Move(X, Y, Z, Yaw, Pitch, Roll);
-            break;
+              Move(X, Y, Z, Yaw, Pitch, Roll);
+              break;
             case "MoveTo":
             case "-MT":
-            UseTarget = true;
-            try {
-              X = STD(Words[1]);
-              Y = STD(Words[2]);
-              Z = STD(Words[3]);
-              Yaw = STD(Words[4]);
-              Pitch = STD(Words[5]);
-              Roll = STD(Words[6]);
-            } catch (Exception) { }
+              UseTarget = true;
+              try
+              {
+                X = STD(Words[1]);
+                Y = STD(Words[2]);
+                Z = STD(Words[3]);
+                Yaw = STD(Words[4]);
+                Pitch = STD(Words[5]);
+                Roll = STD(Words[6]);
+              }
+              catch (Exception) { }
 
-            MoveTo(X, Y, Z, Yaw, Pitch, Roll);
-            break;
+              MoveTo(X, Y, Z, Yaw, Pitch, Roll);
+              break;
             case "RelMove":
             case "-RelM":
-            UseTarget = false;
-            try {
-              X = STD(Words[1]);
-              Y = STD(Words[2]);
-              Z = STD(Words[3]);
-              Yaw = STD(Words[4]);
-              Pitch = STD(Words[5]);
-              Roll = STD(Words[6]);
-            } catch (Exception) { }
-            RelMove(X, Y, Z, Yaw, Pitch, Roll);
-            break;
+              UseTarget = false;
+              try
+              {
+                X = STD(Words[1]);
+                Y = STD(Words[2]);
+                Z = STD(Words[3]);
+                Yaw = STD(Words[4]);
+                Pitch = STD(Words[5]);
+                Roll = STD(Words[6]);
+              }
+              catch (Exception) { }
+              RelMove(X, Y, Z, Yaw, Pitch, Roll);
+              break;
             case "Override":
             case "-O":
-            MyLog("Setting Override");
-            Word = Words[1];
-            PartName = Reform(Words, 2);
-            if (HardwareList.ContainsKey(PartName)) {
-              HardwareList[PartName].Override = OnOffToggle(Word, HardwareList[PartName].Override);
-            } else {
-              MyLog("'" + PartName + "' Not found.");
-              ErrorFlag = GlobStep + 200;
-            }
-            break;
+              MyLog("Setting Override");
+              Word = Words[1];
+              PartName = Reform(Words, 2);
+              if (HardwareList.ContainsKey(PartName))
+              {
+                HardwareList[PartName].Override = OnOffToggle(Word, HardwareList[PartName].Override);
+              }
+              else
+              {
+                MyLog("'" + PartName + "' Not found.");
+                ErrorFlag = GlobStep + 200;
+              }
+              break;
             case "SetPartHome":
             case "-SPH":
-            Word = Words[1];
-            PartName = Reform(Words, 2);
-            if (HardwareList.ContainsKey(PartName)) {
-              HardwareList[PartName].Home = STD(Words[1]);
-              MyLog("Setting " + PartName + "'s Home to: " + HardwareList[PartName].Home);
-            } else {
-              MyLog("'" + PartName + "' Not found.");
-              ErrorFlag = GlobStep + 200;
-            }
-            break;
+              Word = Words[1];
+              PartName = Reform(Words, 2);
+              if (HardwareList.ContainsKey(PartName))
+              {
+                HardwareList[PartName].Home = STD(Words[1]);
+                MyLog("Setting " + PartName + "'s Home to: " + HardwareList[PartName].Home);
+              }
+              else
+              {
+                MyLog("'" + PartName + "' Not found.");
+                ErrorFlag = GlobStep + 200;
+              }
+              break;
           }
-        } catch (Exception) {
+        }
+        catch (Exception)
+        {
           MyLog("<<Error>>: Parsing error in '" + Command + "'");
           ErrorFlag = GlobStep + 200;
         }
@@ -1885,9 +2236,12 @@ namespace IngameScript {
       cPose target = new cPose();
       uint ContrStep;
       List<IMyTerminalBlock> controllers;
-      List<IMyTerminalBlock> Controllers {
-        get {
-          if (ContrStep < GlobStep - 60) {
+      List<IMyTerminalBlock> Controllers
+      {
+        get
+        {
+          if (ContrStep < GlobStep - 60)
+          {
             MyGTS.SearchBlocksOfName(ShipControllerKeyword, controllers);
             if (controllers == null) controllers = new List<IMyTerminalBlock>();
             ContrStep = GlobStep;
@@ -1897,12 +2251,15 @@ namespace IngameScript {
       }
 
       // << ---- P R I V A T E   F U N C T I O N S ---- >>
-      cPose GetKeyboardInput() {
+      cPose GetKeyboardInput()
+      {
         Vector3D IV = new Vector3D();
         // Get the inputs from all desired controllers
-        foreach (IMyTerminalBlock Controller in Controllers) {
+        foreach (IMyTerminalBlock Controller in Controllers)
+        {
           var Ctrl = (IMyShipController)Controller;
-          if (Ctrl.IsUnderControl) {
+          if (Ctrl.IsUnderControl)
+          {
             IV.X += -Ctrl.MoveIndicator.Z;
             IV.Y += -Ctrl.MoveIndicator.X;
             IV.Z += Ctrl.MoveIndicator.Y;
@@ -1914,13 +2271,16 @@ namespace IngameScript {
 
         return new cPose(IV * dt);
       }
-      cPose GetMouseInput() {
+      cPose GetMouseInput()
+      {
         cPose Input;
         Vector3D IV = new Vector3D();
         // Get the inputs from all desired controllers
-        foreach (IMyTerminalBlock Controller in Controllers) {
+        foreach (IMyTerminalBlock Controller in Controllers)
+        {
           var Ctrl = (IMyShipController)Controller;
-          if (Ctrl.IsUnderControl) {
+          if (Ctrl.IsUnderControl)
+          {
             IV.X += Ctrl.RotationIndicator.Y / 40;  // Yaw
             IV.Y += -Ctrl.RotationIndicator.X / 40;  // Pitch
             IV.Z += -Ctrl.RollIndicator * 1;  // Roll
@@ -1934,7 +2294,8 @@ namespace IngameScript {
         return Input;
       }
 
-      cPose ApplyReferenceFrame(cPose Input) {
+      cPose ApplyReferenceFrame(cPose Input)
+      {
         var Targete = ReferenceFrame.Pose + Input - ReferenceFrame.Pose;
         var IMat = MatrixD.Invert(ReferenceFrame.Pose.Mat);
         var dX = Input.Mat.M41;
@@ -1946,15 +2307,19 @@ namespace IngameScript {
           (dX * IMat.M31) + (dY * IMat.M32) + (dZ * IMat.M33));
         return Targete;
       }
-      cPose MoveToTarget() {
+      cPose MoveToTarget()
+      {
         var Diff = Target - Arm.Pose;
         Diff *= dt * 0.5;
         Diff.Pos = (Target.Pos - Arm.Pose.Pos) * dt;
         var Dist = Diff.Pos.Length();
-        if (Dist > 0.05) {
+        if (Dist > 0.05)
+        {
           Diff.Pos = Diff.Pos * Speed / Math.Max(1, Dist * 2) * 2 * dt;
           return Diff;
-        } else {
+        }
+        else
+        {
           Diff.Pos = new Vector3D();
           return Diff;
         }

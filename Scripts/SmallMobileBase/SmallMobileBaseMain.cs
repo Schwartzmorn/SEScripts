@@ -18,15 +18,18 @@ using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program : MyGridProgram {
+namespace IngameScript
+{
+  partial class Program : MyGridProgram
+  {
     readonly CommandLine _cmd;
     readonly IProcessManager _manager;
-    public Program() {
+    public Program()
+    {
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       _manager = Process.CreateManager(Echo);
       var screen = GridTerminalSystem.GetBlockWithName("SMB LCD (Rear Seat)") as IMyTextPanel;
-      var logger = new Logger(_manager, screen);
+      var logger = new ScreenLogger(_manager, screen);
       _cmd = new CommandLine("Small Mobile Base", logger.Log, _manager);
 
       var ini = new IniWatcher(Me, _manager);
@@ -42,9 +45,11 @@ namespace IngameScript {
 
     public void Save() => _manager.Save(s => Me.CustomData = s);
 
-    public void Main(string argument, UpdateType updateSource) {
+    public void Main(string argument, UpdateType updateSource)
+    {
       _cmd.StartCmd(argument, CommandTrigger.User);
-      if ((updateSource & UpdateType.Update1) > 0) {
+      if ((updateSource & UpdateType.Update1) > 0)
+      {
         _manager.Tick();
       }
     }

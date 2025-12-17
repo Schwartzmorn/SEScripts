@@ -16,7 +16,7 @@ public partial class Program : MyGridProgram
     IMyShipController cockpit = GridTerminalSystem.GetBlockWithName("Cockpit") as IMyShipController;
     _manager = Process.CreateManager(Echo);
     var ct = new CoordinatesTransformer(cockpit, _manager);
-    _cmd = new CommandLine("Arm controller", Console.WriteLine, _manager);
+    _cmd = new CommandLine("Arm controller", Echo, _manager);
     var ini = new IniWatcher(Me, _manager);
     var wc = new WheelsController(_cmd, cockpit, GridTerminalSystem, ini, _manager, ct);
     Controller = new ArmController(ini, this, _cmd, cockpit, wc, _manager);

@@ -157,7 +157,7 @@ public class InstructionsTest
   [Test]
   public void MultipleInstruction_Runs_Instructions_Sequentially()
   {
-    var multiple = new Program.MultipleInstruction([
+    var multiple = new Program.AutoRoutine("Test", [
       new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["1"]), _commandLine),
         new Program.WaitInstruction("2"),
         new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["2"]), _commandLine)
@@ -167,7 +167,7 @@ public class InstructionsTest
 
     _tick();
 
-    Assert.That(_getProcesses().Count, Is.EqualTo(2));
+    Assert.That(_getProcesses().Count, Is.EqualTo(3));
     Assert.That(_getProcesses().Any(s => s.Contains("ar-wait")));
     Assert.That(_commandCalls.Count, Is.EqualTo(1));
     Assert.That(_commandCalls[0], Is.EqualTo("1"));
@@ -188,10 +188,10 @@ public class InstructionsTest
   [Test]
   public void MultipleInstruction_Continues_If_One_Instruction_Is_Killed()
   {
-    var multiple = new Program.MultipleInstruction([
-      new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["1"]), _commandLine),
+    var multiple = new Program.AutoRoutine("test", [
+      new Program.CommandInstruction("cmd", new Program.ArgumentsWrapper(["1"]), _commandLine),
       new Program.WaitInstruction("2"),
-      new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["2"]), _commandLine)
+      new Program.CommandInstruction("cmd", new Program.ArgumentsWrapper(["2"]), _commandLine)
     ]);
 
     multiple.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
@@ -273,7 +273,7 @@ public class InstructionsTest
   [Test]
   public void Placholders_Can_Be_Used_In_Instructions()
   {
-    var multipleInstruction = new Program.MultipleInstruction(
+    var multipleInstruction = new Program.AutoRoutine("test",
       [
         new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["$1"]), _commandLine),
         new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["$1", "$4"]), _commandLine),
@@ -305,5 +305,55 @@ public class InstructionsTest
     _tick();
 
     A.CallTo(() => _spyCallback(A<Program.Process>.Ignored)).MustHaveHappened();
+  }
+
+  [Test]
+  public void WhileInstruction_Kills_Its_Children_But_Not_Its_successor()
+  {
+    var routine = new Program.AutoRoutine("test routine",
+      [
+        new Program.WhileInstruction(
+          new Program.WaitInstruction("5"),
+          [
+              new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["1"]), _commandLine),
+              new Program.ForeverInstruction(),
+              new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["2"]), _commandLine),
+          ]
+        ),
+        new Program.WaitInstruction("4"),
+        new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["3"]), _commandLine),
+      ]
+    );
+    routine.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
+
+    foreach (int _i in Enumerable.Range(0, 2))
+    {
+      _tick();
+    }
+
+    Assert.That(_commandCalls.Count, Is.EqualTo(1));
+    Assert.That(_commandCalls[0], Is.EqualTo("1"));
+
+    foreach (int _i in Enumerable.Range(0, 5))
+    {
+      _tick();
+    }
+
+    Assert.That(_commandCalls.Count, Is.EqualTo(1));
+
+    foreach (int _i in Enumerable.Range(0, 3))
+    {
+      _tick();
+    }
+
+    Assert.That(_commandCalls.Count, Is.EqualTo(1));
+
+    foreach (int _i in Enumerable.Range(0, 10))
+    {
+      _tick();
+    }
+
+    Assert.That(_commandCalls.Count, Is.EqualTo(2));
+
   }
 }

@@ -55,6 +55,7 @@ Else, gives the detailed help on the command", nArgs: 0));
 If a number is provided, it will kill the process with the given process id.
 Otherwise, it kills all the process with the given name.", nArgs: 1));
           RegisterCommand(new Command("ps", Command.Wrap(_ps), "Lists alive processes", nArgs: 0));
+          RegisterCommand(new Command("echo", Command.Wrap(_echo), "Prints a message"));
         }
       }
       /// <summary>Registers a <see cref="AbstractCommand"/> so the <see cref="CommandLine"/> recognizes it.</summary>
@@ -96,7 +97,7 @@ Otherwise, it kills all the process with the given name.", nArgs: 1));
           _log($"Failed to parse {cmd}");
           return MyTuple.Create<string, ArgumentsWrapper>(null, null);
         }
-        var args = new ArgumentsWrapper(_parser);
+        var args = new ArgumentsWrapper(cmd, _parser);
         var cmdName = args.Next();
         return MyTuple.Create(cmdName, args);
       }
@@ -126,6 +127,11 @@ Otherwise, it kills all the process with the given name.", nArgs: 1));
       void _ps(ArgumentsWrapper _wrapper, Action<string> log) => (_spawner as IProcessManager).Log(log);
 
       void _log(string s) => _logger?.Invoke(s);
+
+      void _echo(ArgumentsWrapper _wrapper, Action<string> log)
+      {
+        log(_wrapper.Command.Substring(_wrapper.Command.IndexOf("echo") + 4).Trim());
+      }
     }
   }
 }

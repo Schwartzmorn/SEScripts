@@ -14,7 +14,7 @@ class IniHelperTest
 
     ini.SetVector("test-section", "test-vector", new VRageMath.Vector3D(0, 2.5, 3));
 
-    Assert.That(ini.ToString(), Is.EqualTo("[test-section]\ntest-vector-x=0\ntest-vector-y=2.5\ntest-vector-z=3\n"));
+    Assert.That(ini.ToString(), Is.EqualTo("[test-section]\ntest-vector=0.00,2.50,3.00\n"));
   }
 
   [Test]
@@ -22,7 +22,7 @@ class IniHelperTest
   {
     var ini = new VRage.Game.ModAPI.Ingame.Utilities.MyIni();
 
-    ini.TryParse("[test-section]\ntest-vector-x=0\ntest-vector-y=2.5\ntest-vector-z=3\n");
+    ini.TryParse("[test-section]\ntest-vector=0,2.5,4");
 
     Assert.That(new VRageMath.Vector3D(0, 2.5, 3), Is.EqualTo(ini.GetVector("test-section", "test-vector")));
   }

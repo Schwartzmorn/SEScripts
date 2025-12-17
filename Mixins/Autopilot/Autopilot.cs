@@ -25,6 +25,8 @@ namespace IngameScript
       readonly CoordinatesTransformer _transformer;
       readonly WheelsController _wheels;
       readonly List<APWaypoint> _currentPath = new List<APWaypoint>();
+      // Process responsible for keeping track of task completion
+      Process _currentProcess;
       /// <summary>Creates a new Autopilot</summary>
       /// <param name="ini"></param>
       /// <param name="wheels"></param>
@@ -45,7 +47,7 @@ namespace IngameScript
         _wheels = wheels;
         cmd.RegisterCommand(new ParentCommand("ap", "Interacts with the auto pilot")
           .AddSubCommand(new Command("move", Command.Wrap(_move), "Move forward", minArgs: 1, maxArgs: 2))
-          .AddSubCommand(new Command("goto", Command.Wrap(GoTo), "Go to the waypoint", nArgs: 1))
+          .AddSubCommand(new Command("goto", Command.Wrap(_goto), "Go to the waypoint", nArgs: 1))
           .AddSubCommand(new Command("switch", Command.Wrap(Switch), "Switches the autopilot on/off", nArgs: 1))
           .AddSubCommand(new Command("save", Command.Wrap(Save), "Save the current position", nArgs: 1)));
         manager.AddOnSave(_save);
@@ -59,14 +61,24 @@ namespace IngameScript
         _logger?.Invoke($"Autopilot switch {(_activated ? "on" : "off")}");
         if (!_activated)
         {
+          _checkProcess(null);
           _currentPath.Clear();
         }
         _wheels.SetPower(0);
         _wheels.SetSteer(0);
       }
+      private void _goto(Process p, string wpName)
+      {
+        _checkProcess(null);
+        if (GoTo(wpName))
+        {
+          _checkProcess(p.Spawn(null, $"ap-goto {wpName}"));
+        }
+      }
+
       /// <summary>Requests the Autopilot to go to a waypoint</summary>
       /// <param name="wpName">Name of the waypoint to reach</param>
-      public void GoTo(string wpName)
+      public bool GoTo(string wpName)
       {
         if (_activated)
         {
@@ -79,8 +91,10 @@ namespace IngameScript
           {
             Network.GetPath(_remote.GetPosition(), end, _currentPath);
             _log($"Path: {_currentPath.Count}");
+            return true;
           }
         }
+        return false;
       }
       /// <summary>Requests the autopilot to move</summary>
       /// <param name="amtForward">Amount of forward movement</param>
@@ -98,14 +112,16 @@ namespace IngameScript
       /// <param name="name">Name of the waypoint</param>
       public void Save(string name) => Network.Add(new MyWaypointInfo(name, _remote.GetPosition()));
 
-      void _move(ArgumentsWrapper args)
+      void _move(Process p, ArgumentsWrapper args)
       {
+        _checkProcess(null);
         double fw, rt = 0;
         double.TryParse(args[0], out fw);
         if (args.RemaingCount > 1)
         {
           double.TryParse(args[1], out rt);
         }
+        _checkProcess(p.Spawn(null, $"ap-move {fw}"));
         Move(fw, rt);
       }
 
@@ -161,6 +177,8 @@ namespace IngameScript
 
       void _stop()
       {
+        _currentProcess?.Done();
+        _currentProcess = null;
         _wheels.SetSteer(0);
         double curSpeed = _remote.GetShipSpeed();
         if (curSpeed > _settings.HandbrakeSpeed)
@@ -178,6 +196,15 @@ namespace IngameScript
       void _save(MyIni ini) => ini.Set("auto-pilot", "activated", _activated);
 
       void _log(string s) => _logger?.Invoke($"AP: {s}");
+
+      void _checkProcess(Process newProcess)
+      {
+        if (!ReferenceEquals(_currentProcess, newProcess))
+        {
+          _currentProcess?.Kill();
+          _currentProcess = newProcess;
+        }
+      }
     }
   }
 }

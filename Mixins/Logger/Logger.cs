@@ -1,67 +1,74 @@
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
-using System;
+using Sandbox.ModAPI.Interfaces;
+using SpaceEngineers.Game.ModAPI.Ingame;
 using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
 using System.Text;
+using System;
+using VRage.Collections;
+using VRage.Game.Components;
 using VRage.Game.GUI.TextPanel;
+using VRage.Game.ModAPI.Ingame.Utilities;
+using VRage.Game.ModAPI.Ingame;
+using VRage.Game.ObjectBuilders.Definitions;
+using VRage.Game;
+using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program {
-    class Logger {
-      readonly Action<string> _echo;
-      readonly CircularBuffer<string> _messages;
-      bool _changed;
-      readonly IMyTextSurface _surface;
-      public Logger(IProcessSpawner spawner, IMyTextSurface s, Color? bgdCol = null, Color? col = null, Action<string> echo = null, float size = 0.5f) {
-        int nMsgs = 1;
-        if (s != null) {
-          s.TextPadding = 0;
-          s.ContentType = (ContentType)1;
-          s.Alignment = 0;
-          s.Font = "Monospace";
-          s.FontSize = size;
-          s.FontColor = col ?? Color.White;
-          s.BackgroundColor = bgdCol ?? Color.Black;
-          var sb = new StringBuilder("G");
-          nMsgs = (int)((_getMultiplier(s) * s.SurfaceSize.Y / s.MeasureStringInPixels(sb, s.Font, s.FontSize).Y) + 0.1f);
-          _surface = s;
-        }
-        _messages = new CircularBuffer<string>(nMsgs);
-        spawner.Spawn(p => _flush(), "logger");
-        _echo = echo;
+namespace IngameScript
+{
+  partial class Program
+  {
+    public class Log
+    {
+      public enum LogLevel
+      {
+        Debug = 0,
+        Info = 1,
+        Error = 2,
+        Always = 3,
       }
-      public void Log(string log) {
-        _changed = true;
-        foreach (string l in log.Split('\n')) {
-          _messages.Enqueue(l);
-        }
 
-        _echo?.Invoke(log);
+      private Action<string> _logger;
+      // private Action<LogLevel, string> _richLogger;
+
+      public LogLevel Level { get; set; } = LogLevel.Debug;
+
+      public void SetLogger(Action<string> logger)
+      {
+        _logger = logger;
       }
-      void _flush() {
-        if (_changed) {
-          _changed = false;
-          _surface?.WriteText(string.Join("\n", _messages));
+
+      private void _log(LogLevel level, string format, params object[] args)
+      {
+        if (level >= Level)
+        {
+          var msg = string.Format(format, args);
+          _logger?.Invoke(msg);
+          // _richLogger?.Invoke(level, msg);
         }
       }
-      static float _getMultiplier(IMyTextSurface s) {
-        float sy = s.SurfaceSize.Y;
-        if (s is IMyTerminalBlock) {//txt panel
-          string t = (s as IMyTerminalBlock).BlockDefinition.SubtypeId;
-          if (t.Contains("Corner")) {
-            return t.Contains("Large") ? t.Contains("Flat") ? 0.168f : 0.146f : t.Contains("Flat") ? 0.302f : 0.260f;
-          }
-        } else {
-          string nm = s.DisplayName;
-          if (nm == "Large Display") {
-            return sy < 200 ? 4 : sy < 300 ? 2 : 1;//flt sit,small prog blk
-          } else if (nm == "Keyboard") {
-            return (sy < 110) ? 4 : 2;//fter cpit and small prog blk
-          } else if ((nm ?? "").Contains("Screen")) {
-            return (sy < 100 && nm.Contains("Top") && (nm.Contains("Left") || nm.Contains("Right"))) ? 4 : 2;//fter cpit top left right screens
-          }
-        }
-        return 1;
+
+      public void Debug(string format, params object[] args)
+      {
+        _log(LogLevel.Debug, format, args);
+      }
+
+      public void Info(string format, params object[] args)
+      {
+        _log(LogLevel.Info, format, args);
+      }
+
+      public void Error(string format, params object[] args)
+      {
+        _log(LogLevel.Error, format, args);
+      }
+
+      public void Always(string format, params object[] args)
+      {
+        _log(LogLevel.Always, format, args);
       }
     }
   }

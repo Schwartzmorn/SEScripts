@@ -12,7 +12,7 @@ using Utilities.Mocks.Blocks;
 
 public class ProgramWrapper
 {
-  public List<string> EchoMessages { get; } = [];
+  public List<(long, List<string>)> EchoMessages { get; } = [];
 
   public MyGridProgram Program { get; }
 
@@ -38,6 +38,15 @@ public class ProgramWrapper
   public Action<string, UpdateType> RunMain;
   public Action RunOnSave;
 
+  public void Echo(string msg)
+  {
+    if (EchoMessages.Count == 0 || EchoMessages.Last().Item1 != RuntimeMock.LifetimeTicks)
+    {
+      EchoMessages.Add((RuntimeMock.LifetimeTicks, []));
+    }
+    EchoMessages.Last().Item2.Add(msg);
+  }
+
   public ProgramWrapper(MyCubeGridMock cubeGrid, Type P)
   {
     var constructor = P.GetConstructor(Type.EmptyTypes) ?? throw new InvalidOperationException("No parameterless constructor found.");
@@ -53,7 +62,7 @@ public class ProgramWrapper
     backend.Runtime = new MyGridProgramRuntimeInfoMock();
     backend.Storage = "";
     backend.GridTerminalSystem = cubeGrid.GridTerminalSystem;
-    backend.Echo = EchoMessages.Add;
+    backend.Echo = Echo;
     backend.Me = new MyProgrammableBlockMock(cubeGrid, Program);
     var igc = new MyIntergridCommunicationSystemMock(cubeGrid.GridTerminalSystem.TestBed);
     backend.IGC_ContextGetter = () => igc;

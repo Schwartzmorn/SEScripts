@@ -25,6 +25,10 @@ namespace IngameScript
 
     public class ArgumentsWrapper : IEnumerable<string>
     {
+      /// <summary>
+      /// The complete string of the command being called
+      /// </summary>
+      public readonly string Command;
       private readonly List<string> _arguments;
       private readonly HashSet<string> _switches;
       private int _position = 0;
@@ -38,8 +42,9 @@ namespace IngameScript
         }
       }
 
-      public ArgumentsWrapper(MyCommandLine myCommandLine)
+      public ArgumentsWrapper(string cmd, MyCommandLine myCommandLine)
       {
+        Command = cmd;
         _arguments = new List<string>();
         // we copy data to avoid 
         for (var i = 0; i < myCommandLine.ArgumentCount; ++i)
@@ -52,6 +57,9 @@ namespace IngameScript
         }
       }
 
+      /// <summary>
+      /// The number of remaining non consumed arguments
+      /// </summary>
       public int RemaingCount
       {
         get
@@ -60,6 +68,12 @@ namespace IngameScript
         }
       }
 
+      /// <summary>
+      /// The argument at the given index, where 0 points to the first non consumed argument.
+      /// Therefore -1 points to the last consummed argument (if any)
+      /// </summary>
+      /// <param name="i">the index</param>
+      /// <returns>the argument, or null if out of bounds</returns>
       public string this[int i]
       {
         get
@@ -74,6 +88,10 @@ namespace IngameScript
         }
       }
 
+      /// <summary>
+      /// Consumes and returns the next argument.
+      /// </summary>
+      /// <returns></returns>
       public string Next()
       {
         var result = this[0];
@@ -81,11 +99,20 @@ namespace IngameScript
         return result;
       }
 
+      /// <summary>
+      /// returns the the first non consumed argument
+      /// </summary>
+      /// <returns></returns>
       public string Peek()
       {
         return this[0];
       }
 
+      /// <summary>
+      /// Returns true if the argument -<switch name> was present
+      /// </summary>
+      /// <param name="s">name of the switch</param>
+      /// <returns></returns>
       public bool HasSwitch(string s)
       {
         return _switches?.Contains(s) ?? false;
@@ -302,7 +329,7 @@ namespace IngameScript
           return null;
         }
         Action<Process> action = _provider(wrapper, logger);
-        return spawner.Spawn(action, Name, onDone, useOnce: true);
+        return spawner.Spawn(action, wrapper.Command, onDone, useOnce: true);
       }
     }
   }

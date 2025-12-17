@@ -173,8 +173,15 @@ namespace IngameScript
         _currentCommand = up ? FunicularCommand.MoveUp : FunicularCommand.MoveDown;
         foreach (var p in _plates)
         {
-          p.Unlock();
-          p.Enabled = false;
+          if (p.IsLocked)
+          {
+            p.Enabled = true;
+            p.Unlock();
+          }
+          else
+          {
+            p.Enabled = false;
+          }
         }
         var retracting = false;
         foreach (var p in _pistons)

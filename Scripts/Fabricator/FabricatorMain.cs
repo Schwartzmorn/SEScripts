@@ -17,28 +17,35 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  partial class Program : MyGridProgram {
+namespace IngameScript
+{
+  partial class Program : MyGridProgram
+  {
     readonly CommandLine _commandLine;
     readonly IProcessManager _manager;
 
-    public static T AssertNonNull<T>(T obj, string msg) {
-      if (obj == null) {
+    public static T AssertNonNull<T>(T obj, string msg)
+    {
+      if (obj == null)
+      {
         throw new InvalidOperationException(msg);
       }
       return obj;
     }
-    public static IEnumerable<T> AssertNonEmpty<T>(IEnumerable<T> obj, string msg) {
-      if (obj.Count() == 0) {
+    public static IEnumerable<T> AssertNonEmpty<T>(IEnumerable<T> obj, string msg)
+    {
+      if (obj.Count() == 0)
+      {
         throw new InvalidOperationException(msg);
       }
       return obj;
     }
 
-    public Program() {
+    public Program()
+    {
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       _manager = Process.CreateManager(Echo);
-      var logger = new Logger(_manager, Me.GetSurface(0), echo: Echo);
+      var logger = new ScreenLogger(_manager, Me.GetSurface(0), echo: Echo);
       _manager.SetLogger(logger.Log);
       _commandLine = new CommandLine("Fabricator", logger.Log, _manager);
       var ini = new MyIni();
@@ -47,7 +54,8 @@ namespace IngameScript {
     }
     //public void Save() => this.manager.Save(s => this.Me.CustomData = s);
 
-    public void Main(string argument, UpdateType updateSource) {
+    public void Main(string argument, UpdateType updateSource)
+    {
       _commandLine.StartCmd(argument, CommandTrigger.User);
       _manager.Tick();
     }

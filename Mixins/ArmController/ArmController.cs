@@ -52,13 +52,13 @@ namespace IngameScript
         p.GridTerminalSystem.GetBlocksOfType(tools, t => t.IsSameConstructAs(cont) && (t is IMyShipToolBase || t is IMyShipDrill));
         _autoCont = new ArmAutoControl(ini, Angle, wCont, tools);
         cmd.RegisterCommand(new ParentCommand("arm", "Interacts with the arm")
-          .AddSubCommand(new Command("del", Command.Wrap(_deletePosition), "Deletes a saved position of the arm", nArgs: 1))
-          .AddSubCommand(new Command("arm-elevation", Command.Wrap(_autoElevate), @"Makes the arm elevate at the correct position.
+          .AddSubCommand(new Command("delete", Command.Wrap(_deletePosition), "Deletes a saved position of the arm", nArgs: 1))
+          .AddSubCommand(new Command("elevate", Command.Wrap(_autoElevate), @"Makes the arm elevate at the correct position.
 First argument is elevation ('high'/'low'/float)
 Second argument is angle", minArgs: 1, maxArgs: 2))
           .AddSubCommand(new Command("drill", Command.Wrap(_drill), "Engages the drills and move slowly to position", nArgs: 1))
           .AddSubCommand(new Command("recall", Command.Wrap(_recallPosition), "Recalls a saved position of the arm", nArgs: 1))
-          .AddSubCommand(new Command("arm-save", Command.Wrap(_savePosition), "Saves the current position of the arm", nArgs: 1)));
+          .AddSubCommand(new Command("save", Command.Wrap(_savePosition), "Saves the current position of the arm", nArgs: 1)));
 
         manager.Spawn(pc => _updateRotors(cont), "arm-handle");
         manager.AddOnSave(_save);
@@ -81,7 +81,7 @@ Second argument is angle", minArgs: 1, maxArgs: 2))
         if (_pos.ContainsKey(name))
         {
           _autoCont.SetTarget(_pos[name]);
-          _checkProcess(p.Spawn(null, $"arm-recall {name}"));
+          _checkProcess(p.Spawn(null, $"recall {name}"));
         }
       }
 
@@ -92,7 +92,7 @@ Second argument is angle", minArgs: 1, maxArgs: 2))
         {
           _autoCont.SetTarget(_pos[name]);
           _autoCont.SwitchTools(true);
-          _checkProcess(p.Spawn(null, $"arm-drill {name}"));
+          _checkProcess(p.Spawn(null, $"drill {name}"));
         }
       }
 
@@ -102,7 +102,7 @@ Second argument is angle", minArgs: 1, maxArgs: 2))
         _autoCont.SetTarget(new ArmPos(
           args[0] == "high" ? ArmPos.R_ELEVATION : args[0] == "low" ? ArmPos.L_ELEVATION : double.Parse(args[0]),
           args.RemaingCount > 1 ? MathHelper.ToRadians(float.Parse(args[1])) : 0));
-        _checkProcess(p.Spawn(null, $"arm-elevate {_autoCont.Target}"));
+        _checkProcess(p.Spawn(null, $"elevate {_autoCont.Target}"));
       }
 
       void _checkProcess(Process currentProcess)

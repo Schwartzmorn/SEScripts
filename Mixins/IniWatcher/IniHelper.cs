@@ -36,26 +36,25 @@ namespace IngameScript
       }
       return res;
     }
-    /// <summary>Serializes a vector in an ini file. Will actually be stored in three distinct values.</summary>
+    /// <summary>Serializes a vector in an ini file.</summary>
     /// <param name="ini">This</param>
     /// <param name="section">Section where to put the vector</param>
     /// <param name="name">Key where to put the vector</param>
     /// <param name="v">Vector to serialize</param>
     public static void SetVector(this MyIni ini, string section, string name, Vector3D v)
     {
-      ini.Set(section, $"{name}-x", v.X);
-      ini.Set(section, $"{name}-y", v.Y);
-      ini.Set(section, $"{name}-z", v.Z);
+      ini.Set(section, name, $"{v.X:F2},{v.Y:F2},{v.Z:F2}");
     }
     /// <summary>Deserializes a vector stored in the same way than with <see cref="SetVector(MyIni, string, string, Vector3D)"/>. Throws if incomplete.</summary>
     /// <param name="ini">This</param>
     /// <param name="section">Section where the vector is</param>
     /// <param name="name">Key used when serializing</param>
     /// <returns>The vector</returns>
-    public static Vector3D GetVector(this MyIni ini, string section, string name) => new Vector3D(
-    ini.GetThrow(section, $"{name}-x").ToDouble(),
-    ini.GetThrow(section, $"{name}-y").ToDouble(),
-    ini.GetThrow(section, $"{name}-z").ToDouble());
+    public static Vector3D GetVector(this MyIni ini, string section, string name)
+    {
+      var vec = ini.GetThrow(section, name).ToString().Split(",");
+      return new Vector3D(double.Parse(vec[0]), double.Parse(vec[1]), double.Parse(vec[2]));
+    }
     /// <summary>Parses the text and throws if the parse was unsucessful.</summary>
     /// <param name="ini">This</param>
     /// <param name="data">Serialized ini</param>

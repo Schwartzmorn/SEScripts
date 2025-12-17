@@ -119,11 +119,18 @@ end
   {
     List<Program.AutoRoutine> routines = _parser.Parse(@"
 = Mine
-while inv-while under 1
+ap switch on
+while inv-while under 0.99
+  echo drill down
   arm drill $auto-low
-  arm drill $top
+  wait 200
+  echo drill up
+  arm recall $top
+  ap move 1.5
 end
-arm recall $auto-low
+ap move ""-1.5""
+arm recall park
+ap switch off
 ");
     Assert.That(routines.Count, Is.EqualTo(1));
     Program.AutoRoutine routine = routines[0];

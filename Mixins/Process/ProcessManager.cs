@@ -86,7 +86,7 @@ namespace IngameScript
 
         public void KillAll(string n)
         {
-          foreach (Process p in AllProcesses.Where(p => p.Name == n))
+          foreach (Process p in AllProcesses.Where(p => p.Name.Contains(n)))
           {
             p.Kill();
           }

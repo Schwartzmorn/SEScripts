@@ -1,6 +1,7 @@
 namespace ArmControllerTest;
 
 using System;
+using System.Linq;
 using IngameScript;
 using NUnit.Framework;
 using Sandbox.Game.Entities.Cube;
@@ -16,6 +17,7 @@ public class ArmControllerTest
   TestBed _testBed;
   ProgramWrapper _wrapper;
   Program _program;
+  MyMotorStatorMock _rotor;
 
   MyMotorSuspensionMock _getSuspension(Vector3D pos, bool left, MyCubeGridMock grid = null)
   {
@@ -56,12 +58,14 @@ public class ArmControllerTest
     _ = _getSuspension(new Vector3D(-1, 0, 4), true);
     _ = _getSuspension(new Vector3D(1, 0, 4), false);
     // create rotors
-    var rotor = new MyMotorStatorMock(_wrapper.CubeGridMock)
+    _rotor = new MyMotorStatorMock(_wrapper.CubeGridMock)
     {
-      CustomName = "Arm Rotor"
+      CustomName = "Arm Rotor",
+      LowerLimitRad = -1,
+      UpperLimitRad = MathHelper.Pi
     };
     var topGrid = new MyCubeGridMock(_wrapper.GridTerminalSystemMock);
-    rotor.Top = new MyAttachableBlockMock(topGrid);
+    _rotor.Top = new MyAttachableBlockMock(topGrid);
     // create drill
     _ = new MyShipDrillMock(topGrid);
   }
@@ -87,5 +91,45 @@ pos=0,4.5
 
     // we have saved our new target
     Assert.That(_wrapper.ProgrammableBlockMock.CustomData, Contains.Substring("[arm-status]\npos=0,2"));
+  }
+
+  [Test]
+  public void It_Tracks_When_Recall_Is_Done()
+  {
+    _testBed.Tick();
+    Assert.That(_rotor.Angle, Is.EqualTo(0));
+    var cmd = "arm recall $bottom";
+    _wrapper.Run(cmd);
+    _testBed.Tick(100);
+
+    // Sanity checks that the rotor is progressing towards its target
+    Assert.That(_rotor.Angle, Is.LessThan(0));
+    Assert.That(_rotor.Angle, Is.GreaterThan(-0.5f));
+
+    // The recall is not yet done, so the cmd still runs
+    _wrapper.Run("ps");
+    _testBed.Tick();
+    Assert.That(_wrapper.EchoMessages.Last().Item2.Any(l => l.Contains(cmd)));
+    _testBed.Tick(500);
+
+    Assert.That(_rotor.Angle, Is.EqualTo(-1).Within(0.01f));
+
+    // The arm finally reached its target, so the cmd no longer runs
+    _wrapper.Run("ps");
+    _testBed.Tick();
+    Assert.That(_wrapper.EchoMessages.Last().Item2.Any(l => l.Contains(cmd)), Is.False);
+
+    // We "bump" the rotor
+    _rotor.Angle = 1;
+    _testBed.Tick(100);
+
+    // Sanity checks that the rotor is progressing towards its target
+    Assert.That(_rotor.Angle, Is.LessThan(1));
+    Assert.That(_rotor.Angle, Is.GreaterThan(0.5f));
+
+    _testBed.Tick(500);
+
+    // We check that it eventually reaches its target
+    Assert.That(_rotor.Angle, Is.EqualTo(-1).Within(0.01f));
   }
 }

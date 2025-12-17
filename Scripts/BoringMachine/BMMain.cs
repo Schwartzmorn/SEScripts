@@ -5,6 +5,7 @@ using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using VRage;
@@ -23,6 +24,7 @@ namespace IngameScript
   {
     readonly CommandLine _cmd;
     readonly IProcessManager _manager;
+    readonly static Log LOG = new Log();
     ColorScheme _scheme = new ColorScheme();
 
     public Program()
@@ -33,8 +35,9 @@ namespace IngameScript
       IMyCockpit cockpit;
       _manager = Process.CreateManager(Echo);
       _initCockpit(out cockpit, topLefts, out keyboard);
+      var logger = new ScreenLogger(_manager, keyboard, new Color(0, 39, 15), new Color(27, 228, 33), Echo, 1.0f);
+      LOG.SetLogger(logger.Log);
       var ct = new CoordinatesTransformer(cockpit, _manager);
-      var logger = new Logger(_manager, keyboard, new Color(0, 39, 15), new Color(27, 228, 33), Echo, 1.0f);
       _cmd = new CommandLine("Boring machine", logger.Log, _manager);
       var ini = new IniWatcher(Me, _manager);
       var wc = new WheelsController(_cmd, cockpit, GridTerminalSystem, ini, _manager, ct);
@@ -43,15 +46,15 @@ namespace IngameScript
       var cc = new ConnectionClient(Me, ini, GridTerminalSystem, IGC, _cmd, _manager, logger.Log);
       var rcs = new List<IMyRemoteControl>();
       GridTerminalSystem.GetBlocksOfType(rcs, r => r.CubeGrid == Me.CubeGrid);
-      IMyRemoteControl frc = rcs.First(r => r.CustomName.Contains("Forward"));
-      IMyRemoteControl brc = rcs.First(r => r.CustomName.Contains("Backward"));
+      IMyRemoteControl frc = rcs.First(r => r.CubeGrid == Me.CubeGrid && r.CustomName.Contains("Forward"));
+      IMyRemoteControl brc = rcs.First(r => r.CubeGrid == Me.CubeGrid && r.CustomName.Contains("Backward"));
       var ap = new Autopilot(ini, wc, _cmd, frc, logger.Log, _manager);
       var ah = new PilotAssist(Me, GridTerminalSystem, ini, logger.Log, _manager, wc, _cmd);
       ah.AddBraker(cc);
       ah.AddDeactivator(ap);
       var ar = new AutoRoutineHandler(_cmd);
       var arParser = new RoutineParser(_cmd);
-      //ar.AddRoutines(arParser.Parse(GridTerminalSystem.GetBlockWithName("BM Ore Detector").CustomData));
+      ar.AddRoutines(arParser.Parse(brc.CustomData));
 
       // new MiningRoutines(ini, _cmd, ap, _manager);
       var progs = new List<IMyProgrammableBlock>();

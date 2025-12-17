@@ -28,7 +28,7 @@ namespace IngameScript
     {
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       _manager = Process.CreateManager(Echo);
-      var logger = new Logger(_manager, Me.GetSurface(0), echo: Echo);
+      var logger = new ScreenLogger(_manager, Me.GetSurface(0), echo: Echo);
       _manager.SetLogger(logger.Log);
       _commandLine = new CommandLine("Funicular", logger.Log, _manager);
       var watcher = new IniWatcher(Me, _manager);
