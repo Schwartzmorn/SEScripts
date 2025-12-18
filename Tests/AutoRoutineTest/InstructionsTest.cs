@@ -310,6 +310,7 @@ public class InstructionsTest
   [Test]
   public void WhileInstruction_Kills_Its_Children_But_Not_Its_successor()
   {
+    // This terrible test helped diagnose an issue that caused WhileInstructions to fire multiple times the next instructions
     var routine = new Program.AutoRoutine("test routine",
       [
         new Program.WhileInstruction(
@@ -346,7 +347,7 @@ public class InstructionsTest
       _tick();
     }
 
-    Assert.That(_commandCalls.Count, Is.EqualTo(1));
+    Assert.That(_commandCalls.Count, Is.EqualTo(2));
 
     foreach (int _i in Enumerable.Range(0, 10))
     {

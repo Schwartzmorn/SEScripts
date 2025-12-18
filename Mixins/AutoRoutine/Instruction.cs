@@ -101,7 +101,7 @@ namespace IngameScript
         _condition.Execute(whileProcess, p => _onConditionDone(whileProcess), args);
       }
       public override int ArgsCount() => Math.Max(_condition.ArgsCount(), base.ArgsCount());
-      void _onConditionDone(Process whileProcess)
+      static void _onConditionDone(Process whileProcess)
       {
         whileProcess.Done();
         whileProcess.KillChildren();

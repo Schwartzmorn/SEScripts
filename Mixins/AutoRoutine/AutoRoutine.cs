@@ -33,7 +33,7 @@ namespace IngameScript
       public override void Execute(Process parent, Action<Process> onDone, ArgumentsWrapper args)
       {
         // we cannot use the commmand line process as the parent directly, as it is active for only one tick
-        var process = parent.Spawn(null, "ar-execute", onDone);
+        var process = parent.Spawn(null, $"ar-execute {Name}", onDone);
         base.Execute(process, _ => process.Done(), args);
       }
     }

@@ -28,6 +28,7 @@ namespace IngameScript
     /// </summary>
     public partial class Process : IProcessSpawner
     {
+      private static readonly Action<Process> NOOP = p => { };
       /// <summary>Creates a new Process Manager (you should only need one). For it to have any effect, the<see cref="IProcessManager.Tick"/> method must be called once every cycle.</summary>
       /// <param name="logger">Used to log generic errors that happens when handling processes</param>
       /// <returns>A new process manager</returns>
@@ -60,7 +61,7 @@ namespace IngameScript
       readonly Action<Process> _action;
       List<Process> _children;
       readonly Action<string> _logger;
-      readonly Action<Process> _onDone;
+      Action<Process> _onDone;
       readonly ISchedulerManager _scheduler;
 
       /// <summary>Ends the process so that the <see cref="_action"/> will no longer be executed.</summary>
@@ -71,10 +72,7 @@ namespace IngameScript
         if (Active)
         {
           Active = false;
-          if ((_children?.Count ?? 0) == 0)
-          {
-            _invokeDone();
-          }
+          _tryInvokeDone();
         }
       }
       /// <summary>Ends the process so that the <see cref="_action"/> will no longer be executed.</summary>
@@ -112,10 +110,7 @@ namespace IngameScript
             p._killNoNotify();
           }
           _children.Clear();
-          if (hadChildren && !Active)
-          {
-            _invokeDone();
-          }
+          _tryInvokeDone();
         }
       }
 
@@ -197,7 +192,7 @@ namespace IngameScript
         UseOnce = useOnce;
         _action = action;
         _logger = logger;
-        _onDone = onDone;
+        _onDone = onDone ?? NOOP;
         Parent = parent;
         _scheduler = scheduler;
         scheduler.Schedule(this);
@@ -207,10 +202,7 @@ namespace IngameScript
       void _notifyDone(Process child)
       {
         _children.Remove(child);
-        if (!Active && _children.Count == 0)
-        {
-          _invokeDone();
-        }
+        _tryInvokeDone();
       }
 
       // Unschedule itself, kill all children
@@ -222,30 +214,37 @@ namespace IngameScript
         {
           Result = ProcessResult.KILLED;
         }
-        foreach (Process child in _children ?? Enumerable.Empty<Process>())
+        if (_children != null)
         {
-          child._killNoNotify();
+          foreach (Process child in _children)
+          {
+            child._killNoNotify();
+          }
+          _children.Clear();
         }
-        if (wasAlive)
-        {
-          _children?.Clear();
-          _invokeDone(false);
-        }
+        _tryInvokeDone(false);
       }
 
-      void _invokeDone(bool notify = true)
+      void _tryInvokeDone(bool notifyParent = true)
       {
+        if (_onDone == null || Alive)
+        {
+          // it means the callback and notification were already done or that the process is still alive
+          return;
+        }
         try
         {
-          _onDone?.Invoke(this);
-          if (notify)
-          {
-            Parent?._notifyDone(this);
-          }
+          var callback = _onDone;
+          _onDone = null; // makes sure we never call it twice
+          callback(this);
         }
         catch (Exception e)
         {
           _logger?.Invoke($"Failed while terminating {Name}: {e.Message}");
+        }
+        if (notifyParent)
+        {
+          Parent?._notifyDone(this);
         }
       }
     }
