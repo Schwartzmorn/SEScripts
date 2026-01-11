@@ -26,7 +26,7 @@ namespace IngameScript
       readonly Dictionary<string, APWaypoint> _waypoints = new Dictionary<string, APWaypoint>();
       readonly IMyRemoteControl _remote;
       string _prevData;
-      readonly List<string> _tmpSections = new List<string>();
+      readonly List<MyIniKey> _tmpKeys = new List<MyIniKey>();
       readonly List<MyWaypointInfo> _tmpWps = new List<MyWaypointInfo>();
       readonly Action<string> _logger;
       readonly SortedList<double, APWaypoint> _aStarQueue = new SortedList<double, APWaypoint>();
@@ -55,10 +55,10 @@ namespace IngameScript
       /// <param name="linkedWpN">Name of the waypoint that is biderctionally reachable</param>
       /// <param name="terrain">Terrain type of the new waypoint</param>
       /// <param name="type">Type of the new waypoint</param>
-      public void AddLinkedWP(string name, string linkedWpN, Terrain terrain = Terrain.Dangerous, WPType type = WPType.PrecisePath)
+      public void AddLinkedWP(string name, string linkedWpN, Terrain terrain = Terrain.Dangerous)
       {
         APWaypoint linkedWP = _waypoints[linkedWpN];
-        var wp = new APWaypoint(new MyWaypointInfo(name, _remote.GetPosition()), terrain, type);
+        var wp = new APWaypoint(new MyWaypointInfo(name, _remote.GetPosition()), terrain);
         linkedWP.AddWP(wp);
         wp.AddWP(linkedWP);
         _waypoints[name] = wp;
@@ -205,9 +205,9 @@ namespace IngameScript
           _prevData = _remote.CustomData;
           var ini = new MyIni();
           ini.Parse(_remote.CustomData);
-          ini.GetSections(_tmpSections);
+          ini.GetKeys("gps", _tmpKeys);
           _waypoints.Clear();
-          _tmpSections.ForEach(s => _waypoints.Add(s, new APWaypoint(ini, s)));
+          _tmpKeys.ForEach(s => _waypoints.Add(s.Name, new APWaypoint(s.Name, ini.Get(s).ToString())));
           changed = true;
         }
         _remote.GetWaypointInfo(_tmpWps);

@@ -105,7 +105,7 @@ namespace IngameScript
         {
           _currentPath.Clear();
           Vector3D tgt = _remote.GetPosition() + (amtForward * _remote.WorldMatrix.Forward) + (amtRight * _remote.WorldMatrix.Right);
-          _currentPath.Add(new APWaypoint(new MyWaypointInfo("$TMPMOVE", tgt), Terrain.Dangerous, WPType.Maneuvering));
+          _currentPath.Add(new APWaypoint(new MyWaypointInfo("$TMPMOVE", tgt), Terrain.Dangerous));
         }
       }
       /// <summary>Saves the current position of the remote as a new waypoint (or updates an existing one)</summary>

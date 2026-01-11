@@ -26,16 +26,10 @@ public class WPNetworkTest
   [Test]
   public void It_Parses_CustomData()
   {
-    _remote.CustomData = @"[WP Z]
-  gps=GPS:WP Z:0:0:1:
-[WP A]
-  gps=GPS:WP A:0:2.5:0:
-  type=PrecisePath
-  terrain=Good
-  linked-wp=WP B,WP Z
-[WP B]
-  gps=GPS:WP B:1:0:0:
-  linked-wp=WP A,WP C
+    _remote.CustomData = @"[gps]
+  WP Z=0:0:1::
+  WP A=0:2.5:0:Good:WP B,WP Z
+  WP B=1:0:0:Normal:WP A,WP C
 ";
     Program.WPNetwork network = _getNetwork();
 
@@ -46,13 +40,11 @@ public class WPNetworkTest
     Program.APWaypoint wpb = network.GetWaypoint("WP B");
 
     Assert.That(wpz.Terrain, Is.EqualTo(Program.Terrain.Normal));
-    Assert.That(wpz.Type, Is.EqualTo(Program.WPType.Path));
     Assert.That(wpz.Name, Is.EqualTo("WP Z"));
     Assert.That(wpz.LinkedWps.Count, Is.EqualTo(0));
     Assert.That(wpz.Coords, Is.EqualTo(new Vector3D(0, 0, 1)));
 
     Assert.That(wpa.Terrain, Is.EqualTo(Program.Terrain.Good));
-    Assert.That(wpa.Type, Is.EqualTo(Program.WPType.PrecisePath));
     Assert.That(wpa.Name, Is.EqualTo("WP A"));
     Assert.That(wpa.LinkedWps.Count, Is.EqualTo(2));
     Assert.That(wpa.LinkedWps.Contains(wpz));
@@ -72,12 +64,9 @@ public class WPNetworkTest
           new("New", new Vector3D(1, 1, 1)),
           new("Updated", new Vector3D(2, 2, 2))
         ];
-    _remote.CustomData = @"[Updated]
-  gps=GPS:Update:0:0:0:
-  linked-wp=Untouched
-[Untouched]
-  gps=GPS:Untouched:3:3:3:
-  linked-wp=Updated";
+    _remote.CustomData = @"[gps]
+  Updated=0:0:0::Untouched
+  Untouched=3:3:3::Updated";
 
     Program.WPNetwork network = _getNetwork();
 
@@ -100,12 +89,9 @@ public class WPNetworkTest
   [Test]
   public void It_Allows_Adding_Linked_Waypoints()
   {
-    _remote.CustomData = @"[WP A]
-  gps=GPS:WP A:0:0:0:
-  linked-wp=WP B
-[WP B]
-  gps=GPS:WP B:1:1:1:
-  linked-wp=WP A";
+    _remote.CustomData = @"[gps]
+  WP A=0:0:0::WP B
+  WP B=1:1:1::WP A";
 
     _remote.WorldPositionMock = new Vector3D(2, 2, 2);
 
@@ -126,20 +112,14 @@ public class WPNetworkTest
     Assert.That(wpB.LinkedWps.Contains(wpC));
   }
 
+  [Test]
   public void GetPath_Computes_A_Route()
   {
-    _remote.CustomData = @"[A]
-  gps=GPS:A:0:0:0:
-  linked-wp=B
-[B]
-  gps=GPS:B:1:0:0:
-  linked-wp=A,C,D
-[C]
-  gps=GPS:C:2:0:0:
-  linked-wp=B,D
-[D]
-  gps=GPS:D:2:0:1:
-  linked-wp=B,C";
+    _remote.CustomData = @"[gps]
+A=0:0:0::B
+B=1:0:0::A,C,D
+C=2:0:0::B,D
+D=2:0:1::B,C";
 
     Program.WPNetwork network = _getNetwork();
 

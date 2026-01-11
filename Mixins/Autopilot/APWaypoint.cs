@@ -20,14 +20,12 @@ namespace IngameScript
 {
   partial class Program
   {
-    public enum WPType { Path = 0, PrecisePath, Maneuvering }
     public enum Terrain { Normal = 0, Dangerous, Bad, Good, Open }
     /// <summary>Class that wraps a Waypoint coordinates, some information about the terrain around and to what other waypionts it is connected to</summary>
     public class APWaypoint
     {
       public MyWaypointInfo WP;
       public readonly Terrain Terrain = Terrain.Normal;
-      public readonly WPType Type = WPType.Path;
       public readonly List<APWaypoint> LinkedWps = new List<APWaypoint>();
       public Vector3D Coords => WP.Coords;
       public string Name => WP.Name;
@@ -45,11 +43,10 @@ namespace IngameScript
       /// <param name="wp">Coordinates and name of the waypoint</param>
       /// <param name="terrain">Information about how rough the terrain is</param>
       /// <param name="type">How close to the waypoint the autopilot should try to be</param>
-      public APWaypoint(MyWaypointInfo wp, Terrain terrain = Terrain.Normal, WPType type = WPType.Path)
+      public APWaypoint(MyWaypointInfo wp, Terrain terrain = Terrain.Normal)
       {
         WP = wp;
         Terrain = terrain;
-        Type = type;
       }
       /// <summary>Links this waypoint to another waypoint, denoting the autopilot can go from <see cref="this"/> to <paramref name="wp"/>. It is not bidirectionnal.</summary>
       /// <param name="wp">Waypoint reachable from this waypoint.</param>
@@ -63,32 +60,25 @@ namespace IngameScript
         LinkedWps.Add(wp);
       }
       /// <summary>Creates a new waypoint from an ini string, possibly connected to other waypoints</summary>
-      /// <param name="ini">ini that contains the waypoints</param>
+      /// <param name="iniString">ini that contains the waypoints</param>
       /// <param name="section">name of the section containing information about the waypoints</param>
-      public APWaypoint(MyIni ini, string section)
+      public APWaypoint(string name, string iniString)
       {
-        MyWaypointInfo.TryParse(ini.Get(section, "gps").ToString(), out WP);
-        Enum.TryParse(ini.Get(section, "type").ToString(), out Type);
-        Enum.TryParse(ini.Get(section, "terrain").ToString(), out Terrain);
-        _waypointsNames = ini.Get(section, "linked-wp").ToString().Split(IniHelper.SEP, StringSplitOptions.RemoveEmptyEntries).ToList();
+        var iniParts = iniString.Split(':');
+        double x, y, z;
+        double.TryParse(iniParts[0], out x);
+        double.TryParse(iniParts[1], out y);
+        double.TryParse(iniParts[2], out z);
+        WP = new MyWaypointInfo(name, x, y, z);
+        Enum.TryParse(iniParts[3], out Terrain);
+        _waypointsNames = iniParts[4].Split(IniHelper.SEP, StringSplitOptions.RemoveEmptyEntries).ToList();
       }
       /// <summary>Saves the parameters of this waypoint to an ini string</summary>
       /// <param name="ini">Where the waypoint will be saved</param>
       public void Save(MyIni ini)
       {
-        ini.Set(Name, "gps", $"GPS:{Name}:{WP.Coords.X:0.00}:{WP.Coords.Y:0.00}:{WP.Coords.Z:0.00}:");
-        if (Terrain != Terrain.Normal)
-        {
-          ini.Set(Name, "terrain", Terrain.ToString());
-        }
-        if (Type != WPType.Path)
-        {
-          ini.Set(Name, "type", Type.ToString());
-        }
-        if (_waypointsNames != null)
-        {
-          ini.Set(Name, "linked-wp", string.Join(",", _waypointsNames));
-        }
+        var waypoints = _waypointsNames == null ? "" : string.Join(",", _waypointsNames);
+        ini.Set("gps", Name, $"{WP.Coords.X:0.00}:{WP.Coords.Y:0.00}:{WP.Coords.Z:0.00}:${(Terrain == Terrain.Normal ? "" : Terrain.ToString())}:${waypoints}");
       }
       /// <summary>Translates the list of waypoint names from the ini string to a list of actual <see cref="APWaypoint"/></summary>
       /// <param name="network">Network that contains all the waypoints</param>

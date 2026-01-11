@@ -54,16 +54,7 @@ namespace IngameScript
       }
       public double GetTargetPrecision(APWaypoint wp)
       {
-        switch (wp.Type)
-        {
-          case WPType.PrecisePath:
-            return 0.5;
-          case WPType.Maneuvering:
-            return 0.1;
-          case WPType.Path:
-          default:
-            return 3;
-        }
+        return 0.5;
       }
 
       public bool IsWaypointReached(APWaypoint wp, double distance) => distance < this.GetTargetPrecision(wp);
