@@ -48,7 +48,6 @@ namespace IngameScript
       ConnectionType _lastConnectionType = ConnectionType.None;
       // position
       Vector3D _currentPosition;
-      Vector3D _currentOrientation;
       // helpers
       readonly Action<string> _logger;
       readonly CoordinatesTransformer _transformer;
@@ -105,15 +104,15 @@ namespace IngameScript
         Name = name;
         _log($"initialization");
         // initialize moving parts
-        _initMandatoryField(gts, $"{stationName} Connector {Name} Down", out _downConnector);
-        _initMandatoryField(gts, $"{stationName} Connector {Name} Front", out _frontConnector);
-        _initMandatoryField(gts, $"{stationName} Rotor {Name}", out _stator);
+        _initMandatoryField(gts, $"{stationName} / {Name} / Connector Down", out _downConnector);
+        _initMandatoryField(gts, $"{stationName} / {Name} / Connector Front", out _frontConnector);
+        _initMandatoryField(gts, $"{stationName} / {Name} / Rotor", out _stator);
         if (_downConnector == null && _frontConnector == null)
         {
           throw new InvalidOperationException("Need at least one connector");
         }
         _transformer = transformer;
-        string pistonPrefix = $"{stationName} Piston {Name}";
+        string pistonPrefix = $"{stationName} / {Name} / Piston";
         var pistons = new List<IMyPistonBase>();
         gts.GetBlocksOfType(pistons, p => p.CustomName.StartsWith(pistonPrefix));
         _x = new Actuator(4);
@@ -305,7 +304,6 @@ namespace IngameScript
 
             IMyTerminalBlock block = _getPositionBlock();
             _currentPosition = _transformer.Pos(block.GetPosition());
-            _currentOrientation = _frontConnector?.WorldMatrix.Forward ?? FORWARD;
             bool isReached = _goToWaypoint(_waypoints.Peek());
             if (isReached)
             {
@@ -456,7 +454,7 @@ namespace IngameScript
         field = gts.GetBlockWithName(name) as T;
         if (field == null)
         {
-          _log($"Connector '{Name}': could not find {typeof(T)} '{name}'");
+          _log($"could not find {typeof(T)} '{name}'");
         }
       }
 

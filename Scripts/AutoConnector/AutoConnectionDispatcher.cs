@@ -171,7 +171,7 @@ namespace IngameScript
 
       void _registerCommands(CommandLine command, MyGridProgram program)
       {
-        new ParentCommand("acd", "Auto connection dispatcher commands")
+        var cmd = new ParentCommand("acd", "Auto connection dispatcher commands")
           .AddSubCommand(new Command("add", Command.Wrap(s => AddNewConnector(s, program)), @"Adds and initializes an auto connector
 Argument is the name of the auto connector.
 Pistons need to be named:
@@ -187,6 +187,7 @@ Last is the address of the requestor", nArgs: 8, requiredTrigger: CommandTrigger
 Will disconnect or cancel a request based on the requestor", nArgs: 1, requiredTrigger: CommandTrigger.Antenna))
           .AddSubCommand(new Command("reset", Command.Wrap(_resetConnector), @"Resets a connector to its starting positions.
 Argument is the name of the connector.", nArgs: 1));
+        command.RegisterCommand(cmd);
       }
 
       void _connect(ArgumentsWrapper args)

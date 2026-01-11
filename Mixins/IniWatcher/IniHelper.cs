@@ -52,7 +52,7 @@ namespace IngameScript
     /// <returns>The vector</returns>
     public static Vector3D GetVector(this MyIni ini, string section, string name)
     {
-      var vec = ini.GetThrow(section, name).ToString().Split(",");
+      var vec = ini.GetThrow(section, name).ToString().Split(',');
       return new Vector3D(double.Parse(vec[0]), double.Parse(vec[1]), double.Parse(vec[2]));
     }
     /// <summary>Parses the text and throws if the parse was unsucessful.</summary>
