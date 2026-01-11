@@ -27,7 +27,7 @@ public class InstructionsTest
 
   private Action<Program.Process> _command(Program.ArgumentsWrapper args, Action<string> logger)
   {
-    return p => { _commandCalls.Add(string.Join(",", args)); };
+    return p => _commandCalls.Add(string.Join(",", args));
   }
 
   [SetUp]
@@ -85,7 +85,8 @@ public class InstructionsTest
   [Test]
   public void WaitInstruction_Runs_For_The_Given_Number_Of_Cycles()
   {
-    var wait = new Program.WaitInstruction("4");
+    int timeout = 4;
+    var wait = new Program.WaitInstruction(timeout.ToString());
 
     wait.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
     List<string> processes = _getProcesses();
@@ -93,12 +94,13 @@ public class InstructionsTest
     Assert.That(processes.Count, Is.EqualTo(2));
     Assert.That(processes.Any(s => s.Contains("ar-wait")));
 
-    foreach (int i in Enumerable.Range(0, 3))
+    foreach (int i in Enumerable.Range(0, timeout - 1))
     {
       _tick();
     }
     processes = _getProcesses();
 
+    // Wait is still running
     Assert.That(processes.Count, Is.EqualTo(2));
     A.CallTo(() => _spyCallback(A<Program.Process>.Ignored)).MustNotHaveHappened();
     Assert.That(processes.Any(s => s.Contains("ar-wait")));
@@ -307,54 +309,54 @@ public class InstructionsTest
     A.CallTo(() => _spyCallback(A<Program.Process>.Ignored)).MustHaveHappened();
   }
 
-  [Test]
-  public void WhileInstruction_Kills_Its_Children_But_Not_Its_successor()
+  [Test, Sequential]
+  public void WhileInstruction_Kills_Its_Children_But_Not_Its_successor([Range(2, 15)] int wait)
   {
-    // This terrible test helped diagnose an issue that caused WhileInstructions to fire multiple times the next instructions
+    // As a side effect of the condition running before the loop it kills, a wait of n will run the loop for n-1 cycles
     var routine = new Program.AutoRoutine("test routine",
       [
         new Program.WhileInstruction(
-          new Program.WaitInstruction("5"),
-          [
-              new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["1"]), _commandLine),
-              new Program.ForeverInstruction(),
-              new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["2"]), _commandLine),
-          ]
-        ),
-        new Program.WaitInstruction("4"),
-        new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["3"]), _commandLine),
-      ]
+            new Program.WaitInstruction(wait.ToString()),
+            [
+                new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["1"]), _commandLine),
+                new Program.WaitInstruction("3"),
+            ]
+          ),
+          new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["3"]), _commandLine),
+          new Program.CommandInstruction("cmd",  new Program.ArgumentsWrapper(["4"]), _commandLine),
+        ]
     );
     routine.Execute(_process, _spyCallback, new Program.ArgumentsWrapper([]));
 
-    foreach (int _i in Enumerable.Range(0, 2))
-    {
-      _tick();
-    }
+    _tick();
 
     Assert.That(_commandCalls.Count, Is.EqualTo(1));
     Assert.That(_commandCalls[0], Is.EqualTo("1"));
 
-    foreach (int _i in Enumerable.Range(0, 5))
+    // wait for the loop to be finished
+    foreach (int _ in Enumerable.Range(0, wait - 1))
     {
       _tick();
     }
 
-    Assert.That(_commandCalls.Count, Is.EqualTo(1));
+    var loopLength = 4;
+    var nLoops = (wait + loopLength - 2) / loopLength;
 
-    foreach (int _i in Enumerable.Range(0, 3))
-    {
-      _tick();
-    }
+    Assert.That(_commandCalls.Count, Is.EqualTo(nLoops));
+    Assert.That(_commandCalls.Last(), Is.EqualTo("1"));
 
-    Assert.That(_commandCalls.Count, Is.EqualTo(2));
+    _tick();
 
-    foreach (int _i in Enumerable.Range(0, 10))
-    {
-      _tick();
-    }
+    Assert.That(_commandCalls.Count, Is.EqualTo(nLoops + 1));
+    Assert.That(_commandCalls.Last(), Is.EqualTo("3"));
 
-    Assert.That(_commandCalls.Count, Is.EqualTo(2));
+    _tick();
 
+    Assert.That(_commandCalls.Count, Is.EqualTo(nLoops + 2));
+    Assert.That(_commandCalls.Last(), Is.EqualTo("4"));
+
+    _tick();
+
+    Assert.That(_getProcesses().Count, Is.EqualTo(1)); // only the test process
   }
 }

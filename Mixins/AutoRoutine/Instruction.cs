@@ -97,8 +97,9 @@ namespace IngameScript
       public override void Execute(Process parent, Action<Process> onDone, ArgumentsWrapper args)
       {
         Process whileProcess = parent.Spawn(null, "ar-while", onDone, period: 1, useOnce: false);
-        base.Execute(whileProcess, p => _onLoopDone(whileProcess, args), args);
+        // We shedule the condition first to have a consistent scheduling across loops
         _condition.Execute(whileProcess, p => _onConditionDone(whileProcess), args);
+        base.Execute(whileProcess, p => _onLoopDone(whileProcess, args), args);
       }
       public override int ArgsCount() => Math.Max(_condition.ArgsCount(), base.ArgsCount());
       static void _onConditionDone(Process whileProcess)
