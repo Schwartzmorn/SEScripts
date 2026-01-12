@@ -27,11 +27,13 @@ namespace IngameScript
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       _manager = Process.CreateManager(Echo);
       var logger = new ScreenLogger(_manager, Me.GetSurface(0), echo: Echo);
+      LOG_SETTINGS.SetLogger(logger.Log);
+      LOG_SETTINGS.Level = LogSettings.LogLevel.Info;
       _manager.SetLogger(logger.Log);
       _commandLine = new CommandLine("Auto connector station", logger.Log, _manager);
       var ini = new MyIni();
       ini.Parse(Me.CustomData);
-      new AutoConnectionDispatcher(this, _commandLine, ini, logger.Log, _manager);
+      new AutoConnectionDispatcher(this, _commandLine, ini, _manager);
     }
 
     public void Save() => _manager.Save(s => Me.CustomData = s);

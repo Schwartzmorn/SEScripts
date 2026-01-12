@@ -21,7 +21,13 @@ namespace IngameScript
 {
   partial class Program
   {
-    public class Log
+    // public for unit testing
+    public readonly static LogSettings LOG_SETTINGS = new LogSettings();
+
+    /// <summary>
+    /// This class is a compromise between what would make sense and the weird way Space Engineers count the instructions
+    /// </summary>
+    public class LogSettings
     {
       public enum LogLevel
       {
@@ -31,44 +37,67 @@ namespace IngameScript
         Always = 3,
       }
 
-      private Action<string> _logger;
-      // private Action<LogLevel, string> _richLogger;
+      public Action<string> _logger;
 
-      public LogLevel Level { get; set; } = LogLevel.Debug;
+      public LogLevel Level { get; set; } = LogLevel.Info;
 
       public void SetLogger(Action<string> logger)
       {
         _logger = logger;
       }
+    }
 
-      private void _log(LogLevel level, string format, params object[] args)
+    /// <summary>
+    /// Implemented this way to avoid increasing the instructions count too much
+    /// </summary>
+    public class Log
+    {
+      readonly string _name;
+      readonly LogSettings _settings;
+      // LCD Color characters
+      readonly static string DEBUG = ((char)57673).ToString();
+      readonly static string INFO = ((char)57607).ToString();
+      readonly static string ERROR = ((char)58057).ToString();
+      readonly static string ALWAYS = ((char)58111).ToString();
+
+      public Log(string name, LogSettings settings)
       {
-        if (level >= Level)
+        _name = name;
+        _settings = settings;
+      }
+
+      public void Debug(string msg)
+      {
+        if (_settings.Level == LogSettings.LogLevel.Debug)
         {
-          var msg = string.Format(format, args);
-          _logger?.Invoke(msg);
-          // _richLogger?.Invoke(level, msg);
+          _settings._logger?.Invoke($"{DEBUG}{_name}: {msg}");
         }
       }
 
-      public void Debug(string format, params object[] args)
+      public void Info(string msg)
       {
-        _log(LogLevel.Debug, format, args);
+        if (_settings.Level <= LogSettings.LogLevel.Info)
+        {
+          _settings._logger?.Invoke($"{INFO}{_name}: {msg}");
+        }
       }
 
-      public void Info(string format, params object[] args)
+      public void Error(string msg)
       {
-        _log(LogLevel.Info, format, args);
+        if (_settings.Level <= LogSettings.LogLevel.Error)
+        {
+          _settings._logger?.Invoke($"{ERROR}{_name}: {msg}");
+        }
       }
 
-      public void Error(string format, params object[] args)
+      public void Always(string msg)
       {
-        _log(LogLevel.Error, format, args);
+        _settings._logger?.Invoke($"{ALWAYS}{_name}: {msg}");
       }
 
-      public void Always(string format, params object[] args)
+      public static Log GetLog(string name)
       {
-        _log(LogLevel.Always, format, args);
+        return new Log(name, LOG_SETTINGS);
       }
     }
   }

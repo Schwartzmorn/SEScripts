@@ -30,8 +30,9 @@ namespace IngameScript
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
       _manager = Process.CreateManager(Echo);
       var logger = new ScreenLogger(_manager, Me.GetSurface(0), echo: Echo);
+      LOG_SETTINGS.SetLogger(logger.Log);
 
-      _doorManager = new DoorManager(this, _manager, logger.Log);
+      _doorManager = new DoorManager(this, _manager);
     }
 
     public void Save()

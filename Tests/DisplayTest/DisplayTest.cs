@@ -155,7 +155,7 @@ public class DisplayTest
 
     using (Program.Display.Frame frame = display.DrawFrame())
     {
-      frame.DrawCollection("Collection", new Vector2(10, 20), Convert.ToSingle(Math.PI) / 2, _scheme.MedDark);
+      frame.DrawCollection("Collection", new Vector2(10, 20), Convert.ToSingle(Math.PI) / 2, _scheme.Med);
     }
 
     var sprites = _surface.LastDrawnSprites;
@@ -165,14 +165,14 @@ public class DisplayTest
     MySprite sprite = sprites[1];
 
     Assert.That(sprite.Data, Is.EqualTo("Triangle"));
-    Assert.That(sprite.Color, Is.EqualTo(_scheme.MedDark));
+    Assert.That(sprite.Color, Is.EqualTo(_scheme.Med));
     _checkVector(new Vector2(-5, 75), sprite.Position.Value);
     Assert.That(sprite.RotationOrScale, Is.EqualTo(Convert.ToSingle(Math.PI) / 2));
 
     sprite = sprites[2];
 
     Assert.That(sprite.Data, Is.EqualTo("Circle"));
-    Assert.That(sprite.Color, Is.EqualTo(_scheme.MedDark));
+    Assert.That(sprite.Color, Is.EqualTo(_scheme.Med));
     Assert.That(sprite.Position, Is.EqualTo(new Vector2(0, 65)));
     Assert.That(sprite.RotationOrScale, Is.EqualTo(Convert.ToSingle(Math.PI)));
   }

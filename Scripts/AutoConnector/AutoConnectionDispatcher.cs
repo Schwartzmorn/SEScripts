@@ -25,18 +25,17 @@ namespace IngameScript
       static readonly string INI_GENERAL_SECTION = "sac-general";
       static readonly string INI_NAME_KEY = "station-name";
       static readonly string INI_REFERENCE_KEY = "reference-name";
+      static readonly Log LOG = Log.GetLog("ACD");
 
       readonly List<AutoConnectionServer> _autoConnectors = new List<AutoConnectionServer>();
       readonly IMyIntergridCommunicationSystem _igc;
-      readonly Action<string> _logger;
       readonly IProcessManager _manager;
       readonly CoordinatesTransformer _transformer;
       readonly string _referenceName;
       readonly string _stationName;
 
-      public AutoConnectionDispatcher(MyGridProgram program, CommandLine command, MyIni ini, Action<string> logger, IProcessManager manager)
+      public AutoConnectionDispatcher(MyGridProgram program, CommandLine command, MyIni ini, IProcessManager manager)
       {
-        _logger = logger;
         _manager = manager;
         // Station level initialization
         _stationName = ini.GetThrow(INI_GENERAL_SECTION, INI_NAME_KEY).ToString();
@@ -48,16 +47,16 @@ namespace IngameScript
         }
         _igc = program.IGC;
         _transformer = new CoordinatesTransformer(reference, manager);
-        _log("initializing");
+        LOG.Debug("initializing");
         // Connectors initialization
         var sections = new List<string>();
         ini.GetSections(sections);
         foreach (string sectionName in sections.Where(s => s.StartsWith(AutoConnector.INI_CONNECTOR_PREFIX)))
         {
-          var connector = new AutoConnector(_stationName, sectionName, program, _logger, _transformer, ini);
-          _autoConnectors.Add(new AutoConnectionServer(ini, _igc, connector, manager, _logger));
+          var connector = new AutoConnector(_stationName, sectionName, program, _transformer, ini);
+          _autoConnectors.Add(new AutoConnectionServer(ini, _igc, connector, manager));
         }
-        _log($"has {_autoConnectors.Count} auto connectors");
+        LOG.Info($"has {_autoConnectors.Count} auto connectors");
         _registerCommands(command, program);
 
         IMyBroadcastListener listener = _igc.RegisterBroadcastListener("StationConnectionRequests");
@@ -66,6 +65,7 @@ namespace IngameScript
           if (listener.HasPendingMessage)
           {
             MyIGCMessage msg = listener.AcceptMessage();
+            LOG.Debug($"Received message: {msg.As<string>()}");
             command.StartCmd($"{msg.As<string>()} {msg.Source}", CommandTrigger.Antenna);
           }
         }, "ac-dispatcher");
@@ -90,18 +90,18 @@ namespace IngameScript
         {
           if (con.Name == connectorName)
           {
-            _log($"connector {connectorName} already exists");
+            LOG.Error($"connector {connectorName} already exists");
             return;
           }
         }
         try
         {
-          var connector = new AutoConnector(_stationName, connectorName, program, _logger, _transformer);
+          var connector = new AutoConnector(_stationName, connectorName, program, _transformer);
           _autoConnectors.Add(new AutoConnectionServer(_igc, connector, _manager));
         }
         catch (InvalidOperationException e)
         {
-          _log($"could not create connector '{connectorName}': {e.Message}");
+          LOG.Error($"could not create connector '{connectorName}': {e.Message}");
         }
       }
 
@@ -112,7 +112,7 @@ namespace IngameScript
         AutoConnectionServer connector = _autoConnectors.FirstOrDefault(con => con.IsInRange(pos));
         if (connector != null)
         {
-          _log($"found eligible connector for connection: '{connector.Name}'");
+          LOG.Info($"found eligible connector for connection: '{connector.Name}'");
           connector.Connect(new ConnectionRequest
           {
             Address = address,
@@ -123,7 +123,7 @@ namespace IngameScript
         }
         else
         {
-          _log("found no eligible connector");
+          LOG.Info("found no eligible connector");
         }
       }
 
@@ -132,12 +132,12 @@ namespace IngameScript
         AutoConnectionServer connector = _autoConnectors.FirstOrDefault(con => con.HasPendingRequest(address));
         if (connector != null)
         {
-          _log($"found eligible connector for disconnection: '{connector.Name}'");
+          LOG.Info($"found eligible connector for disconnection: '{connector.Name}'");
           connector.Disconnect(address);
         }
         else
         {
-          _log("found no eligible connector");
+          LOG.Info("found no eligible connector");
         }
       }
 
@@ -160,12 +160,12 @@ namespace IngameScript
         }
         if (count == 0)
         {
-          _log($"could not find connector '{name}'");
+          LOG.Info($"could not find connector '{name}'");
         }
         else
         {
           _autoConnectors.RemoveAll(c => c.Name == name);
-          _log($"removed {count} connectors");
+          LOG.Error($"removed {count} connectors");
         }
       }
 
@@ -192,7 +192,7 @@ Argument is the name of the connector.", nArgs: 1));
 
       void _connect(ArgumentsWrapper args)
       {
-        _log("received a connection request");
+        LOG.Info("received a connection request");
         try
         {
           MyCubeSize size = MyCubeSize.Small;
@@ -204,24 +204,22 @@ Argument is the name of the connector.", nArgs: 1));
         }
         catch (Exception e)
         {
-          _log($"could not parse value received: {e.Message}");
+          LOG.Error($"could not parse value received: {e.Message}");
         }
       }
 
       void _disconnect(string arg)
       {
-        _log("received a disconnection request");
+        LOG.Info("received a disconnection request");
         try
         {
           _disconnect(long.Parse(arg));
         }
         catch (Exception e)
         {
-          _log($"could not parse value received: {e.Message}");
+          LOG.Error($"could not parse value received: {e.Message}");
         }
       }
-
-      void _log(string log) => _logger?.Invoke($"Dispatcher '{_stationName}': {log}");
     }
   }
 }

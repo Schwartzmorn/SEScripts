@@ -13,7 +13,7 @@ namespace IngameScript
     /// <summary>Wraps a <see cref="IMyPistonBase"/></summary>
     public class Piston
     {
-      static readonly float OFFSET = 0.157f; // average offset introduced by a piston
+      static readonly float OFFSET = 0.15985f; // average offset introduced by a piston
 
       public float CurrentPosition => _isNegative ? 10 - (OFFSET * 2) - _piston.CurrentPosition : _piston.CurrentPosition;
       public float Velocity => _isNegative ? -_piston.Velocity : _piston.Velocity;
@@ -25,8 +25,9 @@ namespace IngameScript
       {
         piston.Enabled = true;
         piston.Velocity = 0;
-        piston.MinLimit = 0;
-        piston.MaxLimit = 10 - (OFFSET * 2);
+        // We want to preserve manually set limits
+        piston.MinLimit = Math.Max(0, piston.MinLimit);
+        piston.MaxLimit = Math.Min(piston.MaxLimit, 10 - (OFFSET * 2));
         _piston = piston;
         _isNegative = isNegative;
       }

@@ -19,6 +19,7 @@ public class InstancingTests
   {
     _testBed = new TestBed();
     _programWrapper = _testBed.CreateProgram<Program>();
+    Program.LOG_SETTINGS.Level = Program.Log.LogLevel.Debug;
   }
 
   [Test]

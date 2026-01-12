@@ -31,6 +31,7 @@ namespace IngameScript
       static readonly double CONNECTION_OFFSET_LARGE = 1.25;
       static readonly double CONNECTION_SAFETY_OFFSET = 2;
       static readonly double DELTA_TARGET = 0.05;
+      readonly Log _log;
       // moving parts
       readonly IMyShipConnector _downConnector;
       readonly IMyShipConnector _frontConnector;
@@ -49,7 +50,6 @@ namespace IngameScript
       // position
       Vector3D _currentPosition;
       // helpers
-      readonly Action<string> _logger;
       readonly CoordinatesTransformer _transformer;
       /// <summary>
       /// Re creates a serialized auto connector
@@ -64,15 +64,14 @@ namespace IngameScript
           string stationName,
           string sectionName,
           MyGridProgram program,
-          Action<string> logger,
           CoordinatesTransformer transformer,
           MyIni ini)
-          : this(stationName, sectionName.Substring(INI_CONNECTOR_PREFIX.Length), program, logger, transformer)
+          : this(stationName, sectionName.Substring(INI_CONNECTOR_PREFIX.Length), program, transformer)
       {
         // Parse ini
-        _log($"parsing configuration");
+        _log.Debug($"parsing configuration");
         _initializationStage = ini.GetThrow(sectionName, INI_STAGE).ToInt32();
-        _log($"at stage {_initializationStage} ({(IsInitialized() ? "" : "not ")}initialized)");
+        _log.Debug($"at stage {_initializationStage} ({(IsInitialized() ? "" : "not ")}initialized)");
         if (_initializationStage > 1)
         {
           _max = ini.GetVector(sectionName, "max");
@@ -96,13 +95,12 @@ namespace IngameScript
           string stationName,
           string name,
           MyGridProgram program,
-          Action<string> logger,
           CoordinatesTransformer transformer)
       {
-        _logger = logger;
         IMyGridTerminalSystem gts = program.GridTerminalSystem;
         Name = name;
-        _log($"initialization");
+        _log = Log.GetLog($"AC '{Name}'");
+        _log.Debug($"initialization");
         // initialize moving parts
         _initMandatoryField(gts, $"{stationName} / {Name} / Connector Down", out _downConnector);
         _initMandatoryField(gts, $"{stationName} / {Name} / Connector Front", out _frontConnector);
@@ -145,7 +143,7 @@ namespace IngameScript
             _y.AddPiston(piston, isNegative);
             continue;
           }
-          _log($"Could not place piston '{piston.CustomName}'");
+          _log.Error($"Could not place piston '{piston.CustomName}'");
         }
         if (!_x.IsValid)
         {
@@ -214,7 +212,7 @@ namespace IngameScript
         if (hasReachedNextStep)
         {
           ++_initializationStage;
-          _log($"is now at initialization step {_initializationStage}");
+          _log.Info($"is now at initialization step {_initializationStage}");
         }
       }
 
@@ -308,7 +306,7 @@ namespace IngameScript
             if (isReached)
             {
               Waypoint waypoint = _waypoints.Dequeue();
-              _log($"reached a waypoint, {_waypoints.Count} to go");
+              _log.Debug($"reached a waypoint, {_waypoints.Count} to go");
               Stop();
 
               // We only try to connect on the last point
@@ -320,14 +318,12 @@ namespace IngameScript
             }
           }
           bool res = _waypoints.Count != 0;
-          foreach (IMyLightingBlock l in _lights)
-          {
-            l.Enabled = res;
-          }
+          _lights.ForEach(l => l.Enabled = res);
           return res;
         }
         else
         {
+          _lights.ForEach(l => l.Enabled = true);
           _initialize();
         }
         return false;
@@ -446,7 +442,7 @@ namespace IngameScript
             break;
           }
         }
-        _log($"has {_waypoints.Count} pending waypoints");
+        _log.Debug($"has {_waypoints.Count} pending waypoints");
       }
 
       void _initMandatoryField<T>(IMyGridTerminalSystem gts, string name, out T field) where T : class, IMyTerminalBlock
@@ -454,7 +450,7 @@ namespace IngameScript
         field = gts.GetBlockWithName(name) as T;
         if (field == null)
         {
-          _log($"could not find {typeof(T)} '{name}'");
+          _log.Error($"could not find {typeof(T)} '{name}'");
         }
       }
 
@@ -498,8 +494,6 @@ namespace IngameScript
           (_min.X + _max.X) / 2,
           _max.Y,
           (_min.Z + _max.Z) / 2);
-
-      void _log(string log) => _logger?.Invoke($"Connector {Name}: {log}");
 
       IMyShipConnector _getCurrentConnected()
       {

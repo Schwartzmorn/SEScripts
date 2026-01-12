@@ -57,7 +57,7 @@ public class ShapeCollectionTest
     Assert.That(sprite.RotationOrScale, Is.EqualTo(0));
 
     sprite = collection1[2];
-    Assert.That(collection1[2].Color, Is.EqualTo(this._scheme.MedDark));
+    Assert.That(collection1[2].Color, Is.EqualTo(this._scheme.Med));
     Assert.That(sprite.Position, Is.EqualTo(new VRageMath.Vector2(125f, 125f)));
     Assert.That(sprite.RotationOrScale, Is.EqualTo(1.570796326794896619f));
 

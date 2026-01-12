@@ -18,7 +18,7 @@ namespace IngameScript
 
       public readonly WPNetwork Network;
 
-      bool _activated;
+      public bool Activated { get; private set; }
       readonly Action<string> _logger;
       readonly IMyRemoteControl _remote;
       readonly APSettings _settings = new APSettings();
@@ -36,7 +36,7 @@ namespace IngameScript
       /// <param name="manager"></param>
       public Autopilot(MyIni ini, WheelsController wheels, CommandLine cmd, IMyRemoteControl remote, Action<string> logger, ISaveManager manager)
       {
-        _activated = ini.Get("auto-pilot", "activated").ToBoolean();
+        Activated = ini.Get("auto-pilot", "activated").ToBoolean();
         _logger = logger;
 
         Process p = manager.Spawn(_handle, "ap-handle");
@@ -53,13 +53,13 @@ namespace IngameScript
         manager.AddOnSave(_save);
       }
 
-      public bool ShouldDeactivate() => _activated;
+      public bool ShouldDeactivate() => Activated;
 
       public void Switch(string s)
       {
-        _activated = s == "switch" ? !_activated : s == "on";
-        _logger?.Invoke($"Autopilot switch {(_activated ? "on" : "off")}");
-        if (!_activated)
+        Activated = s == "switch" ? !Activated : s == "on";
+        _logger?.Invoke($"Autopilot switch {(Activated ? "on" : "off")}");
+        if (!Activated)
         {
           _checkProcess(null);
           _currentPath.Clear();
@@ -80,7 +80,7 @@ namespace IngameScript
       /// <param name="wpName">Name of the waypoint to reach</param>
       public bool GoTo(string wpName)
       {
-        if (_activated)
+        if (Activated)
         {
           APWaypoint end = Network.GetWaypoint(wpName);
           if (end == null)
@@ -101,7 +101,7 @@ namespace IngameScript
       /// <param name="amtRight">Amount of movement to the right</param>
       public void Move(double amtForward, double amtRight)
       {
-        if (_activated)
+        if (Activated)
         {
           _currentPath.Clear();
           Vector3D tgt = _remote.GetPosition() + (amtForward * _remote.WorldMatrix.Forward) + (amtRight * _remote.WorldMatrix.Right);
@@ -127,7 +127,7 @@ namespace IngameScript
 
       void _handle(Process p)
       {
-        if (!_activated)
+        if (!Activated)
         {
           return;
         }
@@ -193,7 +193,7 @@ namespace IngameScript
 
       bool Reversing => _transformer.Dir(_remote.GetShipVelocities().LinearVelocity).Dot(FORWARD) < 0;
 
-      void _save(MyIni ini) => ini.Set("auto-pilot", "activated", _activated);
+      void _save(MyIni ini) => ini.Set("auto-pilot", "activated", Activated);
 
       void _log(string s) => _logger?.Invoke($"AP: {s}");
 

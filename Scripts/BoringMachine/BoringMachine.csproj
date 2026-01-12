@@ -30,5 +30,6 @@
   <Import Project="../../Mixins/PilotAssist/PilotAssist.projitems" Label="Shared" />
   <Import Project="../../Mixins/Process/Process.projitems" Label="Shared" />
   <Import Project="../../Mixins/RotorHelper/RotorHelper.projitems" Label="Shared" />
+  <Import Project="../../Mixins/ScreenLogger/ScreenLogger.projitems" Label="Shared" />
   <Import Project="../../Mixins/WheelsController/WheelsController.projitems" Label="Shared" />
 </Project>

@@ -24,10 +24,10 @@ namespace IngameScript
     /// <summary>Class that wraps a <see cref="IMyTextSurface"/> to be more convenient</summary>
     public class Display
     {
-      public Vector2 SurfaceSize => _surface.SurfaceSize;
-      public Vector2 TextureSize => _surface.TextureSize;
+      public Vector2 SurfaceSize => Surface.SurfaceSize;
+      public Vector2 TextureSize => Surface.TextureSize;
 
-      readonly IMyTextSurface _surface;
+      public readonly IMyTextSurface Surface;
       readonly Vector2 _offset;
       readonly float _scale;
       readonly ColorScheme _scheme;
@@ -37,19 +37,19 @@ namespace IngameScript
       public class Frame : IDisposable
       {
         public readonly MySpriteDrawFrame _f;
-        readonly Display _d;
+        public readonly Display _d;
         /// <summary>Creates a frame for a <see cref="Display"/>. Inherits its offset and <see cref="ShapeCollections"/></summary>
         /// <param name="display">Display on which to draw the frame</param>
         public Frame(Display display)
         {
           _d = display;
-          _f = _d._surface.DrawFrame();
-          _f.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", _d._surface.TextureSize / 2, _d._surface.TextureSize, _d._scheme.Dark));
+          _f = _d.Surface.DrawFrame();
+          _f.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", _d.Surface.TextureSize / 2, _d.Surface.TextureSize, _d._scheme.Dark));
         }
         /// <summary>Adds some texture and commits the frame</summary>
         public void Dispose()
         {
-          _f.Add(new MySprite(SpriteType.TEXTURE, "Grid", _d._surface.TextureSize / 2, _d._surface.TextureSize * 2, _d._scheme.Light));
+          _f.Add(new MySprite(SpriteType.TEXTURE, "Grid", _d.Surface.TextureSize / 2, _d.Surface.TextureSize * 2, _d._scheme.Light));
           _f.Dispose();
         }
         /// <summary>Draws a <see cref="Shape"/> on the frame</summary>
@@ -97,7 +97,7 @@ namespace IngameScript
       {
         surface.ContentType = ContentType.SCRIPT;
         surface.Script = "";
-        _surface = surface;
+        Surface = surface;
         _offset = offset ?? Vector2.Zero;
         _scale = scale;
         _scheme = scheme ?? new ColorScheme();

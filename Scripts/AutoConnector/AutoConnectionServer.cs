@@ -31,8 +31,9 @@ namespace IngameScript
 
     public class AutoConnectionServer
     {
-      private static readonly double DISTANCE_CUTOFF = 2;
-      private static readonly string INI_SECTION = "connection-server-";
+      static readonly double DISTANCE_CUTOFF = 2;
+      static readonly string INI_SECTION = "connection-server-";
+      static readonly Log LOG = Log.GetLog("ACS");
 
       public string Name => _connector.Name;
       public ConnectionRequest? CurrentRequest { get; private set; }
@@ -40,13 +41,11 @@ namespace IngameScript
 
       readonly AutoConnector _connector;
       readonly IMyIntergridCommunicationSystem _igc;
-      readonly Action<string> _logger;
       readonly Process _mainProcess;
 
-      public AutoConnectionServer(MyIni ini, IMyIntergridCommunicationSystem igc, AutoConnector connector, IProcessSpawner spawner, Action<string> logger)
+      public AutoConnectionServer(MyIni ini, IMyIntergridCommunicationSystem igc, AutoConnector connector, IProcessSpawner spawner)
           : this(igc, connector, spawner)
       {
-        _logger = logger;
         _deserialize(ini);
       }
 
@@ -55,7 +54,7 @@ namespace IngameScript
         _connector = connector;
         _igc = igc;
         _mainProcess = spawner.Spawn(p => Update(), $"ac-server '{Name}'", onDone => _connector.Stop());
-        _logger?.Invoke($"Connector {Name} ready");
+        LOG.Info($"Connector {Name} ready");
       }
 
       public bool IsInRange(Vector3D position) => _connector.GetDistance(position) < DISTANCE_CUTOFF;

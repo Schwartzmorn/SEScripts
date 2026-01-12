@@ -24,7 +24,7 @@
   </ItemGroup>
   <Import Project="../../Mixins/CommandLine/CommandLine.projitems" Label="Shared" />
   <Import Project="../../Mixins/IniWatcher/IniWatcher.projitems" Label="Shared" />
-  <Import Project="../../Mixins/Logger/Logger.projitems" Label="Shared" />
+  <Import Project="../../Mixins/ScreenLogger/ScreenLogger.projitems" Label="Shared" />
   <Import Project="../../Mixins/PilotAssist/PilotAssist.projitems" Label="Shared" />
   <Import Project="../../Mixins/Process/Process.projitems" Label="Shared" />
 </Project>

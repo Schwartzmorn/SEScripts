@@ -27,7 +27,8 @@ namespace IngameScript
       static readonly Vector2 DRILL_ARM_CENTER = new Vector2(161, 105);
       static readonly Vector2 INV_TEXT_POS = new Vector2(10, 20);
       static readonly Vector2 LIGHTS_OFFSET = new Vector2(130, 125);
-      static readonly Vector2 STRAFE_TEXT_POS = new Vector2(10, 170);
+      static readonly Vector2 STATUS_RECT_POS = new Vector2(6, 168);
+      static readonly float STATUS_RECT_PADDING = 10;
 
       readonly List<Display> _drillDisplays;
       readonly ColorScheme _scheme;
@@ -80,8 +81,19 @@ namespace IngameScript
           }
           f.DrawText($"Full at {loadFactor * 100:000}%", INV_TEXT_POS, scale: 0.5f, alignment: TextAlignment.LEFT);
           f.DrawText(_conStatus(), CON_TEXT_POS, scale: 0.5f, alignment: TextAlignment.LEFT);
-          f.DrawText($"Strafing: {(status.IsStrafing ? "on" : "off")}", STRAFE_TEXT_POS, scale: 0.5f, alignment: TextAlignment.LEFT);
+          var statusPos = STATUS_RECT_POS;
+          statusPos.X += _drawStatusRect(f, "STRAFE", status.IsStrafing, statusPos) + STATUS_RECT_PADDING;
+          statusPos.X += _drawStatusRect(f, "AP", status.IsAutopilotEngaged, statusPos) + STATUS_RECT_PADDING;
+          statusPos.X += _drawStatusRect(f, "(!)", status.IsParkEngaged, statusPos) + STATUS_RECT_PADDING;
         }
+      }
+
+      float _drawStatusRect(Display.Frame f, string text, bool active, Vector2 position)
+      {
+        var width = MathHelper.RoundToInt(f._d.Surface.MeasureStringInPixels(new StringBuilder(text), "Monospace", 0.5f).X) + 10;
+        f.Draw(new Shape("SquareSimple", active ? _scheme.Light : _scheme.MedDark, position: position, size: new Vector2(width, 20)));
+        f.DrawText(text, position + new Vector2(5, 2), color: _scheme.Dark, scale: 0.5f, alignment: TextAlignment.LEFT);
+        return width;
       }
 
       string _conStatus()

@@ -24,7 +24,6 @@ namespace IngameScript
   {
     readonly CommandLine _cmd;
     readonly IProcessManager _manager;
-    readonly static Log LOG = new Log();
     ColorScheme _scheme = new ColorScheme();
 
     public Program()
@@ -36,7 +35,7 @@ namespace IngameScript
       _manager = Process.CreateManager(Echo);
       _initCockpit(out cockpit, topLefts, out keyboard);
       var logger = new ScreenLogger(_manager, keyboard, new Color(0, 39, 15), new Color(27, 228, 33), Echo, 1.0f);
-      LOG.SetLogger(logger.Log);
+      LOG_SETTINGS.SetLogger(logger.Log);
       var ct = new CoordinatesTransformer(cockpit, _manager);
       _cmd = new CommandLine("Boring machine", logger.Log, _manager);
       var ini = new IniWatcher(Me, _manager);
@@ -59,7 +58,7 @@ namespace IngameScript
       // new MiningRoutines(ini, _cmd, ap, _manager);
       var progs = new List<IMyProgrammableBlock>();
       GridTerminalSystem.GetBlocksOfType(progs, pr => pr.CubeGrid == Me.CubeGrid);
-      var genStatus = new GeneralStatus(this, ac, cc, wc);
+      var genStatus = new GeneralStatus(this, ac, cc, wc, ap);
       new ScreensController(genStatus, iw, topLefts, _scheme, cockpit.CustomData, _manager);
     }
 

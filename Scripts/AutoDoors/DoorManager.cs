@@ -25,20 +25,19 @@ namespace IngameScript
       static readonly System.Text.RegularExpressions.Regex SAS_DOOR_RE = new System.Text.RegularExpressions.Regex("^(.*) - (Inner|Outer)$");
       static readonly int GRACE_PERIOD = 80;
       static readonly int TIME_TO_CLOSE = 120;
+      static readonly Log LOG = Log.GetLog("DM");
 
       readonly List<IMyDoor> _doors = new List<IMyDoor>();
       readonly HashSet<long> _handledDoors = new HashSet<long>();
       readonly HashSet<string> _handledSases = new HashSet<string>();
-      readonly Action<string> _logger;
       readonly List<Sas> _sases = new List<Sas>();
       readonly Process _mainProcess;
 
       readonly List<IMyDoor> _tmpDoorList = new List<IMyDoor>();
       readonly Dictionary<string, IMyDoor> _tmpSases = new Dictionary<string, IMyDoor>();
 
-      public DoorManager(MyGridProgram program, IProcessSpawner spawner, Action<string> logger)
+      public DoorManager(MyGridProgram program, IProcessSpawner spawner)
       {
-        _logger = logger;
         _mainProcess = spawner.Spawn(_handleDoors, "autodoors-main");
         Scan(program);
         _mainProcess.Spawn(p => Scan(program), "scan", period: 431);
@@ -46,6 +45,8 @@ namespace IngameScript
 
       public void Scan(MyGridProgram program)
       {
+        var previousDoorCount = _doors.Count;
+        var previousSasCount = _sases.Count;
         _doors.Clear();
         _sases.Clear();
 
@@ -72,7 +73,10 @@ namespace IngameScript
           }
         }
         _doors.AddRange(_tmpSases.Values);
-        _logger?.Invoke($"Found {_doors.Count} doors and {_sases.Count} sases");
+        if (previousDoorCount != _doors.Count || previousSasCount != _sases.Count)
+        {
+          LOG.Info($"Found {_doors.Count} doors and {_sases.Count} sases");
+        }
 
         _tmpSases.Clear();
       }
@@ -85,7 +89,7 @@ namespace IngameScript
           {
             if (!_handledDoors.Contains(door.EntityId))
             {
-              _logger?.Invoke($"Will close door {door.CustomName}");
+              LOG.Info($"Will close door {door.CustomName}");
               _mainProcess.Spawn(pc => _closeDoor(door), $"close-door {door.CustomName}", period: TIME_TO_CLOSE, useOnce: true);
               _handledDoors.Add(door.EntityId);
             }
@@ -97,7 +101,7 @@ namespace IngameScript
           {
             if (!_handledSases.Contains(sas.Name))
             {
-              _logger?.Invoke($"Will close sas {sas.Name}");
+              LOG.Info($"Will close sas {sas.Name}");
               sas.Lock();
               _handledSases.Add(sas.Name);
               _mainProcess.Spawn(pc => _closeSas(sas), $"close-sas {sas.Name}", period: TIME_TO_CLOSE, useOnce: true);

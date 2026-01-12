@@ -182,6 +182,7 @@ namespace IngameScript
         if (trigger < RequiredTrigger)
         {
           logger?.Invoke($"Permission denied for \"{FullName}\"");
+          logger?.Invoke($"{RequiredTrigger} > {trigger}");
           return null;
         }
         return _spawnImpl(wrapper, logger, onDone, spawner, trigger);
@@ -218,7 +219,7 @@ namespace IngameScript
 
       private readonly Dictionary<string, AbstractCommand> _subCommands = new Dictionary<string, AbstractCommand>();
 
-      public ParentCommand(string name, string help, CommandTrigger requiredTrigger = CommandTrigger.User) : base(name, requiredTrigger, help)
+      public ParentCommand(string name, string help) : base(name, CommandTrigger.Antenna, help)
       {
       }
 

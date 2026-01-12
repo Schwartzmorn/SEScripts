@@ -25,9 +25,11 @@ namespace IngameScript
     {
       readonly List<IMyReflectorLight> _armLights = new List<IMyReflectorLight>();
       readonly List<IMyReflectorLight> _frontLights = new List<IMyReflectorLight>();
+      readonly List<IMyShipController> _myShipControllers = new List<IMyShipController>();
       readonly ArmController _arm;
       readonly ConnectionClient _conClient;
       readonly WheelsController _wc;
+      readonly Autopilot _ap;
 
       public float ArmAngle => _arm.Angle;
       public float ArmTarget => _arm.TargetAngle;
@@ -36,15 +38,17 @@ namespace IngameScript
       public FailReason FailReason => _conClient.FailReason;
       public float Progress => _conClient.Progress;
 
-      public GeneralStatus(MyGridProgram program, ArmController arm, ConnectionClient conClient, WheelsController wc)
+      public GeneralStatus(MyGridProgram program, ArmController arm, ConnectionClient conClient, WheelsController wc, Autopilot ap)
       {
         IMyGridTerminalSystem gts = program.GridTerminalSystem;
         IMyCubeGrid grid = program.Me.CubeGrid;
         gts.GetBlocksOfType(_armLights, l => grid != l.CubeGrid && l.CubeGrid.IsSameConstructAs(grid));
         gts.GetBlocksOfType(_frontLights, l => l.CubeGrid == grid && l.CustomName.Contains("Front"));
+        gts.GetBlocksOfType(_myShipControllers, c => c.CubeGrid == grid);
         _arm = arm;
         _conClient = conClient;
         _wc = wc;
+        _ap = ap;
       }
 
       public bool AreArmLightsOn => _armLights.Any(l => l.Enabled);
@@ -52,6 +56,10 @@ namespace IngameScript
       public bool AreFrontLightsOn => _frontLights.Any(l => l.Enabled);
 
       public bool IsStrafing => _wc.IsStrafing;
+
+      public bool IsAutopilotEngaged => _ap.Activated;
+
+      public bool IsParkEngaged => _myShipControllers.First().HandBrake;
     }
   }
 }
