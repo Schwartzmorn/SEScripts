@@ -107,7 +107,7 @@ namespace IngameScript
             {
               _throwIf(!float.TryParse(vals[4], out rotation), count, "could not parse rotation");
             }
-            bool isCentered = (vals.Count() == 6) ? vals[5].Trim().ToLower().Contains("center") : false;
+            bool isCentered = (vals.Count() == 6) && vals[5].Trim().ToLower().Contains("center");
             sprts.Add(_toSprt(vals[0].Trim(), color, _parseVector2(vals[2], count, "position"), _parseVector2(vals[3], count, "size"), rotation, isCentered));
           }
         }

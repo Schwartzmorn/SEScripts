@@ -47,7 +47,7 @@ namespace IngameScript
       {
         string[] ss = s.Split(IniHelper.SEP);
         Angle = float.Parse(ss[0]);
-        if (ss.Count() == 2)
+        if (ss.Length == 2)
         {
           Type = ArmPosType.Elevation;
           Elevation = double.Parse(ss[1]);
@@ -154,7 +154,7 @@ namespace IngameScript
       {
         var pos = new Vector3D(0, 0, 0);
         _tools.ForEach(t => pos += t.GetPosition() + (0.75 * t.WorldMatrix.Forward));
-        return pos / _tools.Count();
+        return pos / _tools.Count;
       }
 
       /// <summary>

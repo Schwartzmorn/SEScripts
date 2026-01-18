@@ -17,14 +17,17 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 
-namespace IngameScript {
-  static class DetailedInfoHelper {
-    static readonly char[] SEP_LINE = new char[]{ '\n' };
+namespace IngameScript
+{
+  static class DetailedInfoHelper
+  {
+    static readonly char[] SEP_LINE = new char[] { '\n' };
     // does not really work for CustomInfo: CustomInfo is only updated when the block is opened in the terminal
-    public static string GetDetailedInfo(this IMyTerminalBlock block, string name) {
+    public static string GetDetailedInfo(this IMyTerminalBlock block, string name)
+    {
       string lineStart = name + ": ";
       string line = (block.DetailedInfo + "\n" + block.CustomInfo).Split(SEP_LINE).FirstOrDefault(l => l.StartsWith(lineStart));
-      return line?.Substring(lineStart.Count());
+      return line?.Substring(lineStart.Length);
     }
   }
 }

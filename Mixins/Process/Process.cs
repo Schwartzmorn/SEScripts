@@ -104,7 +104,7 @@ namespace IngameScript
       {
         if (_children != null)
         {
-          bool hadChildren = _children.Where(p => p.Alive).Count() > 0;
+          bool hadChildren = _children.Any(p => p.Alive);
           foreach (Process p in _children)
           {
             p._killNoNotify();

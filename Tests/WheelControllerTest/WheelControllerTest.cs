@@ -140,7 +140,7 @@ class PowerWheelTest
     Assert.That(_wheelBase.MinZ, Is.EqualTo(-4));
     Assert.That(_wheelBase.MaxZ, Is.EqualTo(0));
 
-    Assert.That(_wheelBase.CenterOfTurnZ, Is.EqualTo(-2));
+    Assert.That(_wheelBase.DefaultCenterOfTurnZ, Is.EqualTo(-2));
 
     Assert.That(_wheelBase.TurnRadius, Is.EqualTo(5.5));
 
@@ -167,6 +167,24 @@ class PowerWheelTest
       }
     }
     Assert.That(nInverted, Is.EqualTo(2));
+
+    _wheelBase.CenterOfTurnZOffset = 2;
+
+    Assert.That(_wheelBase.LeftCenterOfTurn, Is.EqualTo(new Vector3D(-5.5, 0, -4)));
+    Assert.That(_wheelBase.RightCenterOfTurn, Is.EqualTo(new Vector3D(5.5, 0, -4)));
+    Assert.That(_wheelBase.GetAngle(frontLeft, false), Is.EqualTo(0));
+    Assert.That(_wheelBase.GetAngle(frontRight, false), Is.EqualTo(0));
+    Assert.That(_wheelBase.GetAngle(middleRight, false), Is.GreaterThan(_wheelBase.GetAngle(middleLeft, false)));
+    Assert.That(_wheelBase.GetAngle(middleLeft, false), Is.GreaterThan(0));
+    Assert.That(_wheelBase.GetAngle(rearLeft, true), Is.GreaterThan(_wheelBase.GetAngle(rearRight, true)));
+    Assert.That(_wheelBase.GetAngle(rearRight, true), Is.GreaterThan(0));
+
+    _wheelBase.CenterOfTurnZOffset = -2;
+
+    Assert.That(_wheelBase.LeftCenterOfTurn, Is.EqualTo(new Vector3D(-5.5, 0, 0)));
+    Assert.That(_wheelBase.RightCenterOfTurn, Is.EqualTo(new Vector3D(5.5, 0, 0)));
+    Assert.That(_wheelBase.GetAngle(rearLeft, false), Is.EqualTo(0));
+    Assert.That(_wheelBase.GetAngle(rearRight, false), Is.EqualTo(0));
   }
 
   [Test]
@@ -200,19 +218,23 @@ class PowerWheelTest
     Assert.That(_wheelBase.LeftCenterOfTurn, Is.EqualTo(new Vector3D(-4, 0, 0)));
     Assert.That(_wheelBase.RightCenterOfTurn, Is.EqualTo(new Vector3D(4, 0, 0)));
 
-    Assert.That(_wheelBase.GetAngle(frontLeft, false), Is.EqualTo(18.43f).Within(TOLERANCE));
+    Assert.That(_wheelBase.GetAngle(frontLeft, false), Is.EqualTo(0.32f).Within(TOLERANCE));
     Assert.That(_wheelBase.GetAngle(middleLeft, false), Is.EqualTo(0));
-    Assert.That(_wheelBase.GetAngle(rearLeft, false), Is.EqualTo(18.43f).Within(TOLERANCE));
-    Assert.That(_wheelBase.GetAngle(frontRight, false), Is.EqualTo(45));
+    Assert.That(_wheelBase.GetAngle(rearLeft, false), Is.EqualTo(0.32f).Within(TOLERANCE));
+    Assert.That(_wheelBase.GetAngle(frontRight, false), Is.EqualTo(MathHelper.PiOver4).Within(TOLERANCE));
     Assert.That(_wheelBase.GetAngle(middleRight, false), Is.EqualTo(0));
-    Assert.That(_wheelBase.GetAngle(rearRight, false), Is.EqualTo(45));
+    Assert.That(_wheelBase.GetAngle(rearRight, false), Is.EqualTo(MathHelper.PiOver4).Within(TOLERANCE));
 
-    Assert.That(_wheelBase.GetAngle(frontLeft, true), Is.EqualTo(45));
+    Assert.That(_wheelBase.GetAngle(frontLeft, true), Is.EqualTo(MathHelper.PiOver4).Within(TOLERANCE));
     Assert.That(_wheelBase.GetAngle(middleLeft, true), Is.EqualTo(0));
-    Assert.That(_wheelBase.GetAngle(rearLeft, true), Is.EqualTo(45));
-    Assert.That(_wheelBase.GetAngle(frontRight, true), Is.EqualTo(18.43f).Within(TOLERANCE));
+    Assert.That(_wheelBase.GetAngle(rearLeft, true), Is.EqualTo(MathHelper.PiOver4).Within(TOLERANCE));
+    Assert.That(_wheelBase.GetAngle(frontRight, true), Is.EqualTo(0.32f).Within(TOLERANCE));
     Assert.That(_wheelBase.GetAngle(middleRight, true), Is.EqualTo(0));
-    Assert.That(_wheelBase.GetAngle(rearRight, true), Is.EqualTo(18.43f).Within(TOLERANCE));
+    Assert.That(_wheelBase.GetAngle(rearRight, true), Is.EqualTo(0.32f).Within(TOLERANCE));
+
+    // TODO check that when updating the Center of turn, all wheels are correctly updated, in particular the ones that have a steering of 0
+
+    // TODO check the inversion is correct
   }
 
   [Test]

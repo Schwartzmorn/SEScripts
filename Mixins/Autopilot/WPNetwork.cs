@@ -28,15 +28,14 @@ namespace IngameScript
       string _prevData;
       readonly List<MyIniKey> _tmpKeys = new List<MyIniKey>();
       readonly List<MyWaypointInfo> _tmpWps = new List<MyWaypointInfo>();
-      readonly Action<string> _logger;
       readonly SortedList<double, APWaypoint> _aStarQueue = new SortedList<double, APWaypoint>();
+      readonly static Log LOG = Log.GetLog("WPN");
       /// <summary>Creates a new network</summary>
       /// <param name="remote">The remote doing the autopilot, and whose position is used as a referential</param>
       /// <param name="logger">Optional logger</param>
       /// <param name="spawner">Used to spawn the update processes</param>
-      public WPNetwork(IMyRemoteControl remote, Action<string> logger, IProcessSpawner spawner)
+      public WPNetwork(IMyRemoteControl remote, IProcessSpawner spawner)
       {
-        _logger = logger;
         _remote = remote;
         _updateData();
         spawner.Spawn(p => _updateData(), "wpn-update", period: 100);
@@ -72,13 +71,13 @@ namespace IngameScript
         if (_waypoints.TryGetValue(wp.Name, out apwp))
         {
           apwp.WP = wp;
-          _logger?.Invoke($"Updated waypoint {wp.Name}");
+          LOG.Debug($"Updated waypoint {wp.Name}");
           _save();
         }
         else
         {
           _waypoints[wp.Name] = new APWaypoint(wp);
-          _logger?.Invoke($"Added waypoint {wp.Name}");
+          LOG.Debug($"Added waypoint {wp.Name}");
           _save();
         }
       }
@@ -232,7 +231,7 @@ namespace IngameScript
         {
           foreach (APWaypoint wp in _waypoints.Values)
           {
-            wp.Update(this, _logger);
+            wp.Update(this);
           }
         }
       }

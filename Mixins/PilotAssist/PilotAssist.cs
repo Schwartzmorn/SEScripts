@@ -39,7 +39,6 @@ namespace IngameScript
       readonly List<IPADeactivator> _deactivators = new List<IPADeactivator>();
       readonly List<IPABraker> _handBrakers = new List<IPABraker>();
       readonly IMyGridTerminalSystem _gts;
-      readonly Action<string> _logger;
       readonly IMyTerminalBlock _refBlock;
       readonly WheelsController _wheelControllers;
       bool _assist;
@@ -52,9 +51,8 @@ namespace IngameScript
       /// <param name="logger">Optional logger</param>
       /// <param name="manager">Used to schedule itself</param>
       /// <param name="wc">Wheel controller used to actually controll the wheels</param>
-      public PilotAssist(IMyTerminalBlock refBlock, IMyGridTerminalSystem gts, IniWatcher ini, Action<string> logger, ISaveManager manager, WheelsController wc, CommandLine commandLine = null)
+      public PilotAssist(IMyTerminalBlock refBlock, IMyGridTerminalSystem gts, IniWatcher ini, ISaveManager manager, WheelsController wc, CommandLine commandLine = null)
       {
-        _logger = logger;
         _wheelControllers = wc;
         _gts = gts;
         _refBlock = refBlock;
@@ -90,7 +88,7 @@ namespace IngameScript
         var controllerNames = ini.Get(SECTION, "controllers");
         string[] names = controllerNames.ToString().Split(IniHelper.SEP, StringSplitOptions.RemoveEmptyEntries);
         _gts.GetBlocksOfType(_controllers, c => c.IsSameConstructAs(_refBlock) && (names.Length == 0 || names.Contains(c.CustomName)));
-        
+
         if (_controllers.Count == 0)
         {
           throw new InvalidOperationException("No controller found");

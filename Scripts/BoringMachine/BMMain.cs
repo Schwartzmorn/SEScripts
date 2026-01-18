@@ -24,21 +24,21 @@ namespace IngameScript
   {
     readonly CommandLine _cmd;
     readonly IProcessManager _manager;
-    ColorScheme _scheme = new ColorScheme();
 
     public Program()
     {
       Runtime.UpdateFrequency = UpdateFrequency.Update1;
-      var topLefts = new List<IMyTextSurface>();
+      IMyTextSurface status;
+      IMyTextSurface sensor;
       IMyTextSurface keyboard;
       IMyCockpit cockpit;
       _manager = Process.CreateManager(Echo);
-      _initCockpit(out cockpit, topLefts, out keyboard);
-      var logger = new ScreenLogger(_manager, keyboard, new Color(0, 39, 15), new Color(27, 228, 33), Echo, 1.0f);
-      LOG_SETTINGS.SetLogger(logger.Log);
-      var ct = new CoordinatesTransformer(cockpit, _manager);
-      _cmd = new CommandLine("Boring machine", logger.Log, _manager);
+      _initCockpit(out cockpit, out status, out sensor, out keyboard);
+      var logger = new ScreenLogger(_manager, keyboard, null, null, Echo, 0.5f);
       var ini = new IniWatcher(Me, _manager);
+      _cmd = new CommandLine("Boring machine", logger.Log, _manager);
+      LOG_SETTINGS.Init(logger.Log, ini, _cmd, _manager);
+      var ct = new CoordinatesTransformer(cockpit, _manager);
       var wc = new WheelsController(_cmd, cockpit, GridTerminalSystem, ini, _manager, ct);
       var ac = new ArmController(ini, this, _cmd, cockpit, wc, _manager);
       var iw = new InventoryWatcher(_cmd, GridTerminalSystem, cockpit);
@@ -47,8 +47,9 @@ namespace IngameScript
       GridTerminalSystem.GetBlocksOfType(rcs, r => r.CubeGrid == Me.CubeGrid);
       IMyRemoteControl frc = rcs.First(r => r.CubeGrid == Me.CubeGrid && r.CustomName.Contains("Forward"));
       IMyRemoteControl brc = rcs.First(r => r.CubeGrid == Me.CubeGrid && r.CustomName.Contains("Backward"));
-      var ap = new Autopilot(ini, wc, _cmd, frc, logger.Log, _manager);
-      var ah = new PilotAssist(Me, GridTerminalSystem, ini, logger.Log, _manager, wc, _cmd);
+      var sensorManager = new SensorManager(cockpit, GridTerminalSystem, _manager);
+      var ap = new Autopilot(ini, wc, _cmd, frc, _manager, sensorManager);
+      var ah = new PilotAssist(Me, GridTerminalSystem, ini, _manager, wc, _cmd);
       ah.AddBraker(cc);
       ah.AddDeactivator(ap);
       var ar = new AutoRoutineHandler(_cmd);
@@ -59,7 +60,7 @@ namespace IngameScript
       var progs = new List<IMyProgrammableBlock>();
       GridTerminalSystem.GetBlocksOfType(progs, pr => pr.CubeGrid == Me.CubeGrid);
       var genStatus = new GeneralStatus(this, ac, cc, wc, ap);
-      new ScreensController(genStatus, iw, topLefts, _scheme, cockpit.CustomData, _manager);
+      new ScreensController(genStatus, iw, status, sensor, cockpit.CustomData, _manager, sensorManager);
     }
 
     public void Save() => _manager.Save(s => Me.CustomData = s);
@@ -73,9 +74,12 @@ namespace IngameScript
       }
     }
 
-    void _initCockpit(out IMyCockpit cockpit, List<IMyTextSurface> topLefts, out IMyTextSurface loggerScreen)
+    void _initCockpit(out IMyCockpit cockpit, out IMyTextSurface topLeft, out IMyTextSurface topCenter, out IMyTextSurface loggerScreen)
     {
       var cockpits = new List<IMyCockpit>();
+      topLeft = null;
+      topCenter = null;
+      loggerScreen = null;
       GridTerminalSystem.GetBlocksOfType(cockpits, c => c.CubeGrid == Me.CubeGrid);
       if (cockpits.Count == 0)
       {
@@ -83,15 +87,18 @@ namespace IngameScript
       }
 
       cockpit = cockpits[0];
-      loggerScreen = null;
       foreach (IMyCockpit cpit in cockpits)
       {
         for (int i = 0; i < cpit.SurfaceCount; ++i)
         {
-          IMyTextSurface surface = cpit.GetSurface(i);
+          var surface = cpit.GetSurface(i);
           if (surface.DisplayName == "Top Left Screen")
           {
-            topLefts.Add(surface);
+            topLeft = surface;
+          }
+          else if (surface.DisplayName == "Top Center Screen")
+          {
+            topCenter = surface;
           }
           else if (surface.DisplayName == "Top Right Screen")
           {

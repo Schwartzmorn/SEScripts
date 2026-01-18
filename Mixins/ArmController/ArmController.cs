@@ -31,14 +31,14 @@ namespace IngameScript
 
       public float Angle => _rotors[0].Angle;
 
-      // TODO correct this
+      // TODO correct this - the angle is not correct when targetting a height
       public float TargetAngle => _autoCont.Target.Angle;
       public ArmPos TargetPosition => _autoCont.Target;
 
       public ArmController(MyIni ini, MyGridProgram p, CommandLine cmd, IMyShipController cont, WheelsController wCont, ISaveManager manager)
       {
         var rotors = new List<IMyMotorStator>();
-        p.GridTerminalSystem.GetBlocksOfType(rotors, r => r.CubeGrid == p.Me.CubeGrid && r.CustomName.Contains("Arm Rotor"));
+        p.GridTerminalSystem.GetBlocksOfType(rotors, r => r.CubeGrid == p.Me.CubeGrid && r.CustomName.Contains("Arm / Rotor"));
         _rotors = rotors.Select(r => new ArmRotor(r, r.WorldMatrix.Up.Dot(cont.WorldMatrix.Right) > 0)).ToList();
         var keys = new List<MyIniKey>();
         ini.GetKeys(SECTION, keys);

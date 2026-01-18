@@ -25,8 +25,8 @@ namespace IngameScript
           s.Alignment = 0;
           s.Font = "Monospace";
           s.FontSize = size;
-          s.FontColor = col ?? Color.White;
-          s.BackgroundColor = bgdCol ?? Color.Black;
+          s.FontColor = col ?? s.FontColor;
+          s.BackgroundColor = bgdCol ?? s.BackgroundColor;
           var sb = new StringBuilder("G");
           nMsgs = (int)((_getMultiplier(s) * s.SurfaceSize.Y / s.MeasureStringInPixels(sb, s.Font, s.FontSize).Y) + 0.1f);
           _surface = s;
@@ -37,13 +37,12 @@ namespace IngameScript
       }
       public void Log(string log)
       {
+        _echo?.Invoke(log);
         _changed = true;
         foreach (string l in log.Split('\n'))
         {
           _messages.Enqueue(l);
         }
-
-        _echo?.Invoke(log);
       }
       void _flush()
       {

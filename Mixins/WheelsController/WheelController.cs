@@ -24,6 +24,8 @@ namespace IngameScript
 
     public class WheelsController
     {
+      static readonly Log LOG = Log.GetLog("WC");
+
       public struct Calibration
       {
         public float Weight;
@@ -63,6 +65,7 @@ namespace IngameScript
         gts.GetBlocksOfType(wheels, w => w.CubeGrid == controller.CubeGrid && w.CustomName.Contains("Power"));
         _wheels = wheels.Select(w => new PowerWheel(w, WheelBase, transformer)).ToList();
         _wheels.Sort((w1, w2) => Math.Sign(w1.Position.Z - w2.Position.Z)); // needed for calibration
+        LOG.Debug($"Found {_wheels.Count} wheels");
 
         _registerCommands(command);
         manager.Spawn(_updateWheels, "wheels-controller", period: 10);
@@ -141,7 +144,7 @@ namespace IngameScript
         int count = 0;
         foreach (PowerWheel w in _wheels)
         {
-          if (w.Position.Z < WheelBase.CenterOfTurnZ + 0.2)
+          if (w.Position.Z < WheelBase.DefaultCenterOfTurnZ + 0.2)
           {
             frontPoc += w.GetPointOfContactW();
             ++count;

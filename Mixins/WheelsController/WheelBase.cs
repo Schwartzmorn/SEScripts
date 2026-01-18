@@ -31,7 +31,8 @@ namespace IngameScript
       /// <summary>Maximum Z coordinate of the base (ie rearmost)</summary>
       public double MaxZ => _max.Z;
       /// <summary>Z coordinate of the center of turn</summary>
-      public double CenterOfTurnZ { get; private set; }
+      public double DefaultCenterOfTurnZ { get; private set; }
+      public double CenterOfTurnZ { get { return LeftCenterOfTurn.Z; } }
       public double CenterOfTurnZOffset
       {
         get { return _centerOfTurnZOffset; }
@@ -74,18 +75,18 @@ namespace IngameScript
       /// <summary>Based on the characteristics of the wheel base, returns the amount the wheel should turn</summary>
       /// <param name="wheel">Wheel whose angle we want</param>
       /// <param name="turnLeft">Whether the wheel is turning left or right</param>
-      /// <returns>The angle, in degrees</returns>
+      /// <returns>The angle, in radians</returns>
       public float GetAngle(PowerWheel wheel, bool turnLeft)
       {
         Vector3D delta = (turnLeft ? LeftCenterOfTurn : RightCenterOfTurn) - wheel.Position;
         delta.Y = 0;
         delta = Vector3D.Normalize(delta);
-        return MathHelper.ToDegrees((float)Math.Acos(delta.Dot(turnLeft ? LEFT : RIGHT)));
+        return (float)Math.Acos(delta.Dot(turnLeft ? LEFT : RIGHT));
       }
 
       void _update()
       {
-        CenterOfTurnZ = (_min.Z + _max.Z) / 2;
+        DefaultCenterOfTurnZ = (_min.Z + _max.Z) / 2;
         TurnRadius = TurnRadiusOverride == 0 ? _max.Z - _min.Z + ((_max.X - _min.X) / 2) : TurnRadiusOverride;
         LeftCenterOfTurn = ((_min + _max) / 2) + new Vector3D(-TurnRadius, 0, 0) + (CenterOfTurnZOffset * Vector3D.Forward);
         RightCenterOfTurn = ((_min + _max) / 2) + new Vector3D(TurnRadius, 0, 0) + (CenterOfTurnZOffset * Vector3D.Forward);

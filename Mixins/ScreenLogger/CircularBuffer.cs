@@ -27,7 +27,7 @@ namespace IngameScript
       readonly T[] _queue;
       int _start = 0;
       public int Count { get; private set; }
-      int Capacity => _queue.Count();
+      int Capacity => _queue.Length;
 
       /// <summary>Creates a buffer</summary>
       /// <param name="capacity">maximum capacity of the buffer</param>

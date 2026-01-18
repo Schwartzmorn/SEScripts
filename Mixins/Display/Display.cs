@@ -19,6 +19,19 @@ namespace IngameScript
         string s = nm.ToLower();
         return s == "dark" ? Dark : s == "meddark" ? MedDark : s == "medlight" ? MedLight : Light;
       }
+
+      public ColorScheme()
+      {
+
+      }
+
+      public ColorScheme(Color light, Color dark)
+      {
+        Dark = dark;
+        Light = light;
+        MedDark = new Color((Dark.R * 2 + Light.R) / 3, (Dark.G * 2 + Light.G) / 3, (Dark.B * 2 + Light.B) / 3);
+        MedLight = new Color((Dark.R + Light.R * 2) / 3, (Dark.G + Light.G * 2) / 3, (Dark.B + Light.B * 2) / 3);
+      }
     }
 
     /// <summary>Class that wraps a <see cref="IMyTextSurface"/> to be more convenient</summary>
@@ -98,7 +111,7 @@ namespace IngameScript
         surface.ContentType = ContentType.SCRIPT;
         surface.Script = "";
         Surface = surface;
-        _offset = offset ?? Vector2.Zero;
+        _offset = (surface.TextureSize - surface.SurfaceSize) / 2 + (offset ?? Vector2.Zero);
         _scale = scale;
         _scheme = scheme ?? new ColorScheme();
         _sprites = sprites;

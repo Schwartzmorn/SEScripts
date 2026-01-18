@@ -24,11 +24,13 @@ namespace IngameScript
     /// <summary>Wraps a <see cref="IMyMotorSuspension"/> to give it some additional features and info</summary>
     public class PowerWheel
     {
+      static readonly Log LOG = Log.GetLog("PW");
       // Determined for small 5*5 wheels:
       // F[wheel] = Strength squared * compressionRatio * STRENGTH_MULT
       const float STRENGTH_MULT = 4326;
       static readonly Vector3D UP = new Vector3D(0, 1, 0);
       static readonly Vector3D RIGHT = new Vector3D(1, 0, 0);
+      static readonly float MAX_STEERING_ANGLE = MathHelper.ToRadians(45.83f);
 
       public float Angle => _wheel.SteerAngle;
       public float MaxAngle => _wheel.MaxSteerAngle;
@@ -91,7 +93,7 @@ namespace IngameScript
       /// <param name="comZPos">Z coordinates of the center of mass of the grid of the wheel base, in the same referential than the wheels</param>
       public void Strafe(double comZPos)
       {
-        _wheel.SetValue("MaxSteerAngle", 30f);
+        _wheel.MaxSteerAngle = MAX_STEERING_ANGLE;
         _wheel.InvertSteer = comZPos < Position.Z;
       }
       /// <summary>Makes it so that the wheel turns. Automatically adjusts the direction with respect to the center of mass and center of turn</summary>
@@ -100,11 +102,16 @@ namespace IngameScript
       {
         bool turnLeft = (_wheelBase.CenterOfTurnZ < Position.Z) ^ (_wheel.SteerAngle > 0);
         float angle = Math.Abs(_wheelBase.GetAngle(this, turnLeft));
-        if (Math.Abs(_wheel.SteerAngle) > 0.03 && Math.Abs(_wheel.MaxSteerAngle - MathHelper.ToRadians(angle)) > 0.01)
+        // We only change the settings if the wheel turns enough to matter
+        if (Math.Abs(_wheel.SteerAngle) > 0.03 || _wheel.MaxSteerAngle < 0.01)
         {
           // We set the angle and invert steer lazily as setting it can cause problems with the steering
-          _wheel.SetValue("MaxSteerAngle", angle);
           bool invertSteer = (comZPos < Position.Z) ^ (_wheelBase.CenterOfTurnZ < Position.Z);
+          if (Math.Abs(_wheel.MaxSteerAngle - angle) > 0.01)
+          {
+            LOG.Debug($"{_wheel.CustomName} => {angle:F2} {invertSteer}");
+            _wheel.MaxSteerAngle = Math.Min(angle, MAX_STEERING_ANGLE);
+          }
           if (_wheel.InvertSteer != invertSteer)
           {
             _wheel.InvertSteer = invertSteer;

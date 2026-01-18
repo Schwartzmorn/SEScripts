@@ -48,7 +48,6 @@ namespace IngameScript
         RegisterCommand(new Command("help", Command.Wrap(_help), @"Displays this help or help on a command
 If no argument, gives the list of available command
 Else, gives the detailed help on the command", nArgs: 0));
-        _log($"'{_name}' initialized. Run 'help' for more info");
         if ((spawner as IProcessManager) != null)
         {
           RegisterCommand(new Command("kill", Command.Wrap(_kill), @"Kills processes by pid or by name.
@@ -57,6 +56,7 @@ Otherwise, it kills all the process with the given name.", nArgs: 1));
           RegisterCommand(new Command("ps", Command.Wrap(_ps), "Lists alive processes", nArgs: 0));
           RegisterCommand(new Command("echo", Command.Wrap(_echo), "Prints a message"));
         }
+        _log($"'{_name}' initialized. Run 'help' for more info");
       }
       /// <summary>Registers a <see cref="AbstractCommand"/> so the <see cref="CommandLine"/> recognizes it.</summary>
       /// <param name="command"><see cref="AbstractCommand"/> to register</param>

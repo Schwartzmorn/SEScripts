@@ -15,33 +15,27 @@ namespace IngameScript
       static readonly Vector3D PLANE = new Vector3D(1, 0, 1);
       static readonly Vector3D FORWARD = new Vector3D(0, 0, -1);
       static readonly Vector3D RIGHT = new Vector3D(1, 0, 0);
+      static readonly Log LOG = Log.GetLog("AP");
 
       public readonly WPNetwork Network;
 
       public bool Activated { get; private set; }
-      readonly Action<string> _logger;
       readonly IMyRemoteControl _remote;
       readonly APSettings _settings = new APSettings();
       readonly CoordinatesTransformer _transformer;
       readonly WheelsController _wheels;
       readonly List<APWaypoint> _currentPath = new List<APWaypoint>();
+      readonly SensorManager _sensorManager;
       // Process responsible for keeping track of task completion
       Process _currentProcess;
       /// <summary>Creates a new Autopilot</summary>
-      /// <param name="ini"></param>
-      /// <param name="wheels"></param>
-      /// <param name="cmd"></param>
-      /// <param name="remote"></param>
-      /// <param name="logger"></param>
-      /// <param name="manager"></param>
-      public Autopilot(MyIni ini, WheelsController wheels, CommandLine cmd, IMyRemoteControl remote, Action<string> logger, ISaveManager manager)
+      public Autopilot(MyIni ini, WheelsController wheels, CommandLine cmd, IMyRemoteControl remote, ISaveManager manager, SensorManager sensorManager)
       {
         Activated = ini.Get("auto-pilot", "activated").ToBoolean();
-        _logger = logger;
 
         Process p = manager.Spawn(_handle, "ap-handle");
 
-        Network = new WPNetwork(remote, logger, p);
+        Network = new WPNetwork(remote, p);
         _remote = remote;
         _transformer = new CoordinatesTransformer(remote, p);
         _wheels = wheels;
@@ -51,6 +45,7 @@ namespace IngameScript
           .AddSubCommand(new Command("switch", Command.Wrap(Switch), "Switches the autopilot on/off", nArgs: 1))
           .AddSubCommand(new Command("save", Command.Wrap(Save), "Save the current position", nArgs: 1)));
         manager.AddOnSave(_save);
+        _sensorManager = sensorManager;
       }
 
       public bool ShouldDeactivate() => Activated;
@@ -58,7 +53,7 @@ namespace IngameScript
       public void Switch(string s)
       {
         Activated = s == "switch" ? !Activated : s == "on";
-        _logger?.Invoke($"Autopilot switch {(Activated ? "on" : "off")}");
+        LOG.Info($"Autopilot switch {(Activated ? "on" : "off")}");
         if (!Activated)
         {
           _checkProcess(null);
@@ -85,12 +80,12 @@ namespace IngameScript
           APWaypoint end = Network.GetWaypoint(wpName);
           if (end == null)
           {
-            _log($"Could not find waypoint {wpName}");
+            LOG.Info($"Could not find waypoint {wpName}");
           }
           else
           {
             Network.GetPath(_remote.GetPosition(), end, _currentPath);
-            _log($"Path: {_currentPath.Count}");
+            LOG.Debug($"Path: {_currentPath.Count}");
             return true;
           }
         }
@@ -105,6 +100,7 @@ namespace IngameScript
         {
           _currentPath.Clear();
           Vector3D tgt = _remote.GetPosition() + (amtForward * _remote.WorldMatrix.Forward) + (amtRight * _remote.WorldMatrix.Right);
+          LOG.Info($"Moving to {tgt}");
           _currentPath.Add(new APWaypoint(new MyWaypointInfo("$TMPMOVE", tgt), Terrain.Dangerous));
         }
       }
@@ -154,13 +150,30 @@ namespace IngameScript
           return true;
         }
         _remote.HandBrake = false;
+
+        var safeDirection = _sensorManager.GetSafeDirection(true);
+
         double angle = Math.Acos(Vector3D.Normalize(route).Dot(FORWARD));
         bool reverseDir = angle > Math.PI / 2;
-        if (reverseDir)
+
+        if (safeDirection == SensorDirection.Left)
         {
-          angle = -(angle - Math.PI);
+          // TODO check for reverse
+          angle = Math.PI / 4;
         }
-        angle *= (route.Dot(RIGHT) > 0) ? 1 : -1;
+        else if (safeDirection == SensorDirection.Right)
+        {
+          // TODO check for reverse
+          angle = -Math.PI / 4;
+        }
+        else
+        {
+          if (reverseDir)
+          {
+            angle = -(angle - Math.PI);
+          }
+          angle *= (route.Dot(RIGHT) > 0) ? 1 : -1;
+        }
 
         double curSpeed = _remote.GetShipSpeed() * (Reversing ? -1 : 1);
 
@@ -194,8 +207,6 @@ namespace IngameScript
       bool Reversing => _transformer.Dir(_remote.GetShipVelocities().LinearVelocity).Dot(FORWARD) < 0;
 
       void _save(MyIni ini) => ini.Set("auto-pilot", "activated", Activated);
-
-      void _log(string s) => _logger?.Invoke($"AP: {s}");
 
       void _checkProcess(Process newProcess)
       {

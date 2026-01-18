@@ -37,6 +37,7 @@ namespace IngameScript
       public bool Visited { get; private set; }
 
       List<string> _waypointsNames;
+      readonly static Log LOG = Log.GetLog("WP");
 
       double? _aStartDistance;
       /// <summary>Create a new waypoint, not connected to any other waypoint</summary>
@@ -82,8 +83,7 @@ namespace IngameScript
       }
       /// <summary>Translates the list of waypoint names from the ini string to a list of actual <see cref="APWaypoint"/></summary>
       /// <param name="network">Network that contains all the waypoints</param>
-      /// <param name="logger">Optional logger</param>
-      public void Update(WPNetwork network, Action<string> logger)
+      public void Update(WPNetwork network)
       {
         if (_waypointsNames != null)
         {
@@ -102,7 +102,7 @@ namespace IngameScript
           }
           if (notFound != 0)
           {
-            logger?.Invoke($"Waypoint '{Name}' links to {notFound} unknown waypoints");
+            LOG.Error($"Waypoint '{Name}' links to {notFound} unknown waypoints");
           }
         }
       }

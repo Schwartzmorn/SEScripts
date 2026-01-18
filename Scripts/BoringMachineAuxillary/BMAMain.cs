@@ -41,7 +41,7 @@ namespace IngameScript
       var wheels = new List<IMyMotorSuspension>();
       GridTerminalSystem.GetBlocksOfType(wheels, w => w.CubeGrid == Me.CubeGrid && w.CustomName.Contains("Power"));
       wheels.ForEach(w => wb.AddWheel(new PowerWheel(w, wb, ct)));
-      var ic = new InventoriesController(ct, GridTerminalSystem, cockpit, wb.CenterOfTurnZ + 2, _manager);
+      var ic = new InventoriesController(ct, GridTerminalSystem, cockpit, wb.DefaultCenterOfTurnZ + 2, _manager);
       new ScreensController(genStatus, ic, topLeft, topRight, _scheme, cockpit.CustomData, _manager);
     }
 
